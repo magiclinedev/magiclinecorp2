@@ -39,6 +39,9 @@ class CollectionController extends Controller
         Gate::define('owner', function ($user) {
             return in_array($user->status, [4]);
         });
+        Gate::define('users', function ($user) {
+            return in_array($user->status, [1, 2, 3]);
+        });
     }
 
     public function index(Request $request)
@@ -103,13 +106,29 @@ class CollectionController extends Controller
         }
 
         $mannequin = Mannequin::find($id);
+
         if (!$mannequin) {
             return redirect()->route('collection')->with('danger_message', 'Mannequin not found.');
         }
 
         // Check if the user's status is 1 and get the checkPrice value for the user's company
         $user = Auth::user();
-        $canViewPrice = $user->status == 1 || $user->companies()->where('companies.id', $mannequin->company_id)->whereNotNull('company_user.checkPrice')->exists();//TO BE CHANGED
+
+        //Get company id from company from mannequin
+        $companyName = $mannequin->company;
+        $company = Company::where('name', $companyName)->first();
+        $company_id = $company->id;
+
+        // check if checkPrice of user has 1 on viewed product/mannequin
+        $canViewPriceForCompany = $user->companies()->where('companies.id', $company_id)->where('company_user.checkPrice', 1)->exists();
+
+        if ($user->status == 1 || $canViewPriceForCompany || $user->status == 4) {
+            $canViewPrice = true;
+        } else {
+            $canViewPrice = false;
+        }
+
+        // dd($canViewPrice);
 
         // Return the view with the mannequin data, $id, and $canViewPrice
         return view('collection-view', [
@@ -117,12 +136,13 @@ class CollectionController extends Controller
             'encryptedId' => $encryptedId,
             'canViewPrice' => $canViewPrice,
         ]);
+
     }
 
     // VIEW MODULE FOR ADD PRODUCT
     public function add()
     {
-        $user = Auth::user(); 
+        $user = Auth::user(); // Assuming you are using the built-in Auth facade
         $types = Type::all();
         $categories = Category::all();
         if ($user->status == 1 || $user->status == 4) {
@@ -152,7 +172,7 @@ class CollectionController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect('/collection-add')->with('danger_message', 'Input Incorrect/Files Too Large: Please check the form fields and try again.')
+            return redirect('/collection-add')->with('danger_message', 'Input Incorrect or Files Too Large(Max 2MB): Please check the form fields and try again.')
                 ->withErrors($validator)
                 ->withInput();
         }
@@ -221,7 +241,6 @@ class CollectionController extends Controller
     public function edit($id)
     {
         $user = Auth::user();
-        //chech user status 
         $categories = Category::all();
         if ($user->status == 1 || $user->status == 4) {
             $companies = Company::all();
@@ -255,7 +274,7 @@ class CollectionController extends Controller
         // Keep the original itemref for audit trail
         // $originalItemref = $mannequin->itemref;
 
-        // Update the fields
+        // Update the fields using the request input directly
         $mannequin->fill([
             'po' => $request->input('po'),
             'itemref' => $request->input('itemref'),
@@ -339,7 +358,7 @@ class CollectionController extends Controller
 
     }
 
-    //SHOW TRASHCAN(mannequins with activeStatus = 0)
+    //SHOW TRASHCAN
     public function trashcan()
     {
         $mannequins = Mannequin::where('activeStatus', '<', 1)->get();
@@ -430,6 +449,19 @@ class CollectionController extends Controller
 
         return redirect()->route('collection.category')->with('success_message', 'Category added successfully!');
     }
+
+    //Delete Category(PERMANENTLY)
+    public function trash_category($id)
+    {
+        $category = Category::findOrFail($id);
+        // Perform any additional tasks related to deletion, if needed
+
+        // Delete the category
+        $category->delete();
+
+        return response()->json(['success' => true]);
+    }
+
 
     // SHOW TYPE MODULE
     public function type()

@@ -9,7 +9,7 @@ class AdminAccessMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if (auth()->user()->status == 1) {
+        if (auth()->user()->status == 1 || auth()->user()->status == 4) {
             return $next($request);
         }
 

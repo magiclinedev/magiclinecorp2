@@ -16,9 +16,16 @@
         <div class="breadcrumbs mt-4 mb-6">
             <nav class="flex" aria-label="Breadcrumb">
                 <ol class="flex items-center space-x-2 text-gray-500">
+                    @can('users', Auth::user())
                     <li>
                         <a href="{{ route('collection') }}" class="hover:text-gray-700">Collection</a>
                     </li>
+                    @endcan
+                    @can('owner', Auth::user())
+                    <li>
+                        <a href="{{ route('dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+                    </li>
+                    @endcan
                     <li class="px-2">
                         <i class="fa fa-caret-right"></i>
                     </li>

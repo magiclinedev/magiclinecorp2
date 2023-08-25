@@ -23,8 +23,8 @@
             </nav>
         </div>
     </x-slot>
-    <div class="container mx-auto px-4 py-8">
-        <form action="{{ route('collection.category') }}" method="POST" enctype="multipart/form-data" class="bg-white shadow-md rounded-lg px-8 py-6">
+    <div class="container bg-white shadow-md rounded-lg mx-auto px-4 py-8 mt-4">
+        <form action="{{ route('collection.category') }}" method="POST" enctype="multipart/form-data" class=" px-8 py-6">
             @csrf
             @method('POST') <!-- Add this line to specify the method -->
             <div class="grid grid-cols-2 gap-4">
@@ -37,25 +37,31 @@
                 Add category
             </button>
 
-            <div class="overflow-x-auto">
-                <table id="categoriesTable" class="w-full table-auto border-collapse border">
-                    <thead class>
-                        <tr>
-                            <th class="px-4 py-2 border">Name</th>
-                            <th class="px-4 py-2 border">Added By</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($categories as $category)
-                            <tr class="border">
-                                <td class="px-4 py-2 border">{{ $category->name }}</td>
-                                <td class="px-4 py-2 border">{{ $category->addedBy }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
         </form>
+        <div class="overflow-x-auto">
+            <table id="categoriesTable" class="w-full table-auto border-collapse border">
+                <thead class>
+                    <tr>
+                        <th class="px-4 py-2 border">Name</th>
+                        <th class="px-4 py-2 border">Added By</th>
+                        <th class="px-4 py-2 border">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($categories as $category)
+                        <tr class="border">
+                            <td class="px-4 py-2 border">{{ $category->name }}</td>
+                            <td class="px-4 py-2 border">{{ $category->addedBy }}</td>
+                            <td class="px-4 py-2 border">
+                                <button class="btn-delete" data-id="{{ $category->id }}" data-transfer-url="{{ route('collection.category.trash', ['id' => $category->id]) }}">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
 
     </div>
 
@@ -100,17 +106,52 @@
                 cancelButtonColor: '#d33',
             });
         @endif
+    </script>
+    {{-- Sweeet Alert for delete --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const deleteButtons = document.querySelectorAll('.btn-delete');
 
-        @if(session('cancel_message'))
-            Swal.fire({
-                title: 'Action Cancelled!',
-                text: '',
-                icon: 'error',
-                timer: 3000,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const recordId = this.getAttribute('data-id');
+                    const transferUrl = this.getAttribute('data-transfer-url');
+
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: 'You won\'t be able to revert this!',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Perform AJAX request to delete the record
+                            axios.post(transferUrl)
+                                    .then(response => {
+                                        if (response.data.success) {
+                                            Swal.fire(
+                                                'Deleted!',
+                                                'Your record has been deleted.',
+                                                'success'
+                                            ).then(() => {
+                                                // Refresh the page after successful deletion
+                                                window.location.reload();
+                                            });
+                                        }
+                                    })
+                            .catch(error => {
+                                Swal.fire(
+                                    'Error!',
+                                    'An error occurred while deleting the record.',
+                                    'error'
+                                );
+                            });
+                        }
+                    });
+                });
             });
-        @endif
+        });
     </script>
 </x-app-layout>

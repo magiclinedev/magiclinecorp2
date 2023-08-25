@@ -127,7 +127,7 @@
                 {{-- UPLOAD FILES --}}
                 {{-- images --}}
                 <div class="col-span-2">
-                    <label for="images" class="block font-bold mb-2">Images</label>
+                    <label for="images" class="block font-bold mb-2">Images <i class="text-sm text-gray-600">(Maximum upload size 2MB per image)</i></label>
                     <input type="file" name="images[]" id="images" class="w-full border rounded-md py-2 px-3" multiple>
                     <div id="image-preview" class="mt-3">
                         {{-- Placeholder for image preview --}}
@@ -135,12 +135,12 @@
                 </div>
                 {{-- file --}}
                 <div class="col-span-2">
-                    <label for="file" class="block font-bold mb-2">File</label>
+                    <label for="file" class="block font-bold mb-2">File <i class="text-sm text-gray-600">(Maximum upload size 2MB)</i></label>
                     <input type="file" name="file" id="file" class="w-full border rounded-md py-2 px-3">
                 </div>
                 {{-- PDF --}}
                 <div class="col-span-2">
-                    <label for="pdf" class="block font-bold mb-2">PDF</label>
+                    <label for="pdf" class="block font-bold mb-2">PDF <i class="text-sm text-gray-600">(Maximum upload size 2MB)</i></label>
                     <input type="file" name="pdf" id="pdf" class="w-full border rounded-md py-2 px-3">
                 </div>
 

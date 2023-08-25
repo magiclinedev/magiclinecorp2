@@ -24,8 +24,8 @@
                     </a>
                 @endcan
 
+                {{-- Trashcan Button --}}
                 @can('super_admin', Auth::user())
-                    {{-- Trashcan Button --}}
                     @if ($mannequins->contains('activeStatus', 0))
                         <div class="ml-2">
                             <a href="{{ route('collection.trashcan') }}" class="text-gray-800 hover:text-gray-600">
@@ -54,7 +54,7 @@
                     <div class="overflow-x-auto">
 
                         {{-- FILTER --}}
-                        <div class="flex space-x-4 mt-4">
+                        <div class="flex space-x-4 my-4">
                             {{-- category --}}
                             <div class="filter-dropdown">
                                 <select id="categoryFilter" class="block w-52 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Category">
@@ -74,6 +74,10 @@
                                 </select>
                             </div>
 
+                            {{-- Searchbox --}}
+                            <div class="w-full">
+                                <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
+                            </div>
                         </div>
 
                         {{-- TABLE --}}
@@ -160,6 +164,7 @@
         $(document).ready(function() {
             var table = $('#mannequinsTable').DataTable({
                 lengthChange: false,
+                "dom": 'lrtip'
             });
 
             // Handle "select all" checkbox
@@ -185,6 +190,11 @@
                     .search(company)
                     .draw();
             });
+
+            // Custom search input handler using input event
+            $('#customSearchInput').keyup(function(){
+                table.search( $(this).val() ).draw() ;
+            })
 
             // Trigger initial filter changes after DataTable initializes(from dashboard)
             $('#categoryFilter').trigger('change');
@@ -218,6 +228,7 @@
             });
         @endif
     </script>
+    {{-- Sweeet Alert for delete --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const deleteButtons = document.querySelectorAll('.btn-delete');

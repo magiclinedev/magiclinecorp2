@@ -9,29 +9,59 @@
         </h2>
     </x-slot>
 
-    <div class="container mx-auto p-4">
+    {{-- LOGIN LIST TABLE --}}
+    <div class="py-2">
+        <div class="max-w-7xl mx-auto sm:px-3 lg:px-8">
+            <div class="bg-white shadow-md rounded-lg auto px-4 py-6">
 
-        <div class="bg-white shadow-md rounded-lg overflow-x-auto px-4 py-6">
-            <table id="auditTrailTable" class="w-full table-auto border-collapse border">
-                <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
-                    <tr>
-                        <th class="px-5 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold uppercase tracking-wider">User ID</th>
-                        <th class="px-5 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold uppercase tracking-wider">User Status</th>
-                        <th class="px-5 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold uppercase tracking-wider">Activity</th>
-                        <th class="px-5 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold uppercase tracking-wider">Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($audits as $audit)
-                    <tr>
-                        <td class="px-4 py-2 border">{{ $audit->user->name }}</td>
-                        <td class="px-4 py-2 border">{{ $audit->user->status }}</td>
-                        <td class="px-4 py-2 border">{{ $audit->activity }}</td>
-                        <td class="px-4 py-2 border">{{ $audit->created_at }}</td>
-                    </tr>
+                <div class="flex space-x-4 mb-4">
+                    {{-- STATUS--}}
+                    <div class="filter-dropdown">
+                        <select id="categoryFilter" class="block w-52 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Category">
+                            <option value="">All Status/Role</option>
+                            <option value="Admin 1">Admin 1</option>
+                            <option value="Admin 2">Admin 2</option>
+                            <option value="Viewer">Viewer</option>
+                            <option value="Owner">Owner</option>
+                        </select>
+                    </div>
+
+                    {{-- Searchbox --}}
+                    <div class="w-full mb-4">
+                        <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
+                    </div>
+                </div>
+
+                <table id="auditTrailTable" class="w-full table-auto border-collapse border">
+                    <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
+                        <tr>
+                            <th class="px-5 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold uppercase tracking-wider">User ID</th>
+                            <th class="px-5 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold uppercase tracking-wider">Activity</th>
+                            <th class="px-5 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold uppercase tracking-wider">Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($audits as $audit)
+                        <tr>
+                            <td class="px-4 py-2 border">{{ $audit->name }}</td>
+                            <td class="px-4 py-2 border">{{ $audit->activity }}</td>
+                            <td class="px-4 py-2 border">{{ $audit->created_at }}</td>
+                        </tr>
                     @endforeach
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+                <div class="mt-4">
+                    @if ($audits instanceof Illuminate\Pagination\LengthAwarePaginator)
+                        <a href="{{ route('audit-trail', ['showAll' => 1]) }}" class="text-blue-500 hover:underline">
+                            View All Records
+                        </a>
+                    @else
+                        <a href="{{ route('audit-trail') }}" class="text-blue-500 hover:underline">
+                            Paginated View
+                        </a>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 
@@ -41,12 +71,26 @@
     <script>
         $(document).ready(function() {
             var table = $('#auditTrailTable').DataTable({
-                lengthChange: false,
-                order: [[3, "desc"]] // Set default sorting order for timestamp column (index 2) to ascending
+                order: [[2, 'desc']], // Order by timestamp column (index 3) in descending order,
+                lengthChange: false, // Disable the "Show x entries" dropdown
+                "dom": 'lrtip'
             });
+
+             // Custom search input handler using input event
+            $('#customSearchInput').keyup(function(){
+                table.search( $(this).val() ).draw() ;
+            })
+
+            // Handle category filter change
+            $('#categoryFilter').on('change', function() {
+                var category = $(this).val();
+                table.column(1) // Category column index (0-based)
+                    .search(category)
+                    .draw();
+            });
+
         });
     </script>
-
 
     {{-- SweetAlert --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>

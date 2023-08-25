@@ -52,6 +52,7 @@ class AuthenticatedSessionController extends Controller
     {
         $log = new ActivityLog;
         $log->user_id = $user->id;
+        $log->name = $user->name;
         $log->activity = $activity;
         // $log->timestamp = $timestamp;
         $log->save();

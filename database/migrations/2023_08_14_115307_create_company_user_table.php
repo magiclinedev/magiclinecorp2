@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('company_id');
-            $table->Integer('checkPrice');//1=true, null=false
+            $table->Integer('checkPrice')->nullable();//1=true, null=false
+            // $table->string('addedBy');
 
             $table->timestamps();
 

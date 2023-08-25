@@ -12,42 +12,52 @@
 
                 <!-- Navigation Links -->
 
+                {{-- Dashboard/Home --}}
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Home') }}
                     </x-nav-link>
                 </div>
 
+                {{-- Products/Collection --}}
                 @if(Auth::user()->status != 4)
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     <x-nav-link :href="route('collection')" :active="request()->routeIs('collection')">
                         {{ __('Products') }}
                     </x-nav-link>
                 </div>
+                @endif
 
-                @if(Auth::user()->status == 1)
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('company')" :active="request()->routeIs('company')">
-                        {{ __('Company') }}
-                    </x-nav-link>
-                </div>
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('users')" :active="request()->routeIs('users')">
-                        {{ __('Users') }}
-                    </x-nav-link>
-                </div>
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('audit-trail')" :active="request()->routeIs('audit-trail')">
-                        {{ __('Audit Trail') }}
-                    </x-nav-link>
-                </div>
+                {{-- Nav for company, users, Audit Trail Viewers(admin1 and owner(4) 4 can only see users ) --}}
+                @if(Auth::user()->status == 1 || Auth::user()->status == 4)
+                    @if(Auth::user()->status != 4)
+                    <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                        <x-nav-link :href="route('company')" :active="request()->routeIs('company')">
+                            {{ __('Company') }}
+                        </x-nav-link>
+                    </div>
+                    @endif
+                    <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                        <x-nav-link :href="route('users')" :active="request()->routeIs('users')">
+                            {{ __('Users') }}
+                        </x-nav-link>
+                    </div>
+                    @if(Auth::user()->status != 4)
+                    <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                        <x-nav-link :href="route('audit-trail')" :active="request()->routeIs('audit-trail')">
+                            {{ __('Audit Trail') }}
+                        </x-nav-link>
+                    </div>
+                    @endif
                 @endif
-                @endif
+
+
                 @if(Auth::user()->status != 3) <!-- Not Viewer -->
                 @if(Auth::user()->status != 2)
 
                 @endif
                 @endif
+
             </div>
 
             <!-- Settings Dropdown -->
@@ -96,7 +106,7 @@
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
+    <!-- Responsive Navigation Menu(FOR HAMBURGER MENU)-->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
 
@@ -108,17 +118,24 @@
             <x-responsive-nav-link :href="route('collection')" :active="request()->routeIs('collection')">
                 {{ __('Collection') }}
             </x-responsive-nav-link>
-
-            @if(Auth::user()->status == 1)
-            <x-responsive-nav-link :href="route('company')" :active="request()->routeIs('company')">
-                {{ __('Company') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('users')" :active="request()->routeIs('users')">
-                {{ __('Users') }}
-            </x-responsive-nav-link>
-
             @endif
+
+            @if(Auth::user()->status == 1 || Auth::user()->status == 4)
+                @if(Auth::user()->status != 4)
+                <x-responsive-nav-link :href="route('company')" :active="request()->routeIs('company')">
+                    {{ __('Company') }}
+                </x-responsive-nav-link>
+                @endif
+                <x-responsive-nav-link :href="route('users')" :active="request()->routeIs('users')">
+                    {{ __('Users') }}
+                </x-responsive-nav-link>
+                @if(Auth::user()->status != 4)
+                <x-responsive-nav-link :href="route('audit-trail')" :active="request()->routeIs('audit-trail')">
+                    {{ __('Audit Trail') }}
+                </x-responsive-nav-link>
+                @endif
             @endif
+
             @if(Auth::user()->status != 3) <!-- Not Viewer -->
             @if(Auth::user()->status != 2)
 

@@ -96,7 +96,7 @@
                 {{-- USERS --}}
                 @can('super_admin', Auth::user())
                 <div class="w-full sm:w-1/5 p-4 ">
-                    <a href="#" class="block text-center relative overflow-hidden group">
+                    <a href="users" class="block text-center relative overflow-hidden group">
                         <!-- Content for the first square -->
                         <div class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800 rounded-md">
                             <div class="relative">
@@ -129,70 +129,113 @@
                 </div>
                 @endcan
 
+                {{-- TABLE (for owner) --}}
                 @can('owner', Auth::user())
-                <div id="tableContainer" class="w-full sm:w-full p-4" style="display: none;">
-                {{-- TABLE --}}
-                <table id="mannequinsTable" class="w-full table-auto border-collapse border">
-                    <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
-                        <tr>
-                            <th class="px-4 py-2 border">
-                                <input type="checkbox" id="selectAllCheckbox">
-                            </th>
-                            <th class="px-4 py-2 border">Image</th>
-                            <th class="px-4 py-2 border">Item Reference</th>
-                            <th class="px-4 py-2 border">Company</th>
-                            <th class="px-4 py-2 border">Category</th>
-                            <th class="px-4 py-2 border">Type</th>
-                            <th class="px-4 py-2 border">Action By</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($mannequins as $mannequin)
-                            @if ($mannequin->activeStatus != 0)
-                                <tr class="border">
-                                    <td class="px-4 py-2 border">
-                                        <!-- Add the checkbox input here -->
-                                        <input type="checkbox" class=" row-checkbox center pb-4">
-                                    </td>
-                                    <td class="px-4 py-2 border">
-                                        @php
-                                            // Split the image paths string into an array
-                                            $imagePaths = explode(',', $mannequin->images);
-                                            // Get the first image path from the array
-                                            $firstImagePath = $imagePaths[0] ?? null;
-                                        @endphp
-                                        @if ($firstImagePath)
-                                            <img src="{{ asset('storage/' . $firstImagePath) }}" alt="Mannequin Photo" width="100">
-                                        @else
-                                            No Image
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-2 border itemref-cell">
-                                        <span class="itemref-text">{{ $mannequin->itemref }}</span>
-                                        {{-- HOVER to show read, update, and delete --}}
-                                        <div class="action-buttons">
+                <div id="tableContainer" class="bg-white overflow-hidden shadow-sm sm:rounded-lg w-full sm:w-full p-4" style="display: none;">
 
-                                            <a href="{{ route('collection.view_prod', ['encryptedId' => Crypt::encrypt($mannequin->id)]) }}" class="btn-view">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
-                                            {{-- Admin --}}
-                                            <a href="{{ route('collection.edit', ['id' => $mannequin->id]) }}" class="btn-view">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </a>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-2 border">{{ $mannequin->company }}</td>
-                                    <td class="px-4 py-2 border">{{ $mannequin->category }}</td>
-                                    <td class="px-4 py-2 border">{{ $mannequin->type }}</td>
-                                    <td class="px-4 py-2 border">{{ $mannequin->addedBy }}</td>
-                                </tr>
-                            @endif
-                        @endforeach
-                    </tbody>
-                </table>
+                    <div class="flex space-x-4 mb-4">
+                        {{-- company FILTER --}}
+                        <div class="filter-dropdown flex-1">
+                            <select id="companyFilter" class="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
+                                <option value="">All Companies</option>
+                                @foreach ($companies as $company)
+                                    <option value="{{ $company->name }}">{{ $company->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- category FILTER --}}
+                        <div class="filter-dropdown flex-1">
+                            <select id="categoryFilter" class="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Category">
+                                <option value="">Categories</option>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category->name }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Searchbox --}}
+                        <div class="w-1/2">
+                            <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
+                        </div>
+
+                        {{-- Trashcan Button --}}
+                        @if ($mannequins->contains('activeStatus', 0))
+                            <div class="pt-2">
+                                <a href="{{ route('collection.trashcan') }}" class="text-gray-800 hover:text-gray-600">
+                                    <i class="fas fa-trash-alt"></i> Trash
+                                    <span class="badge">{{ $mannequins->where('activeStatus', 0)->count() }}</span>
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- TABLE --}}
+                    <table id="mannequinsTable" class="w-full table-auto border-collapse border">
+                        <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
+                            <tr>
+                                <th class="px-4 py-2 border">
+                                    <input type="checkbox" id="selectAllCheckbox">
+                                </th>
+                                <th class="px-4 py-2 border">Image</th>
+                                <th class="px-4 py-2 border">Item Reference</th>
+                                <th class="px-4 py-2 border">Company</th>
+                                <th class="px-4 py-2 border">Category</th>
+                                <th class="px-4 py-2 border">Type</th>
+                                <th class="px-4 py-2 border">Action By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($mannequins as $mannequin)
+                                @if ($mannequin->activeStatus != 0)
+                                    <tr class="border">
+                                        <td class="px-4 py-2 border">
+                                            <!-- Add the checkbox input here -->
+                                            <input type="checkbox" class=" row-checkbox center pb-4">
+                                        </td>
+                                        <td class="px-4 py-2 border">
+                                            @php
+                                                // Split the image paths string into an array
+                                                $imagePaths = explode(',', $mannequin->images);
+                                                // Get the first image path from the array
+                                                $firstImagePath = $imagePaths[0] ?? null;
+                                            @endphp
+                                            @if ($firstImagePath)
+                                                <img src="{{ asset('storage/' . $firstImagePath) }}" alt="Mannequin Photo" width="100">
+                                            @else
+                                                No Image
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-2 border itemref-cell">
+                                            <span class="itemref-text">{{ $mannequin->itemref }}</span>
+                                            {{-- HOVER to show read, update, and delete --}}
+                                            <div class="action-buttons">
+
+                                                <a href="{{ route('collection.view_prod', ['encryptedId' => Crypt::encrypt($mannequin->id)]) }}" class="btn-view">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                                {{-- Admin --}}
+                                                <a href="{{ route('collection.edit', ['id' => $mannequin->id]) }}" class="btn-view">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                                <button class="btn-delete"data-transfer-url="{{ route('collection.trash', ['id' => $mannequin->id]) }}">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-2 border">{{ $mannequin->company }}</td>
+                                        <td class="px-4 py-2 border">{{ $mannequin->category }}</td>
+                                        <td class="px-4 py-2 border">{{ $mannequin->type }}</td>
+                                        <td class="px-4 py-2 border">{{ $mannequin->addedBy }}</td>
+                                    </tr>
+                                @endif
+                            @endforeach
+                        </tbody>
+                    </table>
                 {{-- END TABLE --}}
                 </div>
                 @endcan
+
             </div>
         </div>
     </div>
@@ -204,36 +247,69 @@
         $(document).ready(function() {
             var table = $('#mannequinsTable').DataTable({
                 lengthChange: false,
+                "dom": 'lrtip'
             });
 
-             // showAllProducts
-             $('.showAllProducts').on('click', function(event) {
+            // Handle company filter(ON TOP OF TABLE)
+            $('#companyFilter').on('change', function() {
+                var company = $(this).val();
+                table.column(3).search(company).draw();
+            });
+
+            // Handle category filter change(on table)
+            $('#categoryFilter').on('change', function() {
+                var category = $(this).val();
+                table.column(4).search(category).draw();
+            });
+
+            // Show All Products button
+            $('.showAllProducts').on('click', function(event) {
                 event.preventDefault();
-                $('#tableContainer').show(); // Show the table container
-
-                // Clear existing search/filtering and draw the original table
-                var table = $('#mannequinsTable').DataTable();
+                $('#tableContainer').show();
                 table.search('').columns().search('').draw();
+                $('#companyFilter').val('');
+                $('#customSearchInput').val(''); // Clear custom search input
+                scrollToElement('tableContainer');
             });
 
-            // Handle company filter change
+              // Handle "select all" checkbox
+              $('#selectAllCheckbox').on('change', function() {
+                var isChecked = this.checked;
+                $('td input.row-checkbox').each(function() {
+                    this.checked = isChecked;
+                });
+            });
+
+            // Company Filter links
             $('.companyFilter').on('click', function(event) {
                 event.preventDefault();
-
                 var company = $(this).data('company');
-
-                // Clear existing search and apply new company filter
-                table.search('').draw(); // Clear any previous search
-                table.column(3) // Company column index (0-based)
-                    .search(company)
-                    .draw();
+                table.search('').draw();
+                table.column(3).search(company).draw();
+                $('#companyFilter').val(company);
+                $('#customSearchInput').val(''); // Clear custom search input
+                scrollToElement('tableContainer');
             });
 
-            //Show table
+            // Show Table button
             $('.show-table-button').on('click', function(event) {
                 event.preventDefault();
-                $('#tableContainer').show(); // Show the table container
+                $('#tableContainer').show();
+                scrollToElement('tableContainer');
             });
+
+            // Custom search input handler using input event
+            $('#customSearchInput').keyup(function(){
+            table.search( $(this).val() ).draw() ;
+            })
+
+            // Scroll function
+            function scrollToElement(elementId) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
         });
     </script>
 
@@ -262,5 +338,52 @@
                 cancelButtonColor: '#d33',
             });
         @endif
+    </script>
+    {{-- Sweet Alert for Delete --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const recordId = this.getAttribute('data-id');
+                    const transferUrl = this.getAttribute('data-transfer-url');
+
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: 'You won\'t be able to revert this!',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Perform AJAX request to delete the record
+                            axios.post(transferUrl)
+                                 .then(response => {
+                                     if (response.data.success) {
+                                         Swal.fire(
+                                             'Deleted!',
+                                             'Your record has been deleted.',
+                                             'success'
+                                         ).then(() => {
+                                             // Refresh the page after successful deletion
+                                             window.location.reload();
+                                         });
+                                     }
+                                 })
+                            .catch(error => {
+                                Swal.fire(
+                                    'Error!',
+                                    'An error occurred while deleting the record.',
+                                    'error'
+                                );
+                            });
+                        }
+                    });
+                });
+            });
+        });
     </script>
 </x-app-layout>

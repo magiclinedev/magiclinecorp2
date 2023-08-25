@@ -25,6 +25,7 @@ class LogUserActivity
     {
         $log = new AuditTrail;
         $log->user_id = $user->id;
+        $log->name= $user->name;
         $log->activity = $activity;
         $log->save();
     }
