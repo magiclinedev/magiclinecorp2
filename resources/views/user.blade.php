@@ -10,10 +10,11 @@
     </x-slot>
     {{-- START MAIN --}}
     <div class="container mx-auto px-4 py-8">
-        <div class="max-w-auto mx-auto sm:px-3 lg:px-8">
-            <div class="flex space-x-4">
-                {{-- START Form for adding users --}}
-                <form method="POST" action="{{ route('users.add') }}" class="bg-white shadow-md rounded-lg px-8 py-6 w-1/2">
+        <div class="flex flex-col space-y-4 md:flex-row md:space-y-0">
+
+            {{-- START Form for adding users --}}
+            <div class="bg-white shadow-md rounded-lg p-4 md:w-2/5">
+                <form method="POST" action="{{ route('users.add') }}" enctype="multipart/form-data">
                     @csrf
                     {{-- Name --}}
                     <div class="mb-4">
@@ -94,84 +95,83 @@
                         </button>
                     </div>
                 </form>
-                {{-- END FORM --}}
-                <br>
-
-                {{-- START USer TABLE --}}
-                <div class="bg-white shadow-md rounded-lg px-8 py-6 w-full">
-                    {{-- Searchbox --}}
-                    <div class="w-full">
-                        <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
-                    </div>
-                    {{-- table --}}
-                    <table id="usersTable" class="w-full border-collapse pt-6">
-                        <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
-                            <tr>
-                                <th class="px-4 py-2 border">Name</th>
-                                <th class="px-4 py-2 border">Status</th>
-                                <th class="px-4 py-2 border">Company</th>
-                                <th class="px-4 py-2 border">Set By</th>
-                                <th class="px-4 py-2 border">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($users as $user)
-                                <tr class="border">
-                                    <td class="px-4 py-2 border">{{ $user->name }}</td>
-                                    <td class="px-4 py-2 border" style="{{ $user->activeStatus == 0 ? 'color: red;' : '' }}">
-                                        @if ($user->status == 1)
-                                            Admin 1 / Super Admin
-                                        @elseif ($user->status == 2)
-                                            Admin 2
-                                        @elseif ($user->status == 4)
-                                            Owner
-                                        @else
-                                            Viewer
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-2 border">
-                                        @if ($user->status == 1 || $user->status == 4)
-                                            All
-                                        @else
-                                            @foreach ($user->companies as $company)
-                                                {{ $company->name }}
-                                                @unless($loop->last)
-                                                , {{-- Add a comma unless it's the last company --}}
-                                                @endunless
-                                            @endforeach
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-2 border">{{ $user->addedBy }}</td>
-                                    <td class="px-4 py-2 border">
-                                        {{-- If User is inactive --}}
-                                        @if ($user->activeStatus == 0)
-                                            {{-- <button class="btn-edit">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </button> --}}
-                                            <button class="btn-active" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.restore', ['id' => $user->id]) }}">
-                                                <i class="fas fa-check"></i> Active
-                                            </button>
-                                            <button class="btn-delete" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.trash', ['id' => $user->id]) }}">
-                                                <i class="fas fa-trash-alt"></i> Delete
-                                            </button>
-                                        {{-- else --}}
-                                        @else
-                                            {{-- <button class="btn-edit">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </button> --}}
-                                            <button class="btn-delete" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.trash', ['id' => $user->id]) }}">
-                                                <i class="fas fa-bullseye"></i> Deactivate
-                                            </button>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                {{-- END table --}}
-
             </div>
+            {{-- END FORM --}}
+
+            {{-- CompanyList --}}
+            <div class="bg-white shadow-md rounded-lg p-4 w-full md:w-full">
+                {{-- Searchbox --}}
+                <div class="w-full">
+                    <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
+                </div>
+                {{-- table --}}
+                <table id="usersTable" class="w-full border-collapse pt-6">
+                    <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
+                        <tr>
+                            <th class="px-4 py-2 border">Name</th>
+                            <th class="px-4 py-2 border">Status</th>
+                            <th class="px-4 py-2 border">Company</th>
+                            <th class="px-4 py-2 border">Set By</th>
+                            <th class="px-4 py-2 border">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($users as $user)
+                            <tr class="border">
+                                <td class="px-4 py-2 border">{{ $user->name }}</td>
+                                <td class="px-4 py-2 border" style="{{ $user->activeStatus == 0 ? 'color: red;' : '' }}">
+                                    @if ($user->status == 1)
+                                        Admin 1 / Super Admin
+                                    @elseif ($user->status == 2)
+                                        Admin 2
+                                    @elseif ($user->status == 4)
+                                        Owner
+                                    @else
+                                        Viewer
+                                    @endif
+                                </td>
+                                <td class="px-4 py-2 border">
+                                    @if ($user->status == 1 || $user->status == 4)
+                                        All
+                                    @else
+                                        @foreach ($user->companies as $company)
+                                            {{ $company->name }}
+                                            @unless($loop->last)
+                                            , {{-- Add a comma unless it's the last company --}}
+                                            @endunless
+                                        @endforeach
+                                    @endif
+                                </td>
+                                <td class="px-4 py-2 border">{{ $user->addedBy }}</td>
+                                <td class="px-4 py-2 border">
+                                    {{-- If User is inactive --}}
+                                    @if ($user->activeStatus == 0)
+                                        {{-- <button class="btn-edit">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button> --}}
+                                        <button class="btn-active" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.restore', ['id' => $user->id]) }}">
+                                            <i class="fas fa-check"></i> Active
+                                        </button>
+                                        <button class="btn-delete" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.trash', ['id' => $user->id]) }}">
+                                            <i class="fas fa-trash-alt"></i> Delete
+                                        </button>
+                                    {{-- else --}}
+                                    @else
+                                        {{-- <button class="btn-edit">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button> --}}
+                                        <button class="btn-delete" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.trash', ['id' => $user->id]) }}">
+                                            <i class="fas fa-bullseye"></i> Deactivate
+                                        </button>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            {{-- END table --}}
+
         </div>
     </div>
     {{-- END MAIN --}}
@@ -198,8 +198,7 @@
 
     {{-- script for company checkbox and price access --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function ()
-        {
+        document.addEventListener('DOMContentLoaded', function () {
             const selectAllCheckbox = document.getElementById('select-all-companies');
             const companyCheckboxes = document.querySelectorAll('.company-checkbox');
             const selectedCompaniesDiv = document.getElementById('selected-companies');
@@ -249,8 +248,7 @@
             }
 
             // FOR HIDING THE CHECKBOX WHEN ADMIN 1 or Owner is selected
-            statusDropdown.addEventListener('change', function()
-            {
+                statusDropdown.addEventListener('change', function() {
                 const selectedStatus = this.value;
 
                 // Show/hide the sections based on the selected status
@@ -260,6 +258,8 @@
                     companyAccessSection.style.display = 'block';
                 }
             });
+
+
         });
     </script>
 

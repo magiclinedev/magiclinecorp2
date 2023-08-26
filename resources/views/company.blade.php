@@ -9,53 +9,73 @@
         </h2>
     </x-slot>
     <div class="container mx-auto px-4 py-8">
-    <div class="max-w-auto mx-auto sm:px-3 lg:px-8">
-    <div class="flex space-x-4">
-        <div class="bg-white shadow-md rounded-lg px-8 py-6 w-full">
-            <form action="{{ route('company.add') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('POST') <!-- Add this line to specify the method -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2">
-                        <label for="company" class="block font-bold mb-2">Company</label>
-                        <input type="text" name="company" id="company" class="w-full border rounded-md py-2 px-3" placeholder="Enter company name">
-                    </div>
-                    {{-- images --}}
-                    <div class="col-span-2">
-                        <label for="images" class="block font-bold mb-2">Images</label>
-                        <input type="file" name="images" id="images" class="w-full border rounded-md py-2 px-3">
-                    </div>
-                </div>
-                <button type="submit" class="mt-4 mb-10 inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                    Add Company
-                </button>
-            </form>
-        </div>
-        <div class="bg-white shadow-md rounded-lg px-8 py-6 w-full">
-            <table id="categoriesTable" class="w-full table-auto border-collapse border rounded-lg px-8 py-6">
-                <thead class>
-                    <tr>
-                        <th class="px-4 py-2 border">Logo</th>
-                        <th class="px-4 py-2 border">Name</th>
-                        <th class="px-4 py-2 border">Added By</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($company as $company)
-                        <tr class="border">
-                            <td class="px-4 py-2 border">
-                                <img src="{{ asset('storage/' . $company->images) }}" alt="Company logo" width="100">
-                            </td>
-                            <td class="px-4 py-2 border">{{ $company->name }}</td>
-                            <td class="px-4 py-2 border">{{ $company->addedBy }}</td>
+        <div class="flex flex-col space-y-4 md:flex-row md:space-y-0">
+
+            {{-- Add COmpany --}}
+            <div class="bg-white shadow-md rounded-lg p-4 w-auto md:w-1/3">
+                <form action="{{ route('company.add') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    @method('POST') <!-- Add this line to specify the method -->
+                    <label for="company" class="block font-bold mb-2">Company</label>
+                    <input type="text" name="company" id="company" class="w-full border rounded-md py-2 px-3" placeholder="Enter company name">
+
+                    <label for="images" class="block font-bold mt-4 mb-2">Images</label>
+                    <input type="file" name="images" id="images" class="w-full border rounded-md py-2 px-3">
+
+                    <button type="submit" class="mt-4 bg-gray-800 text-white rounded-md py-2 px-4 font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                        Add Company
+                    </button>
+                </form>
+            </div>
+
+            {{-- CompanyList --}}
+            <div class="bg-white shadow-md rounded-lg p-4 w-full md:w-full">
+                {{-- search box --}}
+                <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm mb-4" placeholder="Search...">
+                {{-- Table --}}
+                <table id="categoriesTable" class="w-full border-collapse">
+                    <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
+                        <tr>
+                            <th class="px-4 py-2 border">Logo</th>
+                            <th class="px-4 py-2 border">Name</th>
+                            <th class="px-4 py-2 border">Added By</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach ($company as $company)
+                            <tr class="border">
+                                <td class="px-4 py-2 border">
+                                    <img src="{{ asset('storage/' . $company->images) }}" alt="Company logo" width="100">
+                                </td>
+                                <td class="px-4 py-2 border">{{ $company->name }}</td>
+                                <td class="px-4 py-2 border">{{ $company->addedBy }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
         </div>
     </div>
-    </div>
-    </div>
+
+    {{-- START SCRIPTS --}}
+    {{-- DATA TABLES --}}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var table = $('#categoriesTable').DataTable({
+                lengthChange: false,
+                "dom": 'lrtip'
+            });
+
+             // Custom search input handler using input event
+             $('#customSearchInput').keyup(function(){
+                table.search( $(this).val() ).draw() ;
+            })
+
+        });
+    </script>
 
     {{-- SweetAlert --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>

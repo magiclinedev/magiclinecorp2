@@ -15,17 +15,6 @@
             <div class="bg-white shadow-md rounded-lg auto px-4 py-6">
 
                 <div class="flex space-x-4 mb-4">
-                    {{-- STATUS--}}
-                    <div class="filter-dropdown">
-                        <select id="categoryFilter" class="block w-52 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Category">
-                            <option value="">All Status/Role</option>
-                            <option value="Admin 1">Admin 1</option>
-                            <option value="Admin 2">Admin 2</option>
-                            <option value="Viewer">Viewer</option>
-                            <option value="Owner">Owner</option>
-                        </select>
-                    </div>
-
                     {{-- Searchbox --}}
                     <div class="w-full mb-4">
                         <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
@@ -80,14 +69,6 @@
             $('#customSearchInput').keyup(function(){
                 table.search( $(this).val() ).draw() ;
             })
-
-            // Handle category filter change
-            $('#categoryFilter').on('change', function() {
-                var category = $(this).val();
-                table.column(1) // Category column index (0-based)
-                    .search(category)
-                    .draw();
-            });
 
         });
     </script>

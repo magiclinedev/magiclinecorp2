@@ -29,21 +29,25 @@ class CollectionController extends Controller
     // FILTER FOR USERS
     public function __construct()
     {
-        // Define gates here
+        // Admins can view
         Gate::define('admin_access', function ($user) {
             return in_array($user->status, [1, 2]);
         });
+        // admin 1 and owner
         Gate::define('super_admin', function ($user) {
             return in_array($user->status, [1, 4]);
         });
+        // owner view
         Gate::define('owner', function ($user) {
             return in_array($user->status, [4]);
         });
+        // users can view except owner
         Gate::define('users', function ($user) {
             return in_array($user->status, [1, 2, 3]);
         });
     }
 
+    //Collection View
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -70,7 +74,7 @@ class CollectionController extends Controller
         ]);
     }
 
-    //AddedBy User
+    //AddedBy User(used for all not just added by)
     private function setActionBy($model, $action)
     {
         if (Auth::check()) {
@@ -374,10 +378,8 @@ class CollectionController extends Controller
             $this->setActionBy($mannequin, 'Deleted');
             $mannequin->save();
 
-
             return response()->json(['success' => true]);
         }
-
         return response()->json(['success' => false]);
     }
 
@@ -410,7 +412,7 @@ class CollectionController extends Controller
             $mannequin->update(['activeStatus' => 1]);
             return redirect()->route('collection')->with('success_message', 'Item restored successfully.');
         } else {
-            return redirect()->route('collection')->with('danger_message', 'Item is not deleted.');
+            return redirect()->route('collection')->with('danger_message', 'Item is not restored.');
         }
         return redirect()->back()->with('error', 'An error occurred while restoring the item.');
     }
@@ -430,12 +432,11 @@ class CollectionController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput()->with('danger_message', 'Duplicate/No input');
+            return redirect()->back()->withErrors($validator)->withInput()->with('danger_message', 'Duplicate/No Input');
         }
 
         $category = new Category();
         $category->name = strtoupper($request->category);
-
 
         // Automatically set the 'addedBy' field with the authenticated user's name
         if (Auth::check()) {
@@ -445,7 +446,6 @@ class CollectionController extends Controller
         }
 
         $category->save();
-
 
         return redirect()->route('collection.category')->with('success_message', 'Category added successfully!');
     }
@@ -461,7 +461,6 @@ class CollectionController extends Controller
 
         return response()->json(['success' => true]);
     }
-
 
     // SHOW TYPE MODULE
     public function type()
@@ -484,7 +483,6 @@ class CollectionController extends Controller
         $type = new type();
         $type->name = strtoupper($request->type);
 
-
         // Automatically set the 'addedBy' field with the authenticated user's name
         if (Auth::check()) {
             $user = Auth::user()->name;
@@ -494,10 +492,10 @@ class CollectionController extends Controller
 
         $type->save();
 
-
         return redirect()->route('collection.type')->with('success_message', 'type added successfully!');
     }
 
+    //Audit Trail
     // public function logAuditTrail($user, $activity)
     // {
     //     $log = new AuditTrail;

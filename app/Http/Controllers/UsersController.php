@@ -14,6 +14,7 @@ use Carbon\Carbon;
 
 class UsersController extends Controller
 {
+    //User View
     public function index()
     {
         $users = User::with('companies')->get();
@@ -37,42 +38,50 @@ class UsersController extends Controller
     //add user
     public function store(Request $request)
     {
-        $user = Auth::user();
-        $addedByInfo = $this->getAddedByInfo('Added', $user);
+        try {
+            $user = Auth::user();
+            $addedByInfo = $this->getAddedByInfo('Added', $user);
 
-        // dd($request);
-        $user = User::create([
-            'name' => $request->name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'status' => $request->status,
-            'activeStatus' => "1",
-            'addedBy' => $addedByInfo,
-        ]);
-        // $this->setActionBy($user, 'Added');
+            // Create user
+            $user = User::create([
+                'name' => $request->name,
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'status' => $request->status,
+                'activeStatus' => "1",
+                'addedBy' => $addedByInfo,
+            ]);
 
-        if($request->status == 1 || $request->status == 4)
-        {
-            // Redirect or do something else after successful registration
-            return redirect()->route('users')->with('success_message', 'User created successfully.');
-
-        }
-        else
-        {
-            // Attach selected companies to the user
-            $user->companies()->attach($request->input('company_ids'));
-
-            // Update checkPrice value for each selected company
-            foreach ($request->input('selected_company_ids') as $companyId) {
-                $user->companies()->updateExistingPivot($companyId, ['checkPrice' => 1]);
+            // Check user creation and handle accordingly
+            if (!$user) {
+                throw new \Exception('Failed to create user');
             }
-            // Redirect or do something else after successful registration
-            return redirect()->route('users')->with('success_message', 'User created successfully.');
+
+            // Handle different user statuses
+            if ($request->status == 1 || $request->status == 4)
+            {
+                return redirect()->route('users')->with('success_message', 'User created successfully.');
+            }
+            else
+            {
+                // Attach selected companies to the user
+                $user->companies()->attach($request->input('company_ids'));
+
+                // Update checkPrice value for each selected company (company_user table)
+                foreach ($request->input('selected_company_ids') as $companyId) {
+                    $user->companies()->updateExistingPivot($companyId, ['checkPrice' => 1]);
+                }
+
+                return redirect()->route('users')->with('success_message', 'User created successfully.');
+            }
+        } catch (\Exception $e) {
+            // Handle the error by redirecting back with an error message
+            return redirect()->back()->with('danger_message', 'Failed to create user. Please try again.');
         }
     }
 
-    //delete user
+    //delete user(Deactivate/Delete permanently)
     public function trash($id)
     {
         $user = Auth::user();
@@ -86,9 +95,9 @@ class UsersController extends Controller
 
             // Permanently delete user with activeStatus 0
             $user->delete();
-            return response()->json(['success' => true, 'message' => 'User is Deleted']); // Change this line
+            return response()->json(['success' => true, 'message' => 'User is Deleted']);
         } else {
-            // Change the active activeStatus to 0 for users with activeStatus other than 0
+            // Make active users inactive user with activeStatus 1 to 0
             $user->activeStatus = 0;
             $user->addedBy = $addedByInfo;
             $user->save();
@@ -96,7 +105,7 @@ class UsersController extends Controller
         }
     }
 
-    // Restore user(to viewer only)
+    // Restore user
     public function restore($id)
     {
         $user = Auth::user();
@@ -105,6 +114,7 @@ class UsersController extends Controller
         $user = User::findOrFail($id);
         // Check if the item is actually deleted (activeStatus = 0)
         if ($user->activeStatus == 0) {
+            //activeStatus -> 1 and addedBy to Retored by user
             $user->update(['activeStatus' => 1, 'addedBy' => $addedByInfo]);
             return response()->json(['success' => true]);
         } else {
