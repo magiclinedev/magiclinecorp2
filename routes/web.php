@@ -30,6 +30,13 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'admin-access'])->group(function () {
     // Only Admin 1 can access these routes(and owner i guess)
+    //Trashcan
+    Route::get('/collection-trash', [CollectionController::class, 'trashcan'])->name('collection.trashcan');//view trashcan view
+    Route::post('/collection/{id}', [CollectionController::class, 'trash'])->name('collection.trash');//change activeStatus of product/mannequin to 0
+    Route::get('collection/{id}', [CollectionController::class, 'restore'])->name('collection.restore');//change activeStatus of product/mannequin back to 1
+    Route::get('collection-delete/{id}', [CollectionController::class, 'destroy'])->name('collection.delete');//permanent delete
+    Route::post('/collection/trash-multiple', [CollectionController::class, 'trashMultiple'])->name('collection.trashMultiple');
+
     //users
     Route::get('/users', [UsersController::class, 'index'])->name('users');
     Route::post('/users-add', [UsersController::class, 'store'])->name('users.add');
@@ -64,12 +71,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/collection-store', [CollectionController::class, 'store'])->name('collection.store');//add product
     Route::get('/collection-edit/{id}', [CollectionController::class, 'edit'])->name('collection.edit');//go
     Route::put('/collection-update/{id}', [CollectionController::class, 'update'])->name('collection.update');
-
-    //Trashcan
-    Route::get('/collection-trash', [CollectionController::class, 'trashcan'])->name('collection.trashcan');//view trashcan view
-    Route::post('/collection/{id}', [CollectionController::class, 'trash'])->name('collection.trash');//change activeStatus of product/mannequin to 0
-    Route::get('collection/{id}', [CollectionController::class, 'restore'])->name('collection.restore');//change activeStatus of product/mannequin back to 1
-    Route::get('collection-delete/{id}', [CollectionController::class, 'destroy'])->name('collection.delete');//permanent delete
 
     // Category
     Route::get('/collection-category', [CollectionController::class, 'category'])->name('collection.category');

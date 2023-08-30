@@ -383,6 +383,27 @@ class CollectionController extends Controller
         return response()->json(['success' => false]);
     }
 
+    // DELETE to trashcan multiple collections
+    public function trashMultiple(Request $request)
+    {
+        $ids = $request->input('ids');
+
+        if (!empty($ids)) {
+            foreach ($ids as $id) {
+                $mannequin = Mannequin::find($id);
+
+                if ($mannequin) {
+                    $mannequin->activeStatus = 0;
+                    $this->setActionBy($mannequin, 'Deleted');
+                    $mannequin->save();
+                }
+            }
+            return redirect()->back()->with('success_message', 'Item deleted permanently.');
+        }
+
+        return response()->json(['success' => false]);
+    }
+
     //Delete (PERMANENTLY from database to storage)
     public function destroy($id)
     {

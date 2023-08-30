@@ -48,7 +48,7 @@
                 </div>
 
                 {{-- Add this line to include the CSRF token for DataTables AJAX requests --}}
-                <meta name="csrf-token" content="{{ csrf_token() }}">
+                {{-- <meta name="csrf-token" content="{{ csrf_token() }}"> --}}
                 <div class="overflow-x-auto">
 
                     {{-- FILTER --}}
@@ -77,14 +77,28 @@
                             <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
                         </div>
                     </div>
+                    {{-- BUTTON FOR DELETING SELECTED CHECKBOXES --}}
+                    @can('super_admin', Auth::user())
+                    <div class="filter-dropdown">
+                        <select id="deleteSelectedButton" class="hidden block w-52 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
+                            <option value="">Bulk Action</option>
+                                <option value="delete">Delete Selected Item</option>
+                        </select>
+                    </div>
+                    {{-- <button id="deleteSelectedButton" class="hidden bg-red-500 block w-52 py-2 px-3 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        Delete All
+                    </button> --}}
+                    @endcan
 
                     {{-- TABLE --}}
                     <table id="mannequinsTable" class="w-full table-auto border-collapse border">
                         <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
                             <tr>
+                                @can('super_admin', Auth::user())
                                 <th class="px-4 py-2 border">
                                     <input type="checkbox" id="selectAllCheckbox">
                                 </th>
+                                @endcan
                                 <th class="px-4 py-2 border">Image</th>
                                 <th class="px-4 py-2 border">Item Reference</th>
                                 <th class="px-4 py-2 border">Company</th>
@@ -96,11 +110,13 @@
                         <tbody>
                             @foreach ($mannequins as $mannequin)
                                 @if ($mannequin->activeStatus != 0)
-                                    <tr class="border">
+                                    <tr data-item-id="{{ $mannequin->id }}" class="border">
+                                        @can('super_admin', Auth::user())
                                         <td class="px-7 py-2 border">
                                             <!-- Add the checkbox input here -->
-                                            <input type="checkbox" class=" row-checkbox center pb-4">
+                                            <input type="checkbox" class="row-checkbox center pb-4" data-item-id="{{ $mannequin->id }}" >
                                         </td>
+                                        @endcan
                                         <td class="px-7 py-2 border">
                                             @php
                                                 // Split the image paths string into an array
@@ -156,7 +172,6 @@
     {{-- END content --}}
 
     {{--START scripts --}}
-    {{-- datables --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
     <script>
@@ -172,28 +187,92 @@
                 $('td input.row-checkbox').each(function() {
                     this.checked = isChecked;
                 });
+
+                // Show/hide the "Delete All" button based on the checked status
+                $('#deleteSelectedButton').toggleClass('hidden', !isChecked);
             });
 
-            // Handle category filter change
+            // Listen for checkbox changes
+            $('td input.row-checkbox').on('change', function() {
+                var anyChecked = $('td input.row-checkbox:checked').length > 0;
+                $('#deleteSelectedButton').toggleClass('hidden', !anyChecked);
+
+                // Check/uncheck the "Select All" checkbox based on the checked status
+                var allCheckboxesChecked = $('td input.row-checkbox').length == $('td input.row-checkbox:checked').length;
+                $('#selectAllCheckbox').prop('checked', allCheckboxesChecked);
+            });
+
+            // Handle "Delete All" button click
+            $('#deleteSelectedButton').on('click', function() {
+                console.log('Button clicked');
+
+                var selectedIds = [];
+                $('td input.row-checkbox:checked').each(function() {
+                    selectedIds.push($(this).data('item-id'));
+                });
+                if (selectedIds.length > 0) {
+                    $.ajax({
+                        url: '{{ route('collection.trashMultiple') }}', // Correct route generation
+                        method: 'POST',
+                        data: { ids: selectedIds },
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}' // Include the CSRF token
+
+                        },
+                        success: function(response)
+                        {
+                            console.log('url:', response.url);
+                            console.log('method:', response.method);
+                            console.log('Response:', response.data);
+                            if (response.success) {
+                                console.log('Response:', response.data);
+                                // Refresh the page or update the table as needed
+                                location.reload();
+                            }
+                        }
+                    });
+                }
+            });
+
+            //Category FIlter
             $('#categoryFilter').on('change', function() {
                 var category = $(this).val();
-                table.column(4) // Category column index (0-based)
-                    .search(category)
-                    .draw();
+
+                if ({{ Auth::user()->status }} === 1 || {{ Auth::user()->status }} === 4) {
+                    // Admin 1 or Owner(4) filter logic
+                    table.column(4) // Category column index (0-based)
+                        .search(category)
+                        .draw();
+                } else {
+                    // Other users filter logic
+                    table.column(3) // Category column index (0-based)
+                        .search(category)
+                        .draw();
+                }
             });
 
             // Handle company filter change
             $('#companyFilter').on('change', function() {
                 var company = $(this).val();
-                table.column(3) // company column index (0-based)
-                    .search(company)
-                    .draw();
+
+                if ({{ Auth::user()->status }} === 1 || {{ Auth::user()->status }} === 4) {
+                    // Admin 1 or Owner(4) filter logic
+                    table.column(3) // Company column index (0-based)
+                        .search(company)
+                        .draw();
+                } else {
+                    // Other users filter logic
+                    table.column(2) // Company column index for non-admin users (0-based)
+                        .search(company)
+                        .draw();
+                }
             });
 
             // Custom search input handler using input event
             $('#customSearchInput').keyup(function(){
                 table.search( $(this).val() ).draw() ;
-            })
+            });
 
             // Trigger initial filter changes after DataTable initializes(from dashboard)
             $('#categoryFilter').trigger('change');
@@ -226,9 +305,8 @@
                 cancelButtonColor: '#d33',
             });
         @endif
-    </script>
-    {{-- Sweeet Alert for delete --}}
-    <script>
+
+        // FOR DELETE
         document.addEventListener('DOMContentLoaded', () => {
             const deleteButtons = document.querySelectorAll('.btn-delete');
 
@@ -236,6 +314,9 @@
                 button.addEventListener('click', function() {
                     const recordId = this.getAttribute('data-id');
                     const transferUrl = this.getAttribute('data-transfer-url');
+
+                    console.log('recordId:', recordId);
+                    console.log('transferUrl:', transferUrl);
 
                     Swal.fire({
                         title: 'Are you sure?',
@@ -248,19 +329,21 @@
                     }).then((result) => {
                         if (result.isConfirmed) {
                             // Perform AJAX request to delete the record
-                            axios.post(transferUrl)
-                                 .then(response => {
-                                     if (response.data.success) {
-                                         Swal.fire(
-                                             'Deleted!',
-                                             'Your record has been deleted.',
-                                             'success'
-                                         ).then(() => {
-                                             // Refresh the page after successful deletion
-                                             window.location.reload();
-                                         });
-                                     }
-                                 })
+                            axios.post(transferUrl, {
+                                ids: [recordId] // Send the array of IDs here
+                            })
+                            .then(response => {
+                                if (response.data.success) {
+                                    Swal.fire(
+                                        'Deleted!',
+                                        'Your record has been deleted.',
+                                        'success'
+                                    ).then(() => {
+                                        // Refresh the page after successful deletion
+                                        window.location.reload();
+                                    });
+                                }
+                            })
                             .catch(error => {
                                 Swal.fire(
                                     'Error!',

@@ -40,10 +40,12 @@
                     </tbody>
                 </table>
                 <div class="mt-4">
+                    {{-- all records --}}
                     @if ($audits instanceof Illuminate\Pagination\LengthAwarePaginator)
                         <a href="{{ route('audit-trail', ['showAll' => 1]) }}" class="text-blue-500 hover:underline">
                             View All Records
                         </a>
+                    {{-- last 30 audit trail record (default)  --}}
                     @else
                         <a href="{{ route('audit-trail') }}" class="text-blue-500 hover:underline">
                             Paginated View
@@ -71,44 +73,5 @@
             })
 
         });
-    </script>
-
-    {{-- SweetAlert --}}
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-    <script>
-        @if(session('success_message'))
-            Swal.fire({
-                title: 'Done!',
-                text: '{{ session('success_message') }}',
-                icon: 'success',
-                timer: 3000,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Close'
-            });
-        @elseif(session('danger_message'))
-            Swal.fire({
-                title: 'Invalid Input',
-                text: '{{session('danger_message') }}',
-                icon: 'error',
-                timer: 3000,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-            });
-        @endif
-
-        @if(session('cancel_message'))
-            Swal.fire({
-                title: 'Action Cancelled!',
-                text: '',
-                icon: 'error',
-                timer: 3000,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-            });
-        @endif
     </script>
 </x-app-layout>
