@@ -225,18 +225,19 @@
             });
 
             // WHEN COMPANY IS CHECKED IT WILL VIEW NEW CHECKBOX FOR PRICE ACCESS
-            function handleSelectedCompany(checkbox)
-            {
+            function handleSelectedCompany(checkbox) {
                 const companyName = checkbox.nextElementSibling.textContent.trim();
                 const selectedCompany = Array.from(selectedCompaniesDiv.children).find(el => el.querySelector('.text-gray-700').textContent === companyName);
 
                 if (checkbox.checked) {
                     if (!selectedCompany) {
                         const newSelectedCompany = document.createElement('div');
-                        newSelectedCompany.classList.add('inline-flex', 'mb-1');
+                        newSelectedCompany.classList.add('flex', 'flex-col', 'mb-1'); // Use 'flex' and 'flex-col'
                         newSelectedCompany.innerHTML = `
-                            <input type="checkbox" name="selected_company_ids[]" value="1" class="selected-company-checkbox rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" checked>
-                            <span class="block text-sm font-medium text-gray-700 mx-2">${companyName}</span>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="selected_company_ids[]" value="1" class="selected-company-checkbox rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" checked>
+                                <span class="block text-sm font-medium text-gray-700 mx-2">${companyName}</span>
+                            </label>
                         `;
                         selectedCompaniesDiv.appendChild(newSelectedCompany);
                     }

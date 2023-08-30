@@ -141,12 +141,12 @@
                                                     <i class="fas fa-eye"></i> View
                                                 </a>
                                                 {{-- Admin --}}
-                                                @can('admin_access', $mannequin)
+                                                @can('admin_access', Auth::user())
                                                 <a href="{{ route('collection.edit', ['id' => $mannequin->id]) }}" class="btn-view">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
                                                 @endcan
-                                                @can('super_admin', $mannequin)
+                                                @can('super_admin',Auth::user())
                                                 <button class="btn-delete" data-id="{{ $mannequin->id }}" data-transfer-url="{{ route('collection.trash', ['id' => $mannequin->id]) }}">
                                                     <i class="fas fa-trash-alt"></i> Delete
                                                 </button>

@@ -19,15 +19,15 @@ class BreadcrumbsServiceProvider extends ServiceProvider
     /**
      * Bootstrap services.
      */
-    // public function boot(): void
-    // {
-    //     Breadcrumbs::for('collection.view_prod', function ($trail, $id) {
-    //         $product = Mannequin::find($id);
+    public function boot(): void
+    {
+        Breadcrumbs::for('collection.view_prod', function ($trail, $id) {
+            $product = Mannequin::find($id);
 
-    //         if ($product) {
-    //             $trail->push('Collection', route('collection')); // This line adds a link to the 'collection' route
-    //             $trail->push('Product View', route('collection.view_prod', $id)); // This line adds the 'Product View' text
-    //         }
-    //     });
-    // }
+            if ($product) {
+                $trail->push('Collection', route('collection')); // This line adds a link to the 'collection' route
+                $trail->push('Product View', route('collection.view_prod', $id)); // This line adds the 'Product View' text
+            }
+        });
+    }
 }

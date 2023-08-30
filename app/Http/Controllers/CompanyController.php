@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
 
 class CompanyController extends Controller
 {
@@ -60,5 +61,23 @@ class CompanyController extends Controller
 
         return redirect()->route('company')->with('success_message', 'Company added successfully!');
     }
+
+    //Delete company(PERMANENTLY)
+    public function trash($id)
+    {
+        $company = Company::findOrFail($id);
+        // Perform any additional tasks related to deletion, if needed
+
+        // Delete associated images
+        foreach (explode(',', $company->images) as $imagePath) {
+            Storage::delete('public/' . trim($imagePath));
+        }
+
+        // Delete the company
+        $company->delete();
+
+        return response()->json(['success' => true]);
+    }
+
 
 }

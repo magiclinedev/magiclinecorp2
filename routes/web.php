@@ -45,6 +45,7 @@ Route::middleware(['auth', 'admin-access'])->group(function () {
     // Company
     Route::get('/company', [CompanyController::class, 'index'])->name('company');
     Route::post('/add-company', [CompanyController::class, 'company'])->name('company.add');
+    Route::post('/trash-company/{id}', [CompanyController::class, 'trash'])->name('company.trash');
     //Audit trail
     Route::get('/audit-trail', [AuditTrailController::class, 'index'])->name('audit-trail');
 });

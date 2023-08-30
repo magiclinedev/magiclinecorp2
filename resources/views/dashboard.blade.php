@@ -131,12 +131,12 @@
 
                 {{-- TABLE (for owner) --}}
                 @can('owner', Auth::user())
-                <div id="tableContainer" class="bg-white overflow-hidden shadow-sm sm:rounded-lg w-full sm:w-full p-4" style="display: none;">
+                <div id="tableContainer" class="bg-white shadow-sm sm:rounded-lg w-full sm:w-full p-4" style="display: none;">
+                    <div class="flex space-x-4 my-4">
 
-                    <div class="flex space-x-4 mb-4">
                         {{-- company FILTER --}}
                         <div class="filter-dropdown flex-1">
-                            <select id="companyFilter" class="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
+                            <select id="companyFilter" class="block w-52 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Category">
                                 <option value="">All Companies</option>
                                 @foreach ($companies as $company)
                                     <option value="{{ $company->name }}">{{ $company->name }}</option>
@@ -146,7 +146,7 @@
 
                         {{-- category FILTER --}}
                         <div class="filter-dropdown flex-1">
-                            <select id="categoryFilter" class="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Category">
+                            <select id="categoryFilter" class="block w-52 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
                                 <option value="">Categories</option>
                                 @foreach ($categories as $category)
                                     <option value="{{ $category->name }}">{{ $category->name }}</option>

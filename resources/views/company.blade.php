@@ -39,6 +39,7 @@
                             <th class="px-4 py-2 border">Logo</th>
                             <th class="px-4 py-2 border">Name</th>
                             <th class="px-4 py-2 border">Added By</th>
+                            <th class="px-4 py-2 border">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -49,6 +50,12 @@
                                 </td>
                                 <td class="px-4 py-2 border">{{ $company->name }}</td>
                                 <td class="px-4 py-2 border">{{ $company->addedBy }}</td>
+                                <td class="px-4 py-2 border">
+                                    <button class="btn-delete" data-id="{{ $company->id }}" data-transfer-url="{{ route('company.trash', ['id' => $company->id]) }}">
+                                        {{--  --}}
+                                        <i class="fas fa-trash-alt"></i> Delete
+                                    </button>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -102,17 +109,52 @@
                 cancelButtonColor: '#d33',
             });
         @endif
+    </script>
+    {{-- Sweeet Alert for delete --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const deleteButtons = document.querySelectorAll('.btn-delete');
 
-        @if(session('cancel_message'))
-            Swal.fire({
-                title: 'Action Cancelled!',
-                text: '',
-                icon: 'error',
-                timer: 3000,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const recordId = this.getAttribute('data-id');
+                    const transferUrl = this.getAttribute('data-transfer-url');
+
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: 'You won\'t be able to revert this!',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Perform AJAX request to delete the record
+                            axios.post(transferUrl)
+                                    .then(response => {
+                                        if (response.data.success) {
+                                            Swal.fire(
+                                                'Deleted!',
+                                                'Your record has been deleted.',
+                                                'success'
+                                            ).then(() => {
+                                                // Refresh the page after successful deletion
+                                                window.location.reload();
+                                            });
+                                        }
+                                    })
+                            .catch(error => {
+                                Swal.fire(
+                                    'Error!',
+                                    'An error occurred while deleting the record.',
+                                    'error'
+                                );
+                            });
+                        }
+                    });
+                });
             });
-        @endif
+        });
     </script>
 </x-app-layout>
