@@ -210,6 +210,7 @@
                 $('td input.row-checkbox:checked').each(function() {
                     selectedIds.push($(this).data('item-id'));
                 });
+                console.log(selectedIds);
                 if (selectedIds.length > 0) {
                     $.ajax({
                         url: '{{ route('collection.trashMultiple') }}', // Correct route generation
