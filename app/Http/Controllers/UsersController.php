@@ -38,6 +38,8 @@ class UsersController extends Controller
     //add user
     public function store(Request $request)
     {
+        // dd($request->all());
+        // dd($request->input('selected_company_ids'));
         try {
             $user = Auth::user();
             $addedByInfo = $this->getAddedByInfo('Added', $user);
@@ -59,20 +61,16 @@ class UsersController extends Controller
             }
 
             // Handle different user statuses
-            if ($request->status == 1 || $request->status == 4)
-            {
+            if ($request->status == 1 || $request->status == 4) {
                 return redirect()->route('users')->with('success_message', 'User created successfully.');
-            }
-            else
-            {
+            } else {
                 // Attach selected companies to the user
                 $user->companies()->attach($request->input('company_ids'));
 
-                // Update checkPrice value for each selected company (company_user table)
-                foreach ($request->input('selected_company_ids') as $companyId) {
-                    $user->companies()->updateExistingPivot($companyId, ['checkPrice' => 1]);
-                }
+                $user->companies()->whereIn('company_id', $selectedCompanyIds)
+                ->update(['checkPrice' => 1]);
 
+                // Redirect or do something else after successful registration
                 return redirect()->route('users')->with('success_message', 'User created successfully.');
             }
         } catch (\Exception $e) {

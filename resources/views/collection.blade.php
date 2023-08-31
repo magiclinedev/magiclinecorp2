@@ -80,12 +80,12 @@
                     {{-- BUTTON FOR DELETING SELECTED CHECKBOXES --}}
                     @can('super_admin', Auth::user())
                     <div class="filter-dropdown">
-                        <select id="deleteSelectedButton" class="hidden block w-52 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
+                        <select id="bulkAction" class="hidden block w-52 mb-2 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
                             <option value="">Bulk Action</option>
-                                <option value="delete">Delete Selected Item</option>
+                                <option value="deleteSelectedButton">Delete Selected Item/s</option>
                         </select>
                     </div>
-                    {{-- <button id="deleteSelectedButton" class="hidden bg-red-500 block w-52 py-2 px-3 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    {{-- <button id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         Delete All
                     </button> --}}
                     @endcan
@@ -111,12 +111,14 @@
                             @foreach ($mannequins as $mannequin)
                                 @if ($mannequin->activeStatus != 0)
                                     <tr data-item-id="{{ $mannequin->id }}" class="border">
+                                        {{-- Checkbox --}}
                                         @can('super_admin', Auth::user())
                                         <td class="px-7 py-2 border">
                                             <!-- Add the checkbox input here -->
                                             <input type="checkbox" class="row-checkbox center pb-4" data-item-id="{{ $mannequin->id }}" >
                                         </td>
                                         @endcan
+                                        {{-- Images --}}
                                         <td class="px-7 py-2 border">
                                             @php
                                                 // Split the image paths string into an array
@@ -189,13 +191,13 @@
                 });
 
                 // Show/hide the "Delete All" button based on the checked status
-                $('#deleteSelectedButton').toggleClass('hidden', !isChecked);
+                $('#bulkAction').toggleClass('hidden', !isChecked);
             });
 
             // Listen for checkbox changes
             $('td input.row-checkbox').on('change', function() {
                 var anyChecked = $('td input.row-checkbox:checked').length > 0;
-                $('#deleteSelectedButton').toggleClass('hidden', !anyChecked);
+                $('#bulkAction').toggleClass('hidden', !anyChecked);
 
                 // Check/uncheck the "Select All" checkbox based on the checked status
                 var allCheckboxesChecked = $('td input.row-checkbox').length == $('td input.row-checkbox:checked').length;

@@ -58,14 +58,14 @@
                         {{-- COMPANY ACCESS --}}
                         <div id="companyAccessSection" class="flex-1">
                             <div class="mt-1">
-                                <div class="inline-flex items-center">
-                                    <label class="block text-sm font-medium text-gray-700 mr-2">Companies</label>
-                                    <label class="inline-flex items-center">
-                                        <input type="checkbox" id="select-all-companies" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                                        <span class="block text-sm font-medium text-gray-700 ml-2">Select All</span>
-                                    </label>
-                                </div>
+                                <label class="block text-sm font-medium text-gray-700 mr-2">Companies</label>
+                                {{-- Select all company/price access --}}
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" id="select-all-companies" class="rounded border-gray-300 font-medium text-indigo-600 shadow-sm focus:ring-indigo-500 mx-1">
+                                    <span class="block text-sm font-medium text-gray-700 ml-2">Select All</span>
+                                </label>
 
+                                {{-- Companies --}}
                                 @foreach ($companies as $company)
                                     <div class="w-auto">
                                         <label class="inline-flex">
@@ -74,7 +74,6 @@
                                         </label>
                                     </div>
                                 @endforeach
-
                             </div>
                         </div>
 
