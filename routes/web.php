@@ -44,8 +44,6 @@ Route::middleware(['auth', 'admin-access'])->group(function () {
     Route::post('/users-restore/{id}', [UsersController::class, 'restore'])->name('users.restore');
     // Company
     Route::get('/company', [CompanyController::class, 'index'])->name('company');
-    Route::post('/add-company', [CompanyController::class, 'company'])->name('company.add');
-    Route::post('/trash-company/{id}', [CompanyController::class, 'trash'])->name('company.trash');
     //Audit trail
     Route::get('/audit-trail', [AuditTrailController::class, 'index'])->name('audit-trail');
 });
@@ -81,10 +79,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //Type
     Route::get('/collection-type', [CollectionController::class, 'type'])->name('collection.type');
     Route::post('/collection-type', [CollectionController::class, 'store_type'])->name('collection.type.store');
+    Route::post('/collection-type-trash/{id}', [CollectionController::class, 'trash_type'])->name('collection.type.trash');
 
     // // Company
     // Route::get('/company', [CompanyController::class, 'index'])->name('company');
     // Route::post('/add-company', [CompanyController::class, 'company'])->name('company.add');
+    Route::post('/add-company', [CompanyController::class, 'company'])->name('company.add');
+    Route::post('/trash-company/{id}', [CompanyController::class, 'trash'])->name('company.trash');
 
     //Users
     // Route::get('/users', [UsersController::class, 'index'])->name('users');

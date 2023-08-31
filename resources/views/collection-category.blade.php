@@ -65,22 +65,6 @@
 
     </div>
 
-    <script>
-        $(document).ready(function() {
-            // Add hover effect to item reference cell
-            $('.item-ref-cell').hover(
-                function() {
-                    // When mouse enters, show the action buttons
-                    $(this).find('.action-buttons').removeClass('hidden');
-                },
-                function() {
-                    // When mouse leaves, hide the action buttons
-                    $(this).find('.action-buttons').addClass('hidden');
-                }
-            );
-        });
-    </script>
-
     {{-- SweetAlert --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script>

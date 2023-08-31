@@ -106,12 +106,14 @@
                         </div>
 
                         {{-- PRICE --}}
+                        @if ($canViewPrice)
                         <div class="col-span-2 sm:col-span-1">
                             <div class="w-1/3 font-bold font-bold">Price:</div>
                             <div class="col-span-2 sm:col-span-1 flex items-center">
                                 <input type="text" name="price" value="{{ $mannequin->price }}" class="w-full border rounded-md py-2 px-3">
                             </div>
                         </div>
+                        @endif
 
                         {{-- listed items wont save dots, number, or etc. --}}
                         {{-- DESCRIPTION --}}

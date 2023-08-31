@@ -35,49 +35,51 @@ class UsersController extends Controller
         }
     }
 
-    //add user
-    public function store(Request $request)
-    {
-        // dd($request->all());
-        // dd($request->input('selected_company_ids'));
-        try {
-            $user = Auth::user();
-            $addedByInfo = $this->getAddedByInfo('Added', $user);
+    // Add user
+public function store(Request $request)
+{
+    $user = Auth::user();
+    $addedByInfo = $this->getAddedByInfo('Added', $user);
 
-            // Create user
-            $user = User::create([
-                'name' => $request->name,
-                'username' => $request->username,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'status' => $request->status,
-                'activeStatus' => "1",
-                'addedBy' => $addedByInfo,
-            ]);
+    // Create user
+    $user = User::create([
+        'name' => $request->name,
+        'username' => $request->username,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'status' => $request->status,
+        'activeStatus' => "1",
+        'addedBy' => $addedByInfo,
+    ]);
 
-            // Check user creation and handle accordingly
-            if (!$user) {
-                throw new \Exception('Failed to create user');
-            }
-
-            // Handle different user statuses
-            if ($request->status == 1 || $request->status == 4) {
-                return redirect()->route('users')->with('success_message', 'User created successfully.');
-            } else {
-                // Attach selected companies to the user
-                $user->companies()->attach($request->input('company_ids'));
-
-                $user->companies()->whereIn('company_id', $selectedCompanyIds)
-                ->update(['checkPrice' => 1]);
-
-                // Redirect or do something else after successful registration
-                return redirect()->route('users')->with('success_message', 'User created successfully.');
-            }
-        } catch (\Exception $e) {
-            // Handle the error by redirecting back with an error message
-            return redirect()->back()->with('danger_message', 'Failed to create user. Please try again.');
-        }
+    // Check user creation and handle accordingly
+    if (!$user) {
+        throw new \Exception('Failed to create user');
     }
+
+    // Handle different user statuses
+    if ($request->status == 1 || $request->status == 4) {
+        // User status is admin or owner, so redirect with success message
+        return redirect()->route('users')->with('success_message', 'User created successfully.');
+    } else {
+        // Attach selected companies to the user
+        $attachedCompanies = $user->companies()->attach($request->input('company_ids'));
+
+        // Get selected company IDs for price access
+        $selected_company_ids = $request->input('selected_company_ids');
+
+        // Update checkPrice for selected companies
+        $companies = Company::whereIn('id', $selected_company_ids)->get();
+
+        foreach ($companies as $company) {
+            // Update checkPrice for the current company
+            $user->companies()->updateExistingPivot($company, ['checkPrice' => 1]);
+        }
+
+        // Redirect with success message
+        return redirect()->route('users')->with('success_message', 'User created successfully.');
+    }
+}
 
     //delete user(Deactivate/Delete permanently)
     public function trash($id)

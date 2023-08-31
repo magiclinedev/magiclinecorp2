@@ -104,49 +104,47 @@ class CollectionController extends Controller
     public function view($encryptedId)
     {
         try {
+            // Decrypt the encrypted ID to get the original ID
             $id = Crypt::decrypt($encryptedId);
         } catch (DecryptException $e) {
+            // Redirect with an error message if decryption fails
             return redirect()->route('collection')->with('danger_message', 'Invalid URL.');
         }
 
+        // Find the mannequin using the decrypted ID
         $mannequin = Mannequin::find($id);
 
+        // If the mannequin doesn't exist, redirect with an error message
         if (!$mannequin) {
             return redirect()->route('collection')->with('danger_message', 'Mannequin not found.');
         }
 
-        // Check if the user's status is 1 and get the checkPrice value for the user's company
+        // Get the authenticated user
         $user = Auth::user();
 
-        //Get company id from company from mannequin
+        // Get company id from company name from the mannequin
         $companyName = $mannequin->company;
         $company = Company::where('name', $companyName)->first();
         $company_id = $company->id;
 
-        // check if checkPrice of user has 1 on viewed product/mannequin
+        // Check if user has the permission to view prices for the mannequin's company
         $canViewPriceForCompany = $user->companies()->where('companies.id', $company_id)->where('company_user.checkPrice', 1)->exists();
 
-        if ($user->status == 1 || $canViewPriceForCompany || $user->status == 4) {
-            $canViewPrice = true;
-        } else {
-            $canViewPrice = false;
-        }
+        // Determine if the user can view the price based on status and company permission
+        $canViewPrice = ($user->status == 1 || $canViewPriceForCompany || $user->status == 4);
 
-        // dd($canViewPrice);
-
-        // Return the view with the mannequin data, $id, and $canViewPrice
+        // Return the view with the mannequin data, encrypted ID, and price view permission
         return view('collection-view', [
             'mannequin' => $mannequin,
             'encryptedId' => $encryptedId,
             'canViewPrice' => $canViewPrice,
         ]);
-
     }
 
     // VIEW MODULE FOR ADD PRODUCT
     public function add()
     {
-        $user = Auth::user(); // Assuming you are using the built-in Auth facade
+        $user = Auth::user();
         $types = Type::all();
         $categories = Category::all();
         if ($user->status == 1 || $user->status == 4) {
@@ -244,27 +242,56 @@ class CollectionController extends Controller
     //View selected product for editing
     public function edit($id)
     {
+        // Get the authenticated user
         $user = Auth::user();
+
+        // Fetch all categories
         $categories = Category::all();
-        if ($user->status == 1 || $user->status == 4) {
-            $companies = Company::all();
-        } else {
-            $companies= Mannequin::whereIn('company', $user->companies->pluck('name'))->get();
-            $companies = $user->companies;
-        }
-        $types = Type::all();
+
+        // Fetch the selected mannequin
         $mannequin = Mannequin::find($id);
+
+        // If the mannequin doesn't exist, redirect with an error message
         if (!$mannequin) {
             return redirect()->route('collection')->with('danger_message', 'Mannequin not found.');
         }
 
-        // Return the view with the mannequin data
-        // return view('collection-edit')->with('mannequin', $mannequin);
+        // Initialize variables
+        $companies = [];
+        $canViewPrice = false;
+
+        // Check user's status and determine allowed companies and price visibility
+        if ($user->status == 1 || $user->status == 4) {
+            // If user's status is 1 or 4, fetch all companies and allow price view
+            $companies = Company::all();
+            $canViewPrice = true;
+        } else {
+            // If user's status is not 1 or 4, fetch user's associated companies
+            $userCompanies = $user->companies->pluck('name')->toArray();
+
+            // Fetch companies associated with the user
+            $companies = Mannequin::whereIn('company', $userCompanies)->get();
+
+            // Retrieve the company associated with the selected mannequin
+            $companyName = $mannequin->company_name; // Assuming the company name is stored in the 'company_name' column
+            $company = Company::where('name', $companyName)->first();
+
+            // Check if user can view price for the selected company
+            if ($company && $user->companies()->where('companies.id', $company->id)->where('company_user.checkPrice', 1)->exists()) {
+                $canViewPrice = true;
+            }
+        }
+
+        // Fetch all types
+        $types = Type::all();
+
+        // Return the view with the required data
         return view('collection-edit')->with([
             'categories' => $categories,
             'mannequin' => $mannequin,
             'types' => $types,
             'companies' => $companies,
+            'canViewPrice' => $canViewPrice,
         ]);
     }
 
@@ -474,11 +501,11 @@ class CollectionController extends Controller
     //Delete Category(PERMANENTLY)
     public function trash_category($id)
     {
-        $category = Category::findOrFail($id);
+        $type = type::findOrFail($id);
         // Perform any additional tasks related to deletion, if needed
 
         // Delete the category
-        $category->delete();
+        $type->delete();
 
         return response()->json(['success' => true]);
     }
@@ -494,7 +521,7 @@ class CollectionController extends Controller
     public function store_type(Request $request)
     {
         $validator = \Validator::make($request->all(), [
-            'type' => 'required|unique:categories,name'
+            'type' => 'required|unique:types,name'
         ]);
 
         if ($validator->fails()) {
@@ -514,6 +541,18 @@ class CollectionController extends Controller
         $type->save();
 
         return redirect()->route('collection.type')->with('success_message', 'type added successfully!');
+    }
+
+    //Delete type(PERMANENTLY)
+    public function trash_type($id)
+    {
+        $type = Type::findOrFail($id);
+        // Perform any additional tasks related to deletion, if needed
+
+        // Delete the type
+        $type->delete();
+
+        return response()->json(['success' => true]);
     }
 
     //Audit Trail

@@ -100,7 +100,7 @@
             });
         @elseif(session('danger_message'))
             Swal.fire({
-                title: 'Done!',
+                title: 'Error!',
                 text: '{{session('danger_message') }}',
                 icon: 'error',
                 timer: 3000,

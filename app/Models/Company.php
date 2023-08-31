@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Company extends Model
 {
-    protected $fillable = ['images, name, addedBy'];
+    protected $fillable = ['images', 'name', 'addedBy'];
     use HasFactory;
 
     public function users()
