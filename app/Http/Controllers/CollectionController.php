@@ -147,9 +147,11 @@ class CollectionController extends Controller
         $user = Auth::user();
         $types = Type::all();
         $categories = Category::all();
+
         if ($user->status == 1 || $user->status == 4) {
             $companies = Company::all();
-        } else {
+        }
+        else {
             $companies= Mannequin::whereIn('company', $user->companies->pluck('name'))->get();
             $companies = $user->companies;
         }
@@ -265,14 +267,11 @@ class CollectionController extends Controller
             // If user's status is 1 or 4, fetch all companies and allow price view
             $companies = Company::all();
             $canViewPrice = true;
-        } else {
-            // If user's status is not 1 or 4, fetch user's associated companies
-            $userCompanies = $user->companies->pluck('name')->toArray();
+        }
+        else {
+            $companies= Mannequin::whereIn('company', $user->companies->pluck('name'))->get();
+            $companies = $user->companies;
 
-            // Fetch companies associated with the user
-            $companies = Mannequin::whereIn('company', $userCompanies)->get();
-
-            // Retrieve the company associated with the selected mannequin
             $companyName = $mannequin->company_name; // Assuming the company name is stored in the 'company_name' column
             $company = Company::where('name', $companyName)->first();
 

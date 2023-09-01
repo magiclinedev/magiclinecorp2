@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class UsersController extends Controller
 {
@@ -36,50 +37,71 @@ class UsersController extends Controller
     }
 
     // Add user
-public function store(Request $request)
-{
-    $user = Auth::user();
-    $addedByInfo = $this->getAddedByInfo('Added', $user);
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|confirmed',
+            'status' => 'required|in:1,2,3,4',
+        ]);
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
 
-    // Create user
-    $user = User::create([
-        'name' => $request->name,
-        'username' => $request->username,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'status' => $request->status,
-        'activeStatus' => "1",
-        'addedBy' => $addedByInfo,
-    ]);
-
-    // Check user creation and handle accordingly
-    if (!$user) {
-        throw new \Exception('Failed to create user');
-    }
-
-    // Handle different user statuses
-    if ($request->status == 1 || $request->status == 4) {
-        // User status is admin or owner, so redirect with success message
-        return redirect()->route('users')->with('success_message', 'User created successfully.');
-    } else {
-        // Attach selected companies to the user
-        $attachedCompanies = $user->companies()->attach($request->input('company_ids'));
-
-        // Get selected company IDs for price access
-        $selected_company_ids = $request->input('selected_company_ids');
-
-        // Update checkPrice for selected companies
-        $companies = Company::whereIn('id', $selected_company_ids)->get();
-
-        foreach ($companies as $company) {
-            // Update checkPrice for the current company
-            $user->companies()->updateExistingPivot($company, ['checkPrice' => 1]);
+            return redirect('/users')
+                ->with('validation_errors', $errors)
+                ->withInput()
+                ->with('danger_message', 'Input Incorrect: Please check the form fields and try again.');
         }
 
-        // Redirect with success message
-        return redirect()->route('users')->with('success_message', 'User created successfully.');
+        $user = Auth::user();
+        $addedByInfo = $this->getAddedByInfo('Added', $user);
+
+        // Create user
+        $user = User::create([
+            'name' => $request->name,
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'status' => $request->status,
+            'activeStatus' => "1",
+            'addedBy' => $addedByInfo,
+        ]);
+
+        // Check user creation and handle accordingly
+        if (!$user) {
+            throw new \Exception('Failed to create user');
+        }
+
+        // Handle different user statuses
+        if ($request->status == 1 || $request->status == 4)
+        {
+            // User status is admin or owner, so redirect with success message
+            return redirect()->route('users')->with('success_message', 'User created successfully.');
+        }
+        else
+        {
+            // Attach selected companies to the user
+            $attachedCompanies = $user->companies()->attach($request->input('company_ids'));
+
+            // Get selected company IDs for price access
+            $selected_company_ids = $request->input('selected_company_ids');
+
+            // Update checkPrice for selected companies if $selected_company_ids is not null
+            if ($selected_company_ids !== null) {
+                $companies = Company::whereIn('id', $selected_company_ids)->get();
+
+                foreach ($companies as $company) {
+                    // Update checkPrice for the current company
+                    $user->companies()->updateExistingPivot($company, ['checkPrice' => 1]);
+                }
+            }
+
+            // Redirect with success message
+            return redirect()->route('users')->with('success_message', 'User created successfully.');
+        }
     }
-}
 
     //delete user(Deactivate/Delete permanently)
     public function trash($id)

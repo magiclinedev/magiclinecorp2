@@ -49,6 +49,6 @@ class User extends Authenticatable
 
     public function companies()
     {
-        return $this->belongsToMany(Company::class);
+        return $this->belongsToMany(Company::class)->withPivot('checkPrice');
     }
 }
