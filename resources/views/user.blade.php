@@ -36,7 +36,7 @@
                         <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
                         <div class="relative">
                             <input type="password" name="password" id="password" class="mt-1 p-2 border rounded-md w-full" required>
-                            <button type="button" id="togglePassword" class="absolute top-1/2 transform -translate-y-1/2 right-2">
+                            <button type="button" id="togglePassword" class="absolute top-1/2 transform -translate-y-1/2 right-2" tabindex="-1">
                                 <i id="passwordIcon" class="fas fa-eye-slash text-gray-400 cursor-pointer"></i>
                             </button>
                         </div>
@@ -94,7 +94,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <button type="submit" class="mt-4 mb-10 inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        <button type="submit" class="mt-4 inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             Register
                         </button>
                     </div>
@@ -146,7 +146,7 @@
                                                 {{ $company->name }}
                                             </span>
                                             @unless($loop->last)
-                                                , {{-- Add a comma unless it's the last company --}}
+                                                ,
                                             @endunless
                                         @endforeach
                                     @endif
@@ -168,12 +168,18 @@
                                         </button>
                                     {{-- else --}}
                                     @else
-                                        <button class="btn-edit">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <button class="btn-delete" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.trash', ['id' => $user->id]) }}">
-                                            <i class="fas fa-bullseye"></i> Deactivate
-                                        </button>
+                                        @if(auth()->check() && auth()->user()->id === $user->id)
+                                            <span class="btn-view">
+                                                Current User
+                                            </span>
+                                        @else
+                                            <a href="{{ route('users.edit', ['encryptedId' => Crypt::encrypt($user->id)]) }}" class="btn-view">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <button class="btn-delete" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.trash', ['id' => $user->id]) }}">
+                                                <i class="fas fa-bullseye"></i> Deactivate
+                                            </button>
+                                        @endif
                                     @endif
                                 </td>
                             </tr>
@@ -328,7 +334,7 @@
                     title: 'Validation Error',
                     html: errorMessage,
                     icon: 'error',
-                    timer: 5000,
+                    // timer: 5000,
                     showCancelButton: false,
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',

@@ -42,6 +42,9 @@ Route::middleware(['auth', 'admin-access'])->group(function () {
     Route::post('/users-add', [UsersController::class, 'store'])->name('users.add');
     Route::post('/users-trash/{id}', [UsersController::class, 'trash'])->name('users.trash');
     Route::post('/users-restore/{id}', [UsersController::class, 'restore'])->name('users.restore');
+    Route::get('/users-edit/{encryptedId}', [UsersController::class, 'edit'])->name('users.edit');
+    Route::post('/users-update/{id}', [UsersController::class, 'update'])->name('users.update');
+
     // Company
     Route::get('/company', [CompanyController::class, 'index'])->name('company');
     //Audit trail

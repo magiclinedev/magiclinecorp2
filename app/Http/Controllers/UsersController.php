@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Str;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
@@ -143,6 +146,97 @@ class UsersController extends Controller
             return response()->json(['success' => true]);
         }
         return redirect()->back()->with('danger_message', 'An error occurred while restoring the item.');
+    }
+
+    // View User being edited
+    public function edit($encryptedId)
+    {
+        try {
+            // Decrypt the encrypted ID to get the original ID
+            $id = Crypt::decrypt($encryptedId);
+        } catch (DecryptException $e) {
+            // Redirect with an error message if decryption fails
+            return redirect()->back()->with('danger_message', 'Invalid URL.');
+        }
+
+        // Get the authenticated user
+        $user = Auth::user();
+
+        // Fetch the selected mannequin
+        $user = User::find($id);
+        $companies = Company::all();
+
+        // Return the view with the required data
+        return view('user-edit')->with([
+            'user' => $user,
+            'companies' => $companies,
+        ]);
+    }
+
+    //EDIT User
+    public function update(Request $request, $id)
+    {
+        $user = Auth::user();
+        $addedByInfo = $this->getAddedByInfo('Updated', $user);
+
+        // Validate the request data
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username,' . $id,
+            'email' => 'required|email|max:255|unique:users,email,' . $id,
+            'status' => 'required|in:1,2,3,4',
+            'company_ids' => $request->status == 1 || $request->status == 4 ? 'nullable|array' : 'required|array',
+        ]);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+
+            return redirect('/users')
+                ->with('validation_errors', $errors)
+                ->withInput()
+                ->with('danger_message', 'Input Incorrect: Please check the form fields and try again.');
+        }
+
+        // Find the user by ID
+        $user = User::findOrFail($id);
+
+        // Update user information
+        $user->update([
+            'name' => $request->input('name'),
+            'username' => $request->input('username'),
+            'email' => $request->input('email'),
+            'status' => $request->input('status'),
+            'addedBy' => $addedByInfo,
+        ]);
+
+        if ($request->status == 1 || $request->status == 4)
+        {
+            // User status is admin or owner, so remove all company relationships
+            $user->companies()->detach();
+
+            // User status is admin or owner, so redirect with success message
+            return redirect()->route('users')->with('success_message', 'User Updated successfully.');
+        }
+        else
+        {
+            // Attach selected companies to the user
+            $user->companies()->sync($request['company_ids']);
+
+            // Handle price access (checkPrice) for selected companies
+            if (isset($request['company_ids'])) {
+                foreach ($request['company_ids'] as $companyId) {
+                    // Check if the company_id should have checkPrice
+                    $checkPrice = in_array($companyId, $request->input('selected_company_ids', [])) ? 1 : NULL;
+
+                    $user->companies()->updateExistingPivot($companyId, [
+                        'checkPrice' => $checkPrice,
+                    ]);
+                }
+            }
+
+            // Redirect to a success page or return a response as needed
+            return redirect()->route('users')->with('success_message', 'User updated successfully');
+        }
     }
 
 }
