@@ -32,7 +32,7 @@
                         <h1 class="text-2xl font-bold">Deleted Products</h1>
                     </div>
                     <table id="trashTable" class="w-full table-auto border-collapse border">
-                        <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
+                        <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                             <tr>
                                 <th class="px-4 py-2 border">
                                     <input type="checkbox" id="selectAllCheckbox">

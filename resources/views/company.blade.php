@@ -34,7 +34,7 @@
                 <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm mb-4" placeholder="Search...">
                 {{-- Table --}}
                 <table id="categoriesTable" class="w-full border-collapse">
-                    <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
+                    <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                         <tr>
                             <th class="px-4 py-2 border">Logo</th>
                             <th class="px-4 py-2 border">Name</th>

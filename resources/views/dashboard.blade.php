@@ -18,7 +18,7 @@
                 <div class="w-full sm:w-1/5 p-4 ">
                     <a href="#" class="showAllProducts block text-center relative overflow-hidden group">
                         <!-- Content for the first square -->
-                        <div class="px-6 py-4 font-medium text-gray-900 dark:text-black whitespace-nowrap bg-gray-50 dark:bg-gray-800 rounded-md">
+                        <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                             <div class="relative">
                                 <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
                                     <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
@@ -61,7 +61,7 @@
                     <a href="#" id="showTableButton" class="companyFilter show-table-button block text-center relative overflow-hidden group" data-company="{{ $company->name }}">{{-- {{ route('collection', ['company' => $company->name]) }} --}}
                     @endcan
                         <!-- Content for the first square -->
-                        <div class="px-6 py-4 font-medium text-gray-900 dark:text-black whitespace-nowrap bg-gray-50 dark:bg-gray-800 rounded-md">
+                        <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                             <div class="relative">
                                 <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
                                     <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
@@ -98,7 +98,7 @@
                 <div class="w-full sm:w-1/5 p-4">
                     <a href="users" class="block text-center relative overflow-hidden group">
                         <!-- Content for the first square -->
-                        <div class="px-6 py-4 font-medium text-gray-900 dark:text-black whitespace-nowrap bg-gray-50 dark:bg-gray-800 rounded-md">
+                        <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                             <div class="relative">
                                 <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
                                     <div class="bg-white w-full h-full rounded-md flex justify-center items-center">

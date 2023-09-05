@@ -110,7 +110,7 @@
                 </div>
                 {{-- table --}}
                 <table id="usersTable" class="w-full border-collapse pt-6">
-                    <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
+                    <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                         <tr>
                             <th class="px-4 py-2 border">Name</th>
                             <th class="px-4 py-2 border">Status</th>
