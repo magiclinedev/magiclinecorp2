@@ -106,6 +106,7 @@
         </div>
     </div>
 
+
     <!-- Responsive Navigation Menu(FOR HAMBURGER MENU)-->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">

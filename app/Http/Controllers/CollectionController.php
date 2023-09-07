@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
+use Spatie\Dropbox\Client as DropboxClient;
+
 use DataTables;
 
 class CollectionController extends Controller
@@ -71,6 +73,8 @@ class CollectionController extends Controller
             'mannequins' => $mannequins,
             'companies' => $companies,
             'companyName' => $selectedCompany,
+            'user' => $user,
+            // 'dropboxFiles' => $files,
         ]);
     }
 
@@ -86,19 +90,6 @@ class CollectionController extends Controller
             $model->addedBy = $newHistory;
         }
     }
-
-        // public function sanitizeAndValidateDescription($description)
-        // {
-        //     // Remove any potentially dangerous HTML/JS tags
-        //     $sanitizedDescription = strip_tags($description);
-
-        //     // Trim any extra spaces
-        //     $sanitizedDescription = trim($sanitizedDescription);
-
-        //     // Ensure the description length is within a reasonable limit
-        //     $sanitizedDescription = Str::limit($sanitizedDescription, 1000); // Adjust the limit as needed
-
-        // }
 
     // VIEW PRODUCT
     public function view($encryptedId)
@@ -163,8 +154,8 @@ class CollectionController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'po' => 'nullable|string|max:255',
-            'itemRef' => 'required|string|max:255',
+            'po' => 'nullable|string|max:255|unique',
+            'itemRef' => 'required|string|max:255|unique',
             'company' => 'nullable|string|max:255',
             'category' => 'nullable|string|max:255',
             'type' => 'nullable|string|max:255',
@@ -181,6 +172,7 @@ class CollectionController extends Controller
                 ->withInput();
         }
 
+        //uploaded files
         $photoPaths = [];
         $excelFileName = null;
         $pdfFileName = null;
@@ -189,8 +181,13 @@ class CollectionController extends Controller
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $photo) {
                 $photoName = time() . '_' . $photo->getClientOriginalName();
-                $photoPaths[] = 'images/product/' . $photoName;
-                $photo->storeAs('public/images/product/', $photoName);
+                $path = 'Magicline Database/images/product/' . $photoName; // Relative path within Dropbox
+
+                // Upload the image to Dropbox
+                Storage::disk('dropbox')->put($path, file_get_contents($photo));
+
+                // Store the Dropbox path in your database
+                $photoPaths[] = $path;
             }
         }
 
@@ -235,8 +232,13 @@ class CollectionController extends Controller
         }
 
         if ($mannequin->save()) {
+            // Add audit trail for the "Added" action with the item reference
+            $activity = "Added " . $request->itemRef;
+            $this->logAuditTrail(auth()->user(), $activity);
+
             return redirect('/collection')->with('success_message', 'Collection has been successfully added!');
-        } else {
+        }
+        else {
             return redirect('/collection')->with('danger_message', 'DATABASE ERROR!');
         }
     }
@@ -302,19 +304,45 @@ class CollectionController extends Controller
         $mannequin = Mannequin::findOrFail($id);
 
         // Keep the original itemref for audit trail
-        // $originalItemref = $mannequin->itemref;
+        $originalItemref = $mannequin->itemref;
+
+        // Create an array to store updates
+        $updates = [];
 
         // Update the fields using the request input directly
-        $mannequin->fill([
-            'po' => $request->input('po'),
-            'itemref' => $request->input('itemref'),
-            'company' => $request->input('company'),
-            'category' => $request->input('category'),
-            'type' => $request->input('type'),
-            'price' => $request->input('price'),
-            'description' => $request->input('description'),
-            $file = $request->file('file'),
-        ]);
+        if ($request->has('po') && $request->input('po') !== $mannequin->po) {
+            $mannequin->po = $request->input('po');
+            $updates[] = 'PO';
+        }
+
+        // Handle the "itemref" field separately for old and new values
+        if ($request->has('itemref') && $request->input('itemref') !== $mannequin->itemref) {
+            $oldItemref = $mannequin->itemref; // Store the old itemref
+            $newItemref = $request->input('itemref'); // Store the new itemref
+            $mannequin->itemref = $newItemref;
+            $updates[] = "Itemref (new: $newItemref, old: $oldItemref)";
+        }
+
+        if ($request->has('company') && $request->input('company') !== $mannequin->company) {
+            $mannequin->company = $request->input('company');
+            $updates[] = 'Company';
+        }
+        if ($request->has('category') && $request->input('category') !== $mannequin->category) {
+            $mannequin->category = $request->input('category');
+            $updates[] = 'Category';
+        }
+        if ($request->has('type') && $request->input('type') !== $mannequin->type) {
+            $mannequin->type = $request->input('type');
+            $updates[] = 'Type';
+        }
+        if ($request->has('price') && $request->input('price') !== $mannequin->price) {
+            $mannequin->price = $request->input('price');
+            $updates[] = 'Price';
+        }
+        if ($request->has('description') && $request->input('description') !== $mannequin->description) {
+            $mannequin->description = $request->input('description');
+            $updates[] = 'Description';
+        }
 
         // Update images
         if ($request->hasFile('images')) {
@@ -334,6 +362,8 @@ class CollectionController extends Controller
 
             // Update the images field in the database
             $mannequin->images = implode(',', $imagePaths);
+
+            $updates[] = 'Images';
         }
 
         //FOR COSTING
@@ -352,6 +382,8 @@ class CollectionController extends Controller
 
             // Update the file field in the database
             $mannequin->file = $filename;
+
+            $updates[] = 'File';
         }
         //FOR PDF
         if ($request->hasFile('pdf')) {
@@ -369,15 +401,19 @@ class CollectionController extends Controller
 
             // Update the pdf field in the database
             $mannequin->pdf = $pdfFilename;
+
+            $updates[] = 'PDF';
         }
 
         $this->setActionBy($mannequin, 'Modified');
 
         $mannequin->save();
 
-        // Log the audit trail entry for the 'update' activity
-        // $activity = "Updated $originalItemref"; // Concatenate the activity
-        // $this->logAuditTrail(auth()->user(), $activity, $originalItemref);
+        // Generate the "Updated" message based on the fields that were updated
+        if (!empty($updates)) {
+            $activity = "Updated " . implode(', ', $updates) . " of $originalItemref";
+            $this->logAuditTrail(auth()->user(), $activity);
+        }
 
         if($user->status == 4){
             return redirect()->route('dashboard', $mannequin->id)->with('success_message', 'Product details updated successfully.');
@@ -400,9 +436,16 @@ class CollectionController extends Controller
     {
         $mannequin = Mannequin::find($id);
         if ($mannequin) {
+            // Store the original item reference for the audit trail
+            $originalItemref = $mannequin->itemref;
+
             $mannequin->activeStatus = 0;
             $this->setActionBy($mannequin, 'Deleted');
             $mannequin->save();
+
+            // Add audit trail for the "Deleted" action with the original item reference
+            $activity = "Trashed $originalItemref";
+            $this->logAuditTrail(auth()->user(), $activity);
 
             return response()->json(['success' => true]);
         }
@@ -435,6 +478,9 @@ class CollectionController extends Controller
     {
         $mannequin = Mannequin::findOrFail($id);
 
+        // Store the original item reference for the audit trail
+        $originalItemref = $mannequin->itemref;
+
         // Delete associated images
         foreach (explode(',', $mannequin->images) as $imagePath) {
             Storage::delete('public/' . trim($imagePath));
@@ -442,6 +488,10 @@ class CollectionController extends Controller
 
         // Delete the Mannequin record from the database
         $mannequin->delete();
+
+        // Add audit trail for the "Deleted Permanently" action with the original item reference
+        $activity = "Deleted Permanently $originalItemref";
+        $this->logAuditTrail(auth()->user(), $activity);
 
         // Retrieve the updated $mannequins collection after deletion
         $mannequins = Mannequin::where('activeStatus', '<', 1)->get();
@@ -455,8 +505,16 @@ class CollectionController extends Controller
         $mannequin = Mannequin::findOrFail($id);
         // Check if the item is actually deleted (activeStatus = 0)
         if ($mannequin->activeStatus == 0) {
+            // Store the original item reference for the audit trail
+            $originalItemref = $mannequin->itemref;
+
             $this->setActionBy($mannequin, 'Restored');
             $mannequin->update(['activeStatus' => 1]);
+
+            // Add audit trail for the "Restored" action with the original item reference
+            $activity = "Restored $originalItemref";
+            $this->logAuditTrail(auth()->user(), $activity);
+
             return redirect()->route('collection')->with('success_message', 'Item restored successfully.');
         } else {
             return redirect()->route('collection')->with('danger_message', 'Item is not restored.');
@@ -555,12 +613,13 @@ class CollectionController extends Controller
     }
 
     //Audit Trail
-    // public function logAuditTrail($user, $activity)
-    // {
-    //     $log = new AuditTrail;
-    //     $log->user_id = $user->id;
-    //     $log->activity = $activity;
-    //     $log->save();
-    // }
+    public function logAuditTrail($user, $activity)
+    {
+        $log = new AuditTrail;
+        $log->name = $user->name;
+        $log->user_id = $user->id;
+        $log->activity = $activity;
+        $log->save();
+    }
 }
 

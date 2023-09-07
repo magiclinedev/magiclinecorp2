@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Company;
+use App\Models\AuditTrail;
 
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
@@ -77,6 +78,11 @@ class UsersController extends Controller
             throw new \Exception('Failed to create user');
         }
 
+
+        // Add audit trail for the "Added" action with the item reference
+        $activity = "Added User " . $request->name;
+        $this->logAuditTrail(auth()->user(), $activity);
+
         // Handle different user statuses
         if ($request->status == 1 || $request->status == 4)
         {
@@ -126,6 +132,12 @@ class UsersController extends Controller
             $user->activeStatus = 0;
             $user->addedBy = $addedByInfo;
             $user->save();
+
+            // Log the audit trail entry for user deactivation
+            $activity = "Deactivated User {$user->name}";
+            $user = Auth::user();
+            $this->logAuditTrail($user, $activity);
+
             return response()->json(['success' => true, 'message' => 'User is Inactive']);
         }
     }
@@ -141,6 +153,12 @@ class UsersController extends Controller
         if ($user->activeStatus == 0) {
             //activeStatus -> 1 and addedBy to Retored by user
             $user->update(['activeStatus' => 1, 'addedBy' => $addedByInfo]);
+
+            // Log the audit trail entry for user restoration
+            $activity = "Restored User {$user->name}";
+            $user = Auth::user();
+            $this->logAuditTrail($user, $activity);
+
             return response()->json(['success' => true]);
         } else {
             return response()->json(['success' => true]);
@@ -178,6 +196,12 @@ class UsersController extends Controller
     {
         $user = Auth::user();
         $addedByInfo = $this->getAddedByInfo('Updated', $user);
+
+        // Keep the original itemref for audit trail
+        $originalName = $user->name;
+
+        // Create an array to store updates
+        $updates = [];
 
         // Validate the request data
         $validator = Validator::make($request->all(), [
@@ -237,6 +261,16 @@ class UsersController extends Controller
             // Redirect to a success page or return a response as needed
             return redirect()->route('users')->with('success_message', 'User updated successfully');
         }
+    }
+
+    //Audit Trail
+    public function logAuditTrail($user, $activity)
+    {
+        $log = new AuditTrail;
+        $log->name = $user->name;
+        $log->user_id = $user->id;
+        $log->activity = $activity;
+        $log->save();
     }
 
 }

@@ -19,6 +19,15 @@
                     <div class="w-full mb-4">
                         <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
                     </div>
+
+                     {{-- activity FILTER --}}
+                     <div class="filter-dropdown w-full mb-4">
+                        <select id="activityFilter" class="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
+                            <option value="activity">Activity</option>
+                            <option value="logins">Logins</option>
+                        </select>
+                    </div>
+
                 </div>
 
                 <table id="auditTrailTable" class="w-full table-auto border-collapse border">
@@ -31,12 +40,13 @@
                     </thead>
                     <tbody>
                         @foreach ($audits as $audit)
-                        <tr>
-                            <td class="px-4 py-2 border">{{ $audit->name }}</td>
-                            <td class="px-4 py-2 border">{{ $audit->activity }}</td>
-                            <td class="px-4 py-2 border">{{ $audit->created_at }}</td>
-                        </tr>
-                    @endforeach
+                            <tr>
+                                <td class="px-4 py-2 border">{{ $audit->name }}</td>
+                                <td class="px-4 py-2 border">{{ $audit->activity }}</td>
+                                <td class="px-4 py-2 border">{{ $audit->created_at }}</td>
+                            </tr>
+                        @endforeach
+
                     </tbody>
                 </table>
                 <div class="mt-4">
@@ -71,6 +81,29 @@
             $('#customSearchInput').keyup(function(){
                 table.search( $(this).val() ).draw() ;
             })
+
+            // Function to update the DataTable based on the selected option
+            function updateTable(optionValue) {
+                if (optionValue === "logins") {
+                    table.columns(1).search('^User', true, false).draw();
+                } else if (optionValue === "activity") {
+                    table.columns(1).search('', true, false).draw();
+                } else {
+                    table.columns(1).search('').draw(); // Reset search when another option is selected
+                }
+            }
+
+            // Initial filter based on the selected option
+            $('#activityFilter').change(function() {
+                var selectedOption = $(this).val();
+                updateTable(selectedOption);
+            });
+
+            // Listen for changes in the filter dropdown
+            $('#activityFilter').change(function() {
+                var selectedOption = $(this).val();
+                updateTable(selectedOption);
+            });
 
         });
     </script>

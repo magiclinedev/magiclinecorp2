@@ -78,7 +78,6 @@
                         </div>
                     </div>
                     {{-- BUTTON FOR DELETING SELECTED CHECKBOXES --}}
-                    @can('super_admin', Auth::user())
                     <div class="filter-dropdown">
                         <select id="bulkAction" class="hidden block w-52 mb-2 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
                             <option value="">Bulk Action</option>
@@ -88,7 +87,6 @@
                     {{-- <button id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         Delete All
                     </button> --}}
-                    @endcan
 
                     {{-- TABLE --}}
                     <table id="mannequinsTable" class="w-full table-auto border-collapse border">
@@ -119,19 +117,32 @@
                                         </td>
                                         @endcan
                                         {{-- Images --}}
-                                        <td class="px-7 py-2 border">
-                                            @php
+                                        @php
+                                            // Cache the image URL for a limited time (e.g., 1 hour)
+                                            $imageCacheKey = 'image_' . $mannequin->id;
+                                            $imageUrl = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($mannequin) {
                                                 // Split the image paths string into an array
                                                 $imagePaths = explode(',', $mannequin->images);
                                                 // Get the first image path from the array
                                                 $firstImagePath = $imagePaths[0] ?? null;
-                                            @endphp
-                                            @if ($firstImagePath)
-                                                <img src="{{ asset('storage/' . $firstImagePath) }}" alt="Mannequin Photo" width="100">
+
+                                                if (Storage::disk('dropbox')->exists($firstImagePath)) {
+                                                    return Storage::disk('dropbox')->url($firstImagePath);
+                                                } else {
+                                                    return null;
+                                                }
+                                            });
+                                        @endphp
+
+                                        <td class="px-7 py-2 border">
+                                            @if ($imageUrl)
+                                            <img src="{{ $imageUrl }}" alt="Mannequin Image" class="w-16 h-16 object-contain" loading="lazy">
+
                                             @else
-                                                No Image
+                                                <p>Image not found</p>
                                             @endif
                                         </td>
+
                                         <td class="px-7 py-2 border itemref-cell">
                                             {{-- ITEM REF --}}
                                             <span class="itemref-text">{{ $mannequin->itemref }}</span>
