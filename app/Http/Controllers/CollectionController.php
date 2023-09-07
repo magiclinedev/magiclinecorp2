@@ -19,8 +19,10 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cache;
 
 use Spatie\Dropbox\Client as DropboxClient;
+use Spatie\FlysystemDropbox\DropboxAdapter;
 
 use DataTables;
 
@@ -156,18 +158,23 @@ class CollectionController extends Controller
         $validator = Validator::make($request->all(), [
             'po' => 'nullable|string|max:255',
             'itemRef' => 'required|string|max:255|unique:mannequins,itemref',
-            'company' => 'nullable|string|max:255',
-            'category' => 'nullable|string|max:255',
-            'type' => 'nullable|string|max:255',
+            'company' => 'required|nullable|string|max:255',
+            'category' => 'required|nullable|string|max:255',
+            'type' => 'required|nullable|string|max:255',
             'price' => 'nullable|numeric',
             'description' => 'nullable',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'file' => 'nullable|mimes:xlsx,xls|max:2048',
             'pdf' => 'nullable|mimes:pdf|max:2048',
+        ], [
+            'itemRef.required' => 'The Item Reference is required.',
+            'images.*.max' => 'The :attribute must be less than or equal to 2 MB.',
+            'file.max' => 'The :attribute must be less than or equal to 2 MB.',
+            'pdf.max' => 'The :attribute must be less than or equal to 2 MB.',
         ]);
 
         if ($validator->fails()) {
-            return redirect('/collection-add')->with('danger_message', 'Input Incorrect or Files Too Large(Max 2MB): Please check the form fields and try again.')
+            return redirect('/collection-add')->with('danger_message', ' ')
                 ->withErrors($validator)
                 ->withInput();
         }
@@ -296,23 +303,24 @@ class CollectionController extends Controller
         ]);
     }
 
-    //EDIT Product
     public function update(Request $request, $id)
     {
         $user = Auth::user();
-        // Find the Mannequin by ID or throw a 404 error if not found
         $mannequin = Mannequin::findOrFail($id);
 
-        // Keep the original itemref for audit trail
+        // Store the original itemref for the audit trail
         $originalItemref = $mannequin->itemref;
 
-        // Create an array to store updates
+        // Define the fields that can be updated
+        $fillableFields = ['po', 'company', 'category', 'type', 'price', 'description'];
+
         $updates = [];
 
-        // Update the fields using the request input directly
-        if ($request->has('po') && $request->input('po') !== $mannequin->po) {
-            $mannequin->po = $request->input('po');
-            $updates[] = 'PO';
+        foreach ($fillableFields as $field) {
+            if ($request->has($field) && $request->input($field) !== $mannequin->{$field}) {
+                $mannequin->{$field} = $request->input($field);
+                $updates[] = strtoupper($field);
+            }
         }
 
         // Handle the "itemref" field separately for old and new values
@@ -323,86 +331,60 @@ class CollectionController extends Controller
             $updates[] = "Itemref (new: $newItemref, old: $oldItemref)";
         }
 
-        if ($request->has('company') && $request->input('company') !== $mannequin->company) {
-            $mannequin->company = $request->input('company');
-            $updates[] = 'Company';
-        }
-        if ($request->has('category') && $request->input('category') !== $mannequin->category) {
-            $mannequin->category = $request->input('category');
-            $updates[] = 'Category';
-        }
-        if ($request->has('type') && $request->input('type') !== $mannequin->type) {
-            $mannequin->type = $request->input('type');
-            $updates[] = 'Type';
-        }
-        if ($request->has('price') && $request->input('price') !== $mannequin->price) {
-            $mannequin->price = $request->input('price');
-            $updates[] = 'Price';
-        }
-        if ($request->has('description') && $request->input('description') !== $mannequin->description) {
-            $mannequin->description = $request->input('description');
-            $updates[] = 'Description';
-        }
-
-        // Update images
+        // Handle image uploads
+        // Optimize image upload using Dropbox
         if ($request->hasFile('images')) {
-            // Remove the old images if they exist
-            foreach (explode(',', $mannequin->images) as $oldImagePath) {
-                // Delete the old image from storage
-                Storage::delete('public/product/' . trim($oldImagePath));
-            }
-
             $imagePaths = [];
 
-            foreach ($request->file('images') as $image) {
-                $imageName = time() . '_' . $image->getClientOriginalName();
-                $image->storeAs('public/images/product', $imageName);
-                $imagePaths[] = 'images/product/' . $imageName;
+            // Clear the cache associated with the first cache key
+            Cache::forget('image_' . $mannequin->id);
+
+            // Clear the cache associated with the second cache key
+            Cache::forget('images_' . $mannequin->id);
+
+            foreach ($request->file('images') as $photo) {
+                $photoName = time() . '_' . $photo->getClientOriginalName();
+                $path = '/Magicline Database/images/product/' . $photoName; // Dropbox path
+
+                // Upload the image to Dropbox
+                Storage::disk('dropbox')->put($path, file_get_contents($photo->path()));
+
+                // Store the Dropbox path in your database
+                $photoPaths[] = $path;
+            }
+
+            // Remove old images from Dropbox
+            $oldImagePaths = explode(',', $mannequin->images);
+            foreach ($oldImagePaths as $oldImagePath) {
+                // Delete the old image from Dropbox
+                Storage::disk('dropbox')->delete($oldImagePath);
             }
 
             // Update the images field in the database
-            $mannequin->images = implode(',', $imagePaths);
-
+            $mannequin->images = implode(',', $photoPaths);
             $updates[] = 'Images';
         }
 
-        //FOR COSTING
-        if ($request->hasFile('file')) {
-            // Remove the old file if it exists
-            if ($mannequin->file) {
-                // Delete the old file from storage
-                Storage::delete('public/files/' . $mannequin->file);
+        // Handle file uploads
+        $fileFields = ['file', 'pdf'];
+
+        foreach ($fileFields as $field) {
+            if ($request->hasFile($field)) {
+                // Remove the old file if it exists
+                if ($mannequin->{$field}) {
+                    Storage::delete('public/files/' . $mannequin->{$field});
+                }
+
+                $file = $request->file($field);
+                $filename = $file->getClientOriginalName();
+
+                // Store the file in the desired storage location (public disk in this case)
+                $file->storeAs('public/files', $filename);
+
+                // Update the file field in the database
+                $mannequin->{$field} = $filename;
+                $updates[] = ucfirst($field);
             }
-
-            $file = $request->file('file');
-            $filename = $file->getClientOriginalName();
-
-            // Store the file in the desired storage location (public disk in this case)
-            $file->storeAs('public/files', $filename);
-
-            // Update the file field in the database
-            $mannequin->file = $filename;
-
-            $updates[] = 'File';
-        }
-        //FOR PDF
-        if ($request->hasFile('pdf')) {
-            // Remove the old PDF if it exists
-            if ($mannequin->pdf) {
-                // Delete the old PDF from storage
-                Storage::delete('public/files/' . $mannequin->pdf);
-            }
-
-            $pdfFile = $request->file('pdf');
-            $pdfFilename = $pdfFile->getClientOriginalName();
-
-            // Store the PDF file in the desired storage location (public disk in this case)
-            $pdfFile->storeAs('public/files', $pdfFilename);
-
-            // Update the pdf field in the database
-            $mannequin->pdf = $pdfFilename;
-
-            $updates[] = 'PDF';
         }
 
         $this->setActionBy($mannequin, 'Modified');
@@ -415,14 +397,11 @@ class CollectionController extends Controller
             $this->logAuditTrail(auth()->user(), $activity);
         }
 
-        if($user->status == 4){
-            return redirect()->route('dashboard', $mannequin->id)->with('success_message', 'Product details updated successfully.');
-        }
-        else{
-            return redirect()->route('collection', $mannequin->id)->with('success_message', 'Product details updated successfully.');
-        }
+        $routeName = $user->status == 4 ? 'dashboard' : 'collection';
 
+        return redirect()->route($routeName, $mannequin->id)->with('success_message', 'Product details updated successfully.');
     }
+
 
     //SHOW TRASHCAN
     public function trashcan()
@@ -483,7 +462,7 @@ class CollectionController extends Controller
 
         // Delete associated images
         foreach (explode(',', $mannequin->images) as $imagePath) {
-            Storage::delete('public/' . trim($imagePath));
+            Storage::disk('dropbox')->delete($imagePath);
         }
 
         // Delete the Mannequin record from the database

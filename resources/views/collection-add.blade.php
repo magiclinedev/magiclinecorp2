@@ -164,17 +164,17 @@
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Close'
             });
-        @elseif(session('danger_message'))
-            Swal.fire({
-                title: 'Error!',
-                text: '{{session('danger_message') }}',
-                icon: 'error',
-                timer: 6000,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-            });
-        @endif
+            @elseif(session('danger_message'))
+                Swal.fire({
+                    title: 'Error!',
+                    html: `{!! implode('<br>', $errors->all()) !!}`,
+                    icon: 'error',
+                    timer: 6000,
+                    showCancelButton: false,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                });
+            @endif
 
     </script>
 

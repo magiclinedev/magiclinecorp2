@@ -7,6 +7,18 @@
     @php
         // Split the image paths string into an array
         $imagePaths = explode(',', $mannequin->images);
+        $imageCacheKey = 'images_' . $mannequin->id;
+        $imageUrls = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($imagePaths) {
+            $imageUrls = [];
+
+            foreach ($imagePaths as $imagePath) {
+                if (Storage::disk('dropbox')->exists($imagePath)) {
+                    $imageUrls[] = Storage::disk('dropbox')->url($imagePath);
+                }
+            }
+
+            return $imageUrls;
+        });
     @endphp
 
     <x-slot name="header">
@@ -42,9 +54,9 @@
 
             {{-- IMAGES --}}
             <div class="grid grid-cols-3 gap-4">
-                @foreach ($imagePaths as $imagePath)
+                @foreach ($imageUrls as $imagePath)
                     <div class="w-full">
-                        <img src="{{ asset('storage/' . $imagePath) }}" alt="Photo" class="max-w-full h-auto">
+                        <img src="{{ $imagePath }}" alt="Photo" class="max-w-full h-auto">
                     </div>
                 @endforeach
             </div>
