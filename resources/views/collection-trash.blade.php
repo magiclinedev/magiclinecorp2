@@ -52,19 +52,34 @@
                                         <!-- Add the checkbox input here -->
                                         <input type="checkbox" class=" row-checkbox center pb-4">
                                     </td>
-                                    <td class="px-4 py-2 border">
-                                        @php
+
+                                    {{-- Images --}}
+                                    @php
+                                        // Cache the image URL for a limited time (e.g., 1 hour)
+                                        $imageCacheKey = 'image_' . $mannequin->id;
+                                        $imageUrl = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($mannequin) {
                                             // Split the image paths string into an array
                                             $imagePaths = explode(',', $mannequin->images);
                                             // Get the first image path from the array
                                             $firstImagePath = $imagePaths[0] ?? null;
-                                        @endphp
-                                        @if ($firstImagePath)
-                                            <img src="{{ asset('storage/' . $firstImagePath) }}" alt="Mannequin Photo" width="100">
+
+                                            if (Storage::disk('dropbox')->exists($firstImagePath)) {
+                                                return Storage::disk('dropbox')->url($firstImagePath);
+                                            } else {
+                                                return null;
+                                            }
+                                        });
+                                    @endphp
+
+                                    <td class="px-7 py-2 border">
+                                        @if ($imageUrl)
+                                        <img src="{{ $imageUrl }}" alt="Mannequin Image" class="w-16 h-16 object-contain" loading="lazy">
+
                                         @else
-                                            No Image
+                                            <p>Image not found</p>
                                         @endif
                                     </td>
+
                                     <td class="px-4 py-2 border itemref-cell">
                                         <span class="itemref-text">{{ $mannequin->itemref }}</span>
                                         {{-- HOVER to show read, update, and delete --}}

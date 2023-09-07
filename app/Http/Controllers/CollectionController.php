@@ -154,8 +154,8 @@ class CollectionController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'po' => 'nullable|string|max:255|unique',
-            'itemRef' => 'required|string|max:255|unique',
+            'po' => 'nullable|string|max:255',
+            'itemRef' => 'required|string|max:255|unique:mannequins,itemref',
             'company' => 'nullable|string|max:255',
             'category' => 'nullable|string|max:255',
             'type' => 'nullable|string|max:255',
