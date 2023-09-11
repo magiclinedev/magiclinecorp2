@@ -78,15 +78,15 @@
                         </div>
                     </div>
                     {{-- BUTTON FOR DELETING SELECTED CHECKBOXES --}}
-                    <div class="filter-dropdown">
+                    {{-- <div class="filter-dropdown">
                         <select id="bulkAction" class="hidden block w-52 mb-2 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
                             <option value="">Bulk Action</option>
                                 <option>Delete Selected Item/s</option>
                         </select>
-                    </div>
-                    {{-- <button id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div> --}}
+                    <button id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         Delete All
-                    </button> --}}
+                    </button>
 
                     {{-- TABLE --}}
                     <table id="mannequinsTable" class="w-full table-auto border-collapse border">
@@ -216,7 +216,7 @@
             });
 
             // Handle "Delete All" button click
-            $('#deleteSelectedButton').on('click', function() {
+            $('#bulkAction').on('click', function() {
                 console.log('Button clicked');
 
                 var selectedIds = [];
@@ -249,7 +249,7 @@
                 }
             });
 
-            //Category FIlter
+            //Category Filter
             $('#categoryFilter').on('change', function() {
                 var category = $(this).val();
 

@@ -84,10 +84,15 @@ Collection
             {{-- Display Images --}}
             <div class="w-full md:w-1/2 mb-4 md:mb-0 flex flex-col justify-center items-center">
                 {{-- MAIN Image --}}
-                <div class="w-10/12 md:w-8/12 img-magnifier-container relative">
-                    <img id="mainImage" src="{{ $imageUrl }}" alt="Product Image" class="main-image w-full h-auto object-cover">
-                </div>
+                @if ($imageUrl)
+                    <div class="w-10/12 md:w-8/12 img-magnifier-container relative">
+                        <img id="mainImage" src="{{ $imageUrl }}" alt="Product Image" class="main-image w-full h-auto object-cover" loading="lazy">
+                    </div>
+                @else
+                    <p>Image not found</p>
+                @endif
                 {{-- SELECT IMAGE --}}
+                @if ($imageUrls)
                 <div class="flex mt-1 space-x-1 overflow-hidden">
                     @foreach ($imageUrls as $index => $imagePath)
                         <div class="w-1/5 zoomable-image" data-image-index="{{ $index }}">
@@ -95,6 +100,9 @@ Collection
                         </div>
                     @endforeach
                 </div>
+                @else
+                    <p>Image not found</p>
+                @endif
             </div>
             {{-- DETAILS --}}
             <div class="md:w-1/2">

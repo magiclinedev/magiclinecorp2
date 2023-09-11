@@ -43,6 +43,7 @@ class Kernel extends HttpKernel
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\DropboxTokenRefreshMiddleware::class,
         ],
     ];
 
@@ -72,6 +73,7 @@ class Kernel extends HttpKernel
         // ... other middlewares
         'admin-access' => \App\Http\Middleware\AdminAccessMiddleware::class,
         'viewer-access' => \App\Http\Middleware\ViewerAccessMiddleware::class,
+        'dropbox.token.refresh' => \App\Http\Middleware\DropboxTokenRefreshMiddleware::class,
     ];
 
 }

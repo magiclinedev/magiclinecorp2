@@ -6,9 +6,20 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+
 use League\Flysystem\Filesystem;
+use League\Flysystem\Filesystem as Flysystem;
+
 use Spatie\Dropbox\Client as DropboxClient;
 use Spatie\FlysystemDropbox\DropboxAdapter;
+use Spatie\FlysystemDropbox\DropboxAdapter as FlysystemDropboxAdapter;
+
+use Kunnu\Dropbox\Dropbox;
+use Kunnu\Dropbox\DropboxApp;
+use Kunnu\Dropbox\DropboxFile;
+use Kunnu\Dropbox\DropboxGuzzleHttpClient;
+
+use GuzzleHttp\Client as GuzzleClient;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,11 +36,55 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Storage::extend('dropbox', function (Application $app, array $config) {
-            $adapter = new DropboxAdapter(new DropboxClient(
-                $config['authorization_token']
-            ));
+        // Storage::extend('dropbox', function (Application $app, array $config) {
+        //     $adapter = new DropboxAdapter(new DropboxClient(
+        //         $config['authorization_token']
+        //     ));
 
+        //     return new FilesystemAdapter(
+        //         new Filesystem($adapter, $config),
+        //         $adapter,
+        //         $config
+        //     );
+        // });
+        Storage::extend('dropbox', function (Application $app, array $config) {
+            // Create a DropboxApp instance with your app credentials
+            $appKey = env('DROPBOX_APP_KEY');
+            $appSecret = env('DROPBOX_APP_SECRET');
+            $accessToken = $config['authorization_token']; // The current access token
+            $refreshToken = env('DROPBOX_REFRESH_TOKEN'); // Your refresh token
+
+            $app = new DropboxApp($appKey, $appSecret);
+
+            // Create a Guzzle HTTP client
+            $httpClient = new GuzzleClient();
+
+            try {
+                // Manually refresh the access token using the Dropbox API
+                $response = $httpClient->post('https://api.dropboxapi.com/oauth2/token', [
+                    'form_params' => [
+                        'grant_type' => 'refresh_token',
+                        'refresh_token' => $refreshToken,
+                        'client_id' => $appKey,
+                        'client_secret' => $appSecret,
+                    ],
+                ]);
+
+                // Parse the response to get the refreshed access token
+                $data = json_decode($response->getBody(), true);
+                $refreshedAccessToken = $data['access_token'];
+
+                // Update the access token in your configuration
+                $config['access_token'] = $refreshedAccessToken;
+            } catch (Exception $e) {
+                // Handle any exceptions if the token refresh fails
+                // You may need to re-authenticate the user or take appropriate action
+            }
+
+            // Initialize the Dropbox adapter with the updated access token
+            $adapter = new DropboxAdapter(new DropboxClient($config['access_token']));
+
+            // Create a new FilesystemAdapter with the Dropbox adapter
             return new FilesystemAdapter(
                 new Filesystem($adapter, $config),
                 $adapter,

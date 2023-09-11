@@ -7,6 +7,7 @@ use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\AuditTrailController;
+use App\Http\Controllers\DropboxController;
 
 
 use App\Http\Livewire\TableFilter;
@@ -60,6 +61,7 @@ Route::middleware(['auth', 'can:viewer-access'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

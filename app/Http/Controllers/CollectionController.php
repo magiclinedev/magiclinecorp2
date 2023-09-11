@@ -431,7 +431,6 @@ class CollectionController extends Controller
         return response()->json(['success' => false]);
     }
 
-    // DELETE to trashcan multiple collections
     public function trashMultiple(Request $request)
     {
         $ids = $request->input('ids');
@@ -446,7 +445,7 @@ class CollectionController extends Controller
                     $mannequin->save();
                 }
             }
-            return redirect()->back()->with('success_message', 'Item deleted permanently.');
+            return response()->json(['success' => true]);
         }
 
         return response()->json(['success' => false]);

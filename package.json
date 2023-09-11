@@ -17,6 +17,7 @@
     },
     "dependencies": {
         "datatables.net-bs4": "^1.13.5",
+        "dropbox": "^10.34.0",
         "quill": "^1.3.7",
         "slick-carousel": "^1.8.1"
     }
