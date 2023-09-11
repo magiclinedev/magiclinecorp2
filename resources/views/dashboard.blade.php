@@ -170,6 +170,10 @@
                         @endif
                     </div>
 
+                    <button id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        Delete All
+                    </button>
+
                     {{-- TABLE --}}
                     <table id="mannequinsTable" class="w-full table-auto border-collapse border">
                         <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
@@ -188,22 +192,38 @@
                         <tbody>
                             @foreach ($mannequins as $mannequin)
                                 @if ($mannequin->activeStatus != 0)
-                                    <tr class="border">
-                                        <td class="px-4 py-2 border">
+                                    <tr data-item-id="{{ $mannequin->id }}" class="border">
+                                        {{-- Checkbox --}}
+                                        @can('super_admin', Auth::user())
+                                        <td class="px-7 py-2 border">
                                             <!-- Add the checkbox input here -->
-                                            <input type="checkbox" class=" row-checkbox center pb-4">
+                                            <input type="checkbox" class="row-checkbox center pb-4" data-item-id="{{ $mannequin->id }}" >
                                         </td>
-                                        <td class="px-4 py-2 border">
-                                            @php
+                                        @endcan
+                                        {{-- Images --}}
+                                        @php
+                                            // Cache the image URL for a limited time (e.g., 1 hour)
+                                            $imageCacheKey = 'image_' . $mannequin->id;
+                                            $imageUrl = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($mannequin) {
                                                 // Split the image paths string into an array
                                                 $imagePaths = explode(',', $mannequin->images);
                                                 // Get the first image path from the array
                                                 $firstImagePath = $imagePaths[0] ?? null;
-                                            @endphp
-                                            @if ($firstImagePath)
-                                                <img src="{{ asset('storage/' . $firstImagePath) }}" alt="Mannequin Photo" width="100">
+
+                                                if (Storage::disk('dropbox')->exists($firstImagePath)) {
+                                                    return Storage::disk('dropbox')->url($firstImagePath);
+                                                } else {
+                                                    return null;
+                                                }
+                                            });
+                                        @endphp
+
+                                        <td class="px-7 py-2 border">
+                                            @if ($imageUrl)
+                                            <img src="{{ $imageUrl }}" alt="Mannequin Image" class="w-16 h-16 object-contain" loading="lazy">
+
                                             @else
-                                                No Image
+                                                <p>Image not found</p>
                                             @endif
                                         </td>
                                         <td class="px-4 py-2 border itemref-cell">
@@ -272,12 +292,60 @@
                 scrollToElement('tableContainer');
             });
 
-              // Handle "select all" checkbox
-              $('#selectAllCheckbox').on('change', function() {
+
+            // Handle "select all" checkbox
+            $('#selectAllCheckbox').on('change', function() {
                 var isChecked = this.checked;
                 $('td input.row-checkbox').each(function() {
                     this.checked = isChecked;
                 });
+
+                // Show/hide the "Delete All" button based on the checked status
+                $('#bulkAction').toggleClass('hidden', !isChecked);
+            });
+
+            // Listen for checkbox changes
+            $('td input.row-checkbox').on('change', function() {
+                var anyChecked = $('td input.row-checkbox:checked').length > 0;
+                $('#bulkAction').toggleClass('hidden', !anyChecked);
+
+                // Check/uncheck the "Select All" checkbox based on the checked status
+                var allCheckboxesChecked = $('td input.row-checkbox').length == $('td input.row-checkbox:checked').length;
+                $('#selectAllCheckbox').prop('checked', allCheckboxesChecked);
+            });
+
+            // Handle "Delete All" button click
+            $('#bulkAction').on('click', function() {
+                console.log('Button clicked');
+
+                var selectedIds = [];
+                $('td input.row-checkbox:checked').each(function() {
+                    selectedIds.push($(this).data('item-id'));
+                });
+                console.log(selectedIds);
+                if (selectedIds.length > 0) {
+                    $.ajax({
+                        url: '{{ route('collection.trashMultiple') }}', // Correct route generation
+                        method: 'POST',
+                        data: { ids: selectedIds },
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}' // Include the CSRF token
+
+                        },
+                        success: function(response)
+                        {
+                            console.log('url:', response.url);
+                            console.log('method:', response.method);
+                            console.log('Response:', response.data);
+                            if (response.success) {
+                                console.log('Response:', response.data);
+                                // Refresh the page or update the table as needed
+                                location.reload();
+                            }
+                        }
+                    });
+                }
             });
 
             // Company Filter links
