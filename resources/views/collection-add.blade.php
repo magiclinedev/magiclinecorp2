@@ -70,12 +70,12 @@
                 {{-- Purchase order --}}
                 <div class="col-span-2 sm:col-span-1">
                     <label for="po" class="block font-bold mb-2">PO</label>
-                    <input type="text" name="po" id="po" class="w-full border rounded-md py-2 px-3" placeholder="Enter PO number">
+                    <input type="text" name="po" value="{{ old('po') }}" id="po" class="w-full border rounded-md py-2 px-3" placeholder="Enter PO number">
                 </div>
                 {{-- ITEM REF--}}
                 <div class="col-span-2 sm:col-span-1">
                     <label for="itemRef" class="block font-bold mb-2">Item Reference</label>
-                    <input type="text" name="itemRef" id="itemRef" class="w-full border rounded-md py-2 px-3" placeholder="Enter Item Ref">
+                    <input type="text" name="itemRef" id="itemRef" value="{{ old('itemRef') }}" class="w-full border rounded-md py-2 px-3" placeholder="Enter Item Ref">
                 </div>
                 {{-- COMPANIES --}}
                 <div class="col-span-2 sm:col-span-1">
@@ -83,7 +83,7 @@
                     <div class="col-span-2 sm:col-span-1 flex items-center">
                         <select name="company" id="company" class="w-full border rounded-md py-2 px-3">
                             @foreach ($companies as $company)
-                                <option value="{{ $company->name }}">{{ $company->name }}</option>
+                                <option value="{{ $company->name }}" {{ old('company') == $company->name ? 'selected' : '' }}>{{ $company->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -94,7 +94,7 @@
                     <div class="col-span-2 sm:col-span-1 flex items-center">
                         <select name="category" id="category" class="w-full border rounded-md py-2 px-3">
                             @foreach ($categories as $category)
-                                <option value="{{ $category->name }}">{{ $category->name }}</option>
+                                <option value="{{ $category->name }}" {{ old('category') == $category->name ? 'selected' : '' }}>{{ $category->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -105,7 +105,7 @@
                     <div class="col-span-2 sm:col-span-1 flex items-center">
                         <select name="type" id="type" class="w-full border rounded-md py-2 px-3">
                             @foreach ($types as $type)
-                                <option value="{{ $type->name }}">{{ $type->name }}</option>
+                                <option value="{{ $type->name }}" {{ old('type') == $type->name ? 'selected' : '' }}>{{ $type->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -113,7 +113,7 @@
                 {{-- PRICE --}}
                 <div class="col-span-2 sm:col-span-1">
                     <label for="price" class="block font-bold mb-2">Price</label>
-                    <input type="number" name="price" id="price" class="w-full border rounded-md py-2 px-3" placeholder="Enter Price">
+                    <input type="number" name="price" value="{{ old('price') }}" id="price" class="w-full border rounded-md py-2 px-3" placeholder="Enter Price">
                 </div>
                 {{-- DESCRIPTION --}}
                 <div class="col-span-2">
@@ -194,6 +194,14 @@
             },
             placeholder: 'Enter Description'
         });
+
+        // Retrieve the old input data for the description field
+        var oldDescription = {!! json_encode(old('description')) !!};
+
+        // Set the content of the Quill editor with old input data if it exists
+        if (oldDescription) {
+            quill.clipboard.dangerouslyPasteHTML(oldDescription);
+        }
 
         // Sync the content of Quill editor with the hidden textarea
         quill.on('text-change', function() {

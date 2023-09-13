@@ -23,6 +23,11 @@
 
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
+        @if(session('session_timeout'))
+            <div class="alert alert-danger">
+                {{ session('session_timeout') }}
+            </div>
+        @endif
 
         <!-- Remember Me -->
         {{-- <div class="block mt-4">

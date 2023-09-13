@@ -11,6 +11,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
+use App\Events\UserLoggedIn;
+use Illuminate\Session\Store;
+// use App\Events\UserLoggedIn;
+
+use Illuminate\Support\Facades\Session;
+
 class AuthenticatedSessionController extends Controller
 {
     /**
@@ -29,7 +35,11 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        $user = Auth::user(); // Retrieve the authenticated user
+
         $request->session()->regenerate();
+
+        event(new UserLoggedIn($user->name)); // Pass the user's name to the event
 
         return redirect()->intended(RouteServiceProvider::HOME);
     }

@@ -12,7 +12,6 @@ use League\Flysystem\Filesystem as Flysystem;
 
 use Spatie\Dropbox\Client as DropboxClient;
 use Spatie\FlysystemDropbox\DropboxAdapter;
-use Spatie\FlysystemDropbox\DropboxAdapter as FlysystemDropboxAdapter;
 
 use Kunnu\Dropbox\Dropbox;
 use Kunnu\Dropbox\DropboxApp;
@@ -20,6 +19,8 @@ use Kunnu\Dropbox\DropboxFile;
 use Kunnu\Dropbox\DropboxGuzzleHttpClient;
 
 use GuzzleHttp\Client as GuzzleClient;
+
+use Illuminate\Support\Facades\Gate;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,17 +37,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Storage::extend('dropbox', function (Application $app, array $config) {
-        //     $adapter = new DropboxAdapter(new DropboxClient(
-        //         $config['authorization_token']
-        //     ));
+        // admin 1 and owner
+        Gate::define('super_admin', function ($user) {
+            return in_array($user->status, [1, 4]);
+        });
 
-        //     return new FilesystemAdapter(
-        //         new Filesystem($adapter, $config),
-        //         $adapter,
-        //         $config
-        //     );
-        // });
+        //dropbox
         Storage::extend('dropbox', function (Application $app, array $config) {
             // Create a DropboxApp instance with your app credentials
             $appKey = env('DROPBOX_APP_KEY');

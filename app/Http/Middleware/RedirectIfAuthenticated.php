@@ -15,12 +15,23 @@ class RedirectIfAuthenticated
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, string ...$guards): Response
+    public function handle(Request $request, Closure $next, ...$guards)
     {
         $guards = empty($guards) ? [null] : $guards;
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
+                // Check if the user's last activity time is within the allowed session timeout
+                $lastActivity = Auth::guard($guard)->user()->last_activity;
+
+                if (time() - strtotime($lastActivity) > config('session.lifetime') * 60) {
+                    Auth::guard($guard)->logout();
+
+                    return redirect()->route('login')
+                        ->with('session_timeout', 'Your session has timed out. Please log in again.');
+                }
+
+                // User is authenticated and within the session timeout, redirect them to the home page
                 return redirect(RouteServiceProvider::HOME);
             }
         }

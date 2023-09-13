@@ -48,6 +48,11 @@ return [
             ],
         ],
 
+        'options' => [
+            'cluster' => 'ap1',
+            'useTLS' => true
+        ],
+
         'ably' => [
             'driver' => 'ably',
             'key' => env('ABLY_KEY'),

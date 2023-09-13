@@ -156,18 +156,24 @@ class CollectionController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'po' => 'nullable|string|max:255',
+            // 'po' => 'nullable|string|max:255|unique:mannequins,po',
             'itemRef' => 'required|string|max:255|unique:mannequins,itemref',
             'company' => 'required|nullable|string|max:255',
             'category' => 'required|nullable|string|max:255',
             'type' => 'required|nullable|string|max:255',
             'price' => 'nullable|numeric',
             'description' => 'nullable',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'file' => 'nullable|mimes:xlsx,xls|max:2048',
+            'images' => 'required|array|min:1|max:8', // Ensure at least one image is present
+            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'file' => 'nullable|mimes:xlsx,xls|max:2048',//COSTING
             'pdf' => 'nullable|mimes:pdf|max:2048',
         ], [
+            // 'po.unique' => 'The Purchase Order is already being used.',
             'itemRef.required' => 'The Item Reference is required.',
+            'itemRef.unique' => 'The Item Reference is already taken.',
+            'images.required' => 'At least one image is required.',
+            'images.min' => 'At least one image is required.',
+            'images.*.max' => 'The :attribute must be less than or equal to 2 MB.',
             'images.*.max' => 'The :attribute must be less than or equal to 2 MB.',
             'file.max' => 'The :attribute must be less than or equal to 2 MB.',
             'pdf.max' => 'The :attribute must be less than or equal to 2 MB.',
@@ -223,12 +229,12 @@ class CollectionController extends Controller
             'description' => $request->description,
         ]);
 
-        $this->setActionBy($mannequin, 'Added');
-        $mannequin->activeStatus = "1";
-
         if (!empty($photoPaths)) {
             $mannequin->images = implode(',', $photoPaths);
         }
+
+        $this->setActionBy($mannequin, 'Added');
+        $mannequin->activeStatus = "1";
 
         if ($excelFileName !== null) {
             $mannequin->file = $excelFileName;
@@ -305,6 +311,33 @@ class CollectionController extends Controller
 
     public function update(Request $request, $id)
     {
+        $validator = Validator::make($request->all(), [
+            // 'po' => 'nullable|string|max:255|unique:mannequins,po,' . $id,
+            'itemref' => 'required|string|max:255|unique:mannequins,itemref,' . $id,
+            'company' => 'required|nullable|string|max:255',
+            'category' => 'required|nullable|string|max:255',
+            'type' => 'required|nullable|string|max:255',
+            'price' => 'nullable|numeric',
+            'description' => 'nullable',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'file' => 'nullable|mimes:xlsx,xls|max:2048',
+            'pdf' => 'nullable|mimes:pdf|max:2048',
+        ], [
+            // 'po.unique' => 'The Purchase Order is already being used.',
+            'itemref.required' => 'The Item Reference is required.',
+            'itemref.unique' => 'The Item Reference has already been taken.',
+            'images.*.max' => 'The :attribute must be less than or equal to 2 MB.',
+            'file.max' => 'The :attribute must be less than or equal to 2 MB.',
+            'pdf.max' => 'The :attribute must be less than or equal to 2 MB.',
+        ]);
+
+        // If validation fails, redirect back with errors
+        if ($validator->fails()) {
+            return redirect()->back()->with('danger_message', ' ')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
         $user = Auth::user();
         $mannequin = Mannequin::findOrFail($id);
 
@@ -431,8 +464,13 @@ class CollectionController extends Controller
         return response()->json(['success' => false]);
     }
 
+    // Trash Multiple Products
     public function trashMultiple(Request $request)
     {
+        $request->validate([
+            'ids' => 'required|array', // Add any other validation rules as needed
+        ]);
+
         $ids = $request->input('ids');
 
         if (!empty($ids)) {
@@ -445,10 +483,11 @@ class CollectionController extends Controller
                     $mannequin->save();
                 }
             }
-            return response()->json(['success' => true]);
+
+            return response()->json(['message' => 'Product details updated successfully.']);
         }
 
-        return response()->json(['success' => false]);
+        return response()->json(['message' => 'No products selected.'], 400);
     }
 
     //Delete (PERMANENTLY from database to storage)

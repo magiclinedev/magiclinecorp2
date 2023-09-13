@@ -24,6 +24,9 @@ class EventServiceProvider extends ServiceProvider
         'Illuminate\Auth\Events\Logout' => [
             'App\Listeners\LogUserActivity',
         ],
+        UserLoggedIn::class => [
+            SendUserLoginNotification::class,
+        ],
     ];
 
     /**

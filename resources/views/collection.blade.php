@@ -223,24 +223,29 @@
                 $('td input.row-checkbox:checked').each(function() {
                     selectedIds.push($(this).data('item-id'));
                 });
-                console.log(selectedIds);
+                console.log('Selected IDs:', selectedIds);
+
                 if (selectedIds.length > 0) {
                     $.ajax({
-                        url: '{{ route('collection.trashMultiple') }}', // Correct route generation
+                        url: '{{ route('collection.trashMultiple') }}',
                         method: 'POST',
                         data: { ids: selectedIds },
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}' // Include the CSRF token
-
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
-                        success: function(response)
-                        {
-                            console.log('url:', response.url);
-                            console.log('method:', response.method);
-                            console.log('Response:', response.data);
-                            if (response.success) {
-                                console.log('Response:', response.data);
+                        success: function(data, textStatus, jqXHR) {
+                            console.log('AJAX Request URL:', this.url);
+                            console.log('AJAX Request Method:', this.type);
+                            console.log('AJAX Request Headers:', this.headers);
+                            console.log('AJAX Request Data:', this.data);
+
+                            console.log('Response URL:', jqXHR.responseURL); // Log the response URL
+                            console.log('Response Status:', textStatus); // Log the response status
+                            console.log('Response Data:', data); // Log the response data
+
+                            if (data.success) {
+                                console.log('Response:', data.data);
                                 // Refresh the page or update the table as needed
                                 location.reload();
                             }

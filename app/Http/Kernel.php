@@ -74,6 +74,7 @@ class Kernel extends HttpKernel
         'admin-access' => \App\Http\Middleware\AdminAccessMiddleware::class,
         'viewer-access' => \App\Http\Middleware\ViewerAccessMiddleware::class,
         'dropbox.token.refresh' => \App\Http\Middleware\DropboxTokenRefreshMiddleware::class,
+        'session.timeout' => \App\Http\Middleware\CheckSessionTimeout::class,
     ];
 
 }

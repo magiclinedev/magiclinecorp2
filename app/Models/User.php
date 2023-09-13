@@ -51,4 +51,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Company::class)->withPivot('checkPrice');
     }
+
+    public function isSuperAdmin()
+    {
+        return $this->status == 1;
+    }
 }

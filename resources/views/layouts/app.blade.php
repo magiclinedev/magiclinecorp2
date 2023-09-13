@@ -25,6 +25,32 @@
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.15/dist/tailwind.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+        {{-- notification(PUSHER) --}}
+        <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+        {{-- tostr--}}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+        @can('super_admin', Auth::user())
+        <script>
+            // Enable pusher logging - don't include this in production
+            Pusher.logToConsole = true;
+
+            var pusher = new Pusher('f3ef13e0681b0b5cd2be', {
+                cluster: 'ap1'
+            });
+
+            var channel = pusher.subscribe('popup-channel');
+            channel.bind('user-login', function(data) {
+                toastr.success(JSON.stringify(data.name) + ' has logged in')
+                // alert();
+            });
+        </script>
+        @endcan
+
+
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -34,6 +60,11 @@
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
             @include('layouts.navigation')
+
+            <div class="container">
+                <x-user-login-notification /> <!-- Include the notification component here -->
+                <!-- Other layout content -->
+            </div>
 
             <!-- Page Heading -->
             @if (isset($header))
