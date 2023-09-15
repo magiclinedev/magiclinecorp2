@@ -27,11 +27,14 @@ Collection
         $imagePaths = explode(',', $mannequin->images);
         $imageCacheKey = 'image_' . $mannequin->id;
         $imageUrl = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($imagePaths) {
-            if (Storage::disk('dropbox')->exists($imagePaths)) {
-                return Storage::disk('dropbox')->url($imagePaths);
-            } else {
-                return null;
+            foreach ($imagePaths as $imagePath) {
+                if (!Storage::disk('dropbox')->exists($imagePath)) {
+                    return null; // If any image doesn't exist, return null
+                }
             }
+
+            // If all images exist, return the URL of the first image
+            return Storage::disk('dropbox')->url($imagePaths[0]);
         });
 
         // Split the image paths string into an array

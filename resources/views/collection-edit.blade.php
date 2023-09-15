@@ -54,11 +54,15 @@
 
             {{-- IMAGES --}}
             <div class="grid grid-cols-3 gap-4">
-                @foreach ($imageUrls as $imagePath)
-                    <div class="w-full">
-                        <img src="{{ $imagePath }}" alt="Photo" class="max-w-full h-auto">
-                    </div>
-                @endforeach
+                @if ($imageUrls)
+                    @foreach ($imageUrls as $imagePath)
+                        <div class="w-full">
+                            <img src="{{ $imagePath }}" alt="Photo" class="max-w-full h-auto">
+                        </div>
+                    @endforeach
+                @else
+                    <p>Image not found</p>
+                @endif
             </div>
 
             <div class="md:w-1/2">

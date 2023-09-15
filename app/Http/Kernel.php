@@ -22,6 +22,8 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         'check.user.role' => \App\Http\Middleware\CheckUserRole::class,
+
+        \App\Http\Middleware\CheckSessionTimeout::class,
     ];
 
     /**

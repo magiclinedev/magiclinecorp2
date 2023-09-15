@@ -19,17 +19,17 @@
                     {{-- Name --}}
                     <div class="mb-4">
                         <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                        <input type="text" name="name" id="name" class="mt-1 p-2 border rounded-md w-full" required>
+                        <input type="text" name="name" value="{{ old('name') }}" id="name" class="mt-1 p-2 border rounded-md w-full" required>
                     </div>
                     {{-- Username --}}
                     <div class="mb-4">
                         <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-                        <input type="text" name="username" id="username" class="mt-1 p-2 border rounded-md w-full" required>
+                        <input type="text" name="username" value="{{ old('username') }}" id="username" class="mt-1 p-2 border rounded-md w-full" required>
                     </div>
                     {{-- Email --}}
                     <div class="mb-4">
                         <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" name="email" id="email" class="mt-1 p-2 border rounded-md w-full" required>
+                        <input type="email" name="email" value="{{ old('email') }}" id="email" class="mt-1 p-2 border rounded-md w-full" required>
                     </div>
                     {{-- Password --}}
                     <div class="mb-4">

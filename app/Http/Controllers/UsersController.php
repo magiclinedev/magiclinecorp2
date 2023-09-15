@@ -7,15 +7,19 @@ use App\Models\Company;
 use App\Models\AuditTrail;
 
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Str;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Validation\Rule;
+
+use Carbon\Carbon;
 
 class UsersController extends Controller
 {
@@ -47,9 +51,20 @@ class UsersController extends Controller
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|confirmed',
+            'password' => 'required|string|confirmed|min:5',
             'status' => 'required|in:1,2,3,4',
+            'company_ids' => [
+                'array', // Must be an array
+                // Required if 'status' is not equal to 1 or 4
+                Rule::requiredIf(function () use ($request) {
+                    return !in_array($request->input('status'), [1, 4]);
+                }),
+            ],
+        ], [
+            'company_ids.required' => 'Admin 2 or Viewer is required to have at least 1 company access.',
+            'password.min' => 'Password is too short. It must be at least 5 characters long.',
         ]);
+
         if ($validator->fails()) {
             $errors = $validator->errors()->all();
 

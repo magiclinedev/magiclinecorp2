@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
+use Illuminate\Session\Store;
+
 class CheckSessionTimeout
 {
     /**
@@ -14,19 +16,37 @@ class CheckSessionTimeout
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle($request, Closure $next, $guard = null)
+    protected $session;
+    protected $timeout = 10;
+
+    public function __construct(Store $session)
     {
-        if (Auth::guard($guard)->check()) {
-            // Check if the user's last activity time is within the allowed session timeout
-            $lastActivity = Auth::user()->last_activity;
+        $this->session = $session;
+    }
 
-            if (time() - strtotime($lastActivity) > config('session.lifetime') * 10) {
-                Auth::logout();
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @return mixed
+     */
+    public function handle(Request $request, Closure $next)
+    {
+        $is_logged_in = $request->path() != 'dashboard/logout';
 
-                return redirect()->route('login')
-                    ->with('session_timeout', 'Your session has timed out. Please log in again.');
-            }
+        if(!session('last_active')) {
+            $this->session->put('last_active', time());
+        } elseif(time() - $this->session->get('last_active') > $this->timeout) {
+
+            $this->session->forget('last_active');
+
+            $cookie = cookie('intend', $is_logged_in ? url()->current() : 'dashboard');
+
+            auth()->logout();
         }
+
+        $is_logged_in ? $this->session->put('last_active', time()) : $this->session->forget('last_active');
 
         return $next($request);
     }
