@@ -3,6 +3,7 @@
 @endsection
 
 <x-app-layout>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -34,7 +35,6 @@
                         </div>
                     @endif
                 @endcan
-
             </div>
         </div>
     </x-slot>
@@ -47,8 +47,6 @@
                     <h1 class="text-2xl font-bold"><i class="fas fa-list-alt"></i> Product List</h1>
                 </div>
 
-                {{-- Add this line to include the CSRF token for DataTables AJAX requests --}}
-                {{-- <meta name="csrf-token" content="{{ csrf_token() }}"> --}}
                 <div class="overflow-x-auto">
 
                     {{-- FILTER --}}
@@ -79,14 +77,14 @@
                     </div>
                     {{-- BUTTON FOR DELETING SELECTED CHECKBOXES --}}
                     {{-- <div class="filter-dropdown">
-                        <select id="bulkAction" class="hidden block w-52 mb-2 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
+                        <select id="bulk" class=" block w-52 mb-2 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
                             <option value="">Bulk Action</option>
                                 <option>Delete Selected Item/s</option>
                         </select>
                     </div> --}}
-                    <button id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        Delete All
-                    </button>
+
+                    <button name="bulkAction" id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" onclick="deleteSelectedMannequins()">
+                        Delete All</button>
 
                     {{-- TABLE --}}
                     <table id="mannequinsTable" class="w-full table-auto border-collapse border">
@@ -113,41 +111,41 @@
                                         @can('super_admin', Auth::user())
                                         <td class="px-7 py-2 border">
                                             <!-- Add the checkbox input here -->
-                                            <input type="checkbox" class="row-checkbox center pb-4" data-item-id="{{ $mannequin->id }}" >
+                                            <input type="checkbox" name="ids[]" class="prod_checkbox row-checkbox center pb-4" value="{{ $mannequin->id }}" >
                                         </td>
                                         @endcan
                                         {{-- Images --}}
-                                        @php
-                                            // Cache the image URL for a limited time (e.g., 1 hour)
-                                            $imageCacheKey = 'image_' . $mannequin->id;
-                                            $imageUrl = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($mannequin) {
-                                                // Split the image paths string into an array
-                                                $imagePaths = explode(',', $mannequin->images);
-                                                // Get the first image path from the array
-                                                $firstImagePath = $imagePaths[0] ?? null;
-
-                                                if (Storage::disk('dropbox')->exists($firstImagePath)) {
-                                                    return Storage::disk('dropbox')->url($firstImagePath);
-                                                } else {
-                                                    return null;
-                                                }
-                                            });
-                                        @endphp
-
                                         <td class="px-7 py-2 border">
-                                            @if ($imageUrl)
-                                            <img src="{{ $imageUrl }}" alt="Mannequin Image" class="w-16 h-16 object-contain" loading="lazy">
+                                            @php
+                                                // Cache the image URL permanently
+                                                $imageCacheKey = 'image_' . $mannequin->id;
+                                                $imageUrl = Cache::rememberForever($imageCacheKey, function () use ($mannequin) {
+                                                // Cache the image URL with a reasonable duration (e.g., 1 hour)
+                                                // $imageUrl = Cache::remember($imageCacheKey, now()->addHour(1), function () use ($mannequin) {
+                                                    // Split the image paths string into an array
+                                                    $imagePaths = explode(',', $mannequin->images);
+                                                    // Get the first image path from the array
+                                                    $firstImagePath = $imagePaths[0] ?? null;
 
+                                                    if (Storage::disk('dropbox')->exists($firstImagePath)) {
+                                                        return Storage::disk('dropbox')->url($firstImagePath);
+                                                    } else {
+                                                        return null;
+                                                    }
+                                                });
+                                            @endphp
+                                            @if ($imageUrl)
+                                                <img src="{{ $imageUrl }}" alt="Mannequin Image" class="w-16 h-16 object-contain" loading="lazy">
                                             @else
                                                 <p>Image not found</p>
                                             @endif
                                         </td>
-
+                                        {{-- ITEM REF and actions--}}
                                         <td class="px-7 py-2 border itemref-cell">
                                             {{-- ITEM REF --}}
                                             <span class="itemref-text">{{ $mannequin->itemref }}</span>
 
-                                            {{-- HOVER to show read, update, and delete --}}
+                                            {{-- HOVER to show action buttons read, update, and delete --}}
                                             <div class="action-buttons">
 
                                                 <a href="{{ route('collection.view_prod', ['encryptedId' => Crypt::encrypt($mannequin->id)]) }}" class="btn-view">
@@ -159,10 +157,10 @@
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
                                                 @endcan
-                                                @can('super_admin',Auth::user())
-                                                <button class="btn-delete" data-id="{{ $mannequin->id }}" data-transfer-url="{{ route('collection.trash', ['id' => $mannequin->id]) }}">
+                                                @can('super_admin', Auth::user())
+                                                <a href="{{ route('collection.trash', ['id' => $mannequin->id]) }}" class="btn-delete" data-id="{{ $mannequin->id }}">
                                                     <i class="fas fa-trash-alt"></i> Delete
-                                                </button>
+                                                </a>
                                                 @endcan
                                             </div>
                                         </td>
@@ -176,7 +174,6 @@
                         </tbody>
                     </table>
                     {{-- END TABLE --}}
-
                 </div>
             </div>
         </div>
@@ -190,6 +187,7 @@
     <script>
         $(document).ready(function() {
             var table = $('#mannequinsTable').DataTable({
+                processing: true,
                 lengthChange: false,
                 "dom": 'lrtip'
             });
@@ -213,45 +211,6 @@
                 // Check/uncheck the "Select All" checkbox based on the checked status
                 var allCheckboxesChecked = $('td input.row-checkbox').length == $('td input.row-checkbox:checked').length;
                 $('#selectAllCheckbox').prop('checked', allCheckboxesChecked);
-            });
-
-            // Handle "Delete All" button click
-            $('#bulkAction').on('click', function() {
-                console.log('Button clicked');
-
-                var selectedIds = [];
-                $('td input.row-checkbox:checked').each(function() {
-                    selectedIds.push($(this).data('item-id'));
-                });
-                console.log('Selected IDs:', selectedIds);
-
-                if (selectedIds.length > 0) {
-                    $.ajax({
-                        url: '{{ route('collection.trashMultiple') }}',
-                        method: 'POST',
-                        data: { ids: selectedIds },
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        success: function(data, textStatus, jqXHR) {
-                            console.log('AJAX Request URL:', this.url);
-                            console.log('AJAX Request Method:', this.type);
-                            console.log('AJAX Request Headers:', this.headers);
-                            console.log('AJAX Request Data:', this.data);
-
-                            console.log('Response URL:', jqXHR.responseURL); // Log the response URL
-                            console.log('Response Status:', textStatus); // Log the response status
-                            console.log('Response Data:', data); // Log the response data
-
-                            if (data.success) {
-                                console.log('Response:', data.data);
-                                // Refresh the page or update the table as needed
-                                location.reload();
-                            }
-                        }
-                    });
-                }
             });
 
             //Category Filter
@@ -325,17 +284,14 @@
             });
         @endif
 
-        // FOR DELETE
         document.addEventListener('DOMContentLoaded', () => {
             const deleteButtons = document.querySelectorAll('.btn-delete');
 
             deleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const recordId = this.getAttribute('data-id');
-                    const transferUrl = this.getAttribute('data-transfer-url');
+                button.addEventListener('click', function(event) {
+                    event.preventDefault(); // Prevent the default link behavior
 
-                    console.log('recordId:', recordId);
-                    console.log('transferUrl:', transferUrl);
+                    const recordId = this.getAttribute('data-id');
 
                     Swal.fire({
                         title: 'Are you sure?',
@@ -347,8 +303,8 @@
                         confirmButtonText: 'Yes, delete it!'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // Perform AJAX request to delete the record
-                            axios.post(transferUrl, {
+                            // Perform the AJAX request to delete the record
+                            axios.post(this.href, {
                                 ids: [recordId] // Send the array of IDs here
                             })
                             .then(response => {
@@ -375,6 +331,65 @@
                 });
             });
         });
+
+
+        // DELETE ALL
+        function deleteSelectedMannequins() {
+    const selectedIds = [];
+    $('td input.row-checkbox:checked').each(function() {
+        selectedIds.push($(this).val());
+    });
+    console.log('selectedIds:', selectedIds);
+    if (selectedIds.length == 0) {
+        // No checkboxes are selected, do nothing or show an error message.
+        return;
+    }
+    console.log('Before Swal.fire');
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'Item/s will be trashed!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete all!'
+
+    }).then((result) => {
+        console.log('Inside Swal.then');
+        if (result.isConfirmed) {
+            // Perform the AJAX request to delete the selected records
+            axios.post('/collection/trash-multiple', { ids: selectedIds })
+                .then(response => {
+                    if (response.data.success) {
+                        Swal.fire(
+                            'Deleted!',
+                            'Selected records have been deleted.',
+                            'success'
+                        ).then(() => {
+                            // Refresh the page after successful deletion
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire(
+                            'Error!',
+                            'An error occurred while deleting the records.',
+                            'error'
+                        );
+                    }
+                })
+                .catch(error => {
+                    Swal.fire(
+                        'Error!',
+                        'An error occurred while deleting the records.',
+                        'error'
+                    );
+                });
+        }
+    });
+    console.log('After Swal.fire');
+}
+
+
     </script>
     {{--END scripts--}}
 </x-app-layout>

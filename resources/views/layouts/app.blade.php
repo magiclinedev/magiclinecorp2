@@ -28,11 +28,16 @@
 
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+        {{-- FILEPOND --}}
+        <link href="https://unpkg.com/filepond@^4/dist/filepond.css" rel="stylesheet" />
+        <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet"/>
+
         {{-- notification(PUSHER) --}}
         <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
         {{-- tostr--}}
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
         @can('super_admin', Auth::user())
         <script>
             // Enable pusher logging - don't include this in production
@@ -49,7 +54,6 @@
             });
         </script>
         @endcan
-
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -97,6 +101,7 @@
                 });
             }
         </script>
+
 
         {{-- <script src="{{ asset('resources/app.js') }}"></script> --}}
     </body>

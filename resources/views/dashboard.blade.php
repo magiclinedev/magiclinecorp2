@@ -379,6 +379,15 @@
                 }
             }
         });
+
+        document.addEventListener('mousemove', function () {
+    console.log('Mouse moved');
+    redirectAfterTimeout();
+});
+
+
+
+
     </script>
 
     {{-- sweet alert --}}

@@ -71,7 +71,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/collection', [CollectionController::class, 'index'])->name('collection');
     Route::get('/collection-view/{encryptedId}', [CollectionController::class, 'view'])->name('collection.view_prod');
     Route::get('/collection-add', [CollectionController::class, 'add'])->name('collection.add');//go to add view
-    Route::post('/remove-image', [CollectionController::class, 'remove'])->name('remove-image');//image removal in add
+
+    Route::post('/dropbox-image', [CollectionController::class, 'uploadToDropbox'])->name('upload-dropbox');//UPLOAD TO DROPBOX
+    Route::get('/remove-image', [CollectionController::class, 'removeDropboxImage'])->name('remove-image');//image removal in add
+    // Route::post('/remove-image', [CollectionController::class, 'remove'])->name('remove-image');//image removal in add
+
     Route::put('/collection-store', [CollectionController::class, 'store'])->name('collection.store');//add product
     Route::get('/collection-edit/{id}', [CollectionController::class, 'edit'])->name('collection.edit');//go
     Route::put('/collection-update/{id}', [CollectionController::class, 'update'])->name('collection.update');

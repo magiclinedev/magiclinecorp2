@@ -62,7 +62,7 @@
     </style>
 
     <div class="container mx-auto px-4 py-8">
-        <form action="{{ route('collection.store') }}" method="POST"  enctype="multipart/form-data" class="bg-white shadow-md rounded-lg px-8 py-6">
+        <form action="{{ route('collection.store') }}" method="POST" enctype="multipart/form-data" class="bg-white shadow-md rounded-lg px-8 py-6">
             @csrf
             @method('PUT')
             <div class="grid grid-cols-2 gap-4">
@@ -128,7 +128,15 @@
                 {{-- images --}}
                 <div class="col-span-2">
                     <label for="images" class="block font-bold mb-2">Images <i class="text-sm text-gray-600">(Maximum upload size 2MB per image)</i></label>
-                    <input type="file" name="images[]" id="images" class="w-full border rounded-md py-2 px-3" multiple>
+                    {{-- <input type="file" name="images[]" id="images" class="w-full border rounded-md py-2 px-3" multiple> --}}
+                    <input type="file"
+                        name="images[]" id="images"
+                        class="filepond"
+                        multiple
+                        data-max-file-size="2MB"
+                        data-max-files="8" />
+
+
                     <div id="image-preview" class="mt-3">
                         {{-- Placeholder for image preview --}}
                     </div>
@@ -249,4 +257,67 @@
             }
         });
     </script>
+
+    {{-- iMAGE UPLOAD --}}
+    <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
+    <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+    <script>
+        const inputElement = document.querySelector('input[type="file"]');
+
+        // Initialize FilePond with the desired configuration, including the imagePreview plugin
+        const pond = FilePond.create(inputElement, {
+            allowMultiple: true, // Allow multiple files
+            allowRevert: true, // Allow reverting uploaded files
+            allowRemove: true,
+            maxFileSize: '2MB', // Allow removing uploaded files
+            server: {
+                process: {
+                    url: '/dropbox-image', // Point this to your server endpoint for processing the upload
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}' // Include CSRF token if needed
+                    },
+                    // Additional process options if needed
+                },
+                revert: {
+                    url: '/remove-image', // Point this to your server endpoint for file removal
+                    method: 'GET', // Use POST method
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}' // Include CSRF token if needed
+                    },
+                    // Additional revert options if needed
+                },
+
+            },
+            // Add the imagePreview plugin options
+            imagePreviewHeight: 150, // Set the height of the image preview
+            imagePreviewMaxHeight: 300, // Set the maximum height of the image preview
+            imagePreviewWidth: 150, // Set the width of the image preview
+            imagePreviewMaxWidth: 300, // Set the maximum width of the image preview
+        });
+
+        // Hook into the removefile event to perform actions when a file is removed
+        pond.on('removefile', (file) => {
+            // You can perform additional actions here, such as deleting the file from your server or Dropbox
+            console.log(`File removed: ${file.filename}`);
+        });
+
+        // Hook into the addfile event to validate file size
+        pond.on('addfile', (error, file) => {
+            if (error || file.fileSize > 2 * 1024 * 1024) { // Check if the file size exceeds 2MB
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'File size exceeds the 2MB limit. Please select a smaller file.',
+                    icon: 'error',
+                    timer: 6000,
+                    showCancelButton: false,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                });
+                pond.removeFile(file); // Remove the invalid file from FilePond
+            }
+        });
+    </script>
+
+
 </x-app-layout>

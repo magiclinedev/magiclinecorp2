@@ -152,6 +152,33 @@ class CollectionController extends Controller
         return view('collection-add')->with(['categories' => $categories, 'types' => $types, 'companies' => $companies]);
     }
 
+    //ADD DROPBOX
+    public function uploadToDropbox(Request $request)
+    {
+        $photoPaths = [];
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $photo) {
+                $photoName = time() . '_' . $photo->getClientOriginalName();
+                $path = 'Magicline Database/images/product/' . $photoName; // Relative path within Dropbox
+
+                // Upload the image to Dropbox
+                Storage::disk('dropbox')->put($path, file_get_contents($photo));
+
+                // Store the Dropbox path in your array
+                $photoPaths[] = $path;
+            }
+        }
+
+        return $photoPaths; // Return the paths
+    }
+
+    // DROPBOX RFEMOVE IMAGES
+    public function removeDropboxImage(Request $request)
+    {
+
+    }
+
     // ADD PRODUCT
     public function store(Request $request)
     {
@@ -164,7 +191,7 @@ class CollectionController extends Controller
             'price' => 'nullable|numeric',
             'description' => 'nullable',
             'images' => 'required|array|min:1|max:8', // Ensure at least one image is present
-            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            // 'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'file' => 'nullable|mimes:xlsx,xls|max:2048',//COSTING
             'pdf' => 'nullable|mimes:pdf|max:2048',
         ], [
@@ -172,9 +199,9 @@ class CollectionController extends Controller
             'itemRef.required' => 'The Item Reference is required.',
             'itemRef.unique' => 'The Item Reference is already taken.',
             'images.required' => 'At least one image is required.',
-            'images.min' => 'At least one image is required.',
-            'images.*.max' => 'The :attribute must be less than or equal to 2 MB.',
-            'images.*.max' => 'The :attribute must be less than or equal to 2 MB.',
+            // 'images.min' => 'At least one image is required.',
+            // 'images.*.max' => 'The :attribute must be less than or equal to 2 MB.',
+            // 'images.*.max' => 'The :attribute must be less than or equal to 2 MB.',
             'file.max' => 'The :attribute must be less than or equal to 2 MB.',
             'pdf.max' => 'The :attribute must be less than or equal to 2 MB.',
         ]);
@@ -185,24 +212,17 @@ class CollectionController extends Controller
                 ->withInput();
         }
 
-        //uploaded files
-        $photoPaths = [];
+        //FOR IMAGE UPLOAD
+        $photoPaths = $request->input('images');
+
+        // Remove square brackets and double quotes from each path of image
+        $photoPaths = array_map(function ($path) {
+            return str_replace(['[', ']', '"', '\\'], '', $path);
+        }, $photoPaths);
+
+        //FILE UPLOADS
         $excelFileName = null;
         $pdfFileName = null;
-
-        // Optimize image upload
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $photo) {
-                $photoName = time() . '_' . $photo->getClientOriginalName();
-                $path = 'Magicline Database/images/product/' . $photoName; // Relative path within Dropbox
-
-                // Upload the image to Dropbox
-                Storage::disk('dropbox')->put($path, file_get_contents($photo));
-
-                // Store the Dropbox path in your database
-                $photoPaths[] = $path;
-            }
-        }
 
         // Optimize file upload
         $uploadFile = function ($fileType, $fileKey, $pathPrefix) use ($request) {
@@ -370,7 +390,7 @@ class CollectionController extends Controller
             $imagePaths = [];
 
             // Clear the cache associated with the first cache key
-            Cache::forget('image_' . $mannequin->id);
+
 
             // Clear the cache associated with the second cache key
             Cache::forget('images_' . $mannequin->id);
@@ -467,15 +487,12 @@ class CollectionController extends Controller
     // Trash Multiple Products
     public function trashMultiple(Request $request)
     {
-        $request->validate([
-            'ids' => 'required|array', // Add any other validation rules as needed
-        ]);
+        dd($request->input('selectedItems'));
+        $selectedItemIds = $request->input('selectedItems');
 
-        $ids = $request->input('ids');
-
-        if (!empty($ids)) {
-            foreach ($ids as $id) {
-                $mannequin = Mannequin::find($id);
+        if (!empty($selectedItemIds)) {
+            foreach ($selectedItemIds as $itemId) {
+                $mannequin = Mannequin::find($itemId);
 
                 if ($mannequin) {
                     $mannequin->activeStatus = 0;
@@ -483,12 +500,11 @@ class CollectionController extends Controller
                     $mannequin->save();
                 }
             }
-
-            return response()->json(['message' => 'Product details updated successfully.']);
+            return response()->json(['success' => true, 'message' => 'Items deleted permanently']);
         }
-
-        return response()->json(['message' => 'No products selected.'], 400);
+        return response()->json(['success' => false, 'message' => 'No items selected for deletion']);
     }
+
 
     //Delete (PERMANENTLY from database to storage)
     public function destroy($id)

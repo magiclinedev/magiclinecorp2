@@ -24,5 +24,5 @@ class Mannequin extends Model
         'activeStatus',
     ];
 
-    
+
 }
