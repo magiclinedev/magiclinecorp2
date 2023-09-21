@@ -212,13 +212,20 @@ class CollectionController extends Controller
                 ->withInput();
         }
 
-        //FOR IMAGE UPLOAD
-        $photoPaths = $request->input('images');
+        $inputArray = $request->input('images');
 
-        // Remove square brackets and double quotes from each path of image
-        $photoPaths = array_map(function ($path) {
-            return str_replace(['[', ']', '"', '\\'], '', $path);
-        }, $photoPaths);
+        $photoPaths = [];
+
+        foreach ($inputArray as $element) {
+            // Remove square brackets and backslashes
+            $cleanedElement = str_replace(['[', ']', '\\', '"'], '', $element);
+
+            // Remove leading and trailing whitespace
+            $cleanedElement = trim($cleanedElement);
+
+            // Add the cleaned element to the photoPaths array
+            $photoPaths[] = $cleanedElement;
+        }
 
         //FILE UPLOADS
         $excelFileName = null;
