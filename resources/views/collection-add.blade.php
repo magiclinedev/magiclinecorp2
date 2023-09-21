@@ -134,7 +134,7 @@
                         class="filepond"
                         multiple
                         data-max-file-size="2MB"
-                        data-max-files="8" />
+                        data-max-files="8" >
 
 
                     <div id="image-preview" class="mt-3">
@@ -294,12 +294,6 @@
             imagePreviewMaxHeight: 300, // Set the maximum height of the image preview
             imagePreviewWidth: 150, // Set the width of the image preview
             imagePreviewMaxWidth: 300, // Set the maximum width of the image preview
-        });
-
-        // Hook into the removefile event to perform actions when a file is removed
-        pond.on('removefile', (file) => {
-            // You can perform additional actions here, such as deleting the file from your server or Dropbox
-            console.log(`File removed: ${file.filename}`);
         });
 
         // Hook into the addfile event to validate file size

@@ -170,7 +170,7 @@ class CollectionController extends Controller
             }
         }
 
-        return $photoPaths; // Return the paths
+        return $photoPaths;
     }
 
     // DROPBOX RFEMOVE IMAGES
@@ -247,22 +247,12 @@ class CollectionController extends Controller
             'type' => strtoupper($request->type),
             'price' => $request->price,
             'description' => $request->description,
+            'images' => implode(',', $photoPaths),
+            'activeStatus' => "1",
+            'file' => $excelFileName,
+            'pdf' => $pdfFileName
         ]);
-
-        if (!empty($photoPaths)) {
-            $mannequin->images = implode(',', $photoPaths);
-        }
-
         $this->setActionBy($mannequin, 'Added');
-        $mannequin->activeStatus = "1";
-
-        if ($excelFileName !== null) {
-            $mannequin->file = $excelFileName;
-        }
-
-        if ($pdfFileName !== null) {
-            $mannequin->pdf = $pdfFileName;
-        }
 
         if ($mannequin->save()) {
             // Add audit trail for the "Added" action with the item reference

@@ -101,6 +101,7 @@
                                 <th class="px-4 py-2 border">Category</th>
                                 <th class="px-4 py-2 border">Type</th>
                                 <th class="px-4 py-2 border">Action By</th>
+                                <th class="hidden">Action By</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -117,11 +118,9 @@
                                         {{-- Images --}}
                                         <td class="px-7 py-2 border">
                                             @php
-                                                // Cache the image URL permanently
-                                                $imageCacheKey = 'image_' . $mannequin->id;
-                                                $imageUrl = Cache::rememberForever($imageCacheKey, function () use ($mannequin) {
                                                 // Cache the image URL with a reasonable duration (e.g., 1 hour)
-                                                // $imageUrl = Cache::remember($imageCacheKey, now()->addHour(1), function () use ($mannequin) {
+                                                $imageCacheKey = 'image_' . $mannequin->id;
+                                                $imageUrl = Cache::remember($imageCacheKey, now()->addHour(1), function () use ($mannequin) {
                                                     // Split the image paths string into an array
                                                     $imagePaths = explode(',', $mannequin->images);
                                                     // Get the first image path from the array
@@ -168,6 +167,7 @@
                                         <td class="px-7 py-2 border">{{ $mannequin->category }}</td>
                                         <td class="px-7 py-2 border">{{ $mannequin->type }}</td>
                                         <td class="px-7 py-2 border">{{ $mannequin->addedBy }}</td>
+                                        <td class="hidden">{{ $mannequin->created_at }}</td>
                                     </tr>
                                 @endif
                             @endforeach
@@ -187,6 +187,7 @@
     <script>
         $(document).ready(function() {
             var table = $('#mannequinsTable').DataTable({
+                order: [[7, 'desc']],
                 processing: true,
                 lengthChange: false,
                 "dom": 'lrtip'
