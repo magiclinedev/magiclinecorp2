@@ -24,13 +24,6 @@ class RedirectIfAuthenticated
                 // Check if the user's last activity time is within the allowed session timeout
                 $lastActivity = Auth::guard($guard)->user()->last_activity;
 
-                if (time() - strtotime($lastActivity) > config('session.lifetime') * 10) {
-                    Auth::guard($guard)->logout();
-
-                    return redirect()->route('auth.login')
-                        ->with('session_timeout', 'Your session has timed out. Please log in again.');
-                }
-
                 // User is authenticated and within the session timeout, redirect them to the home page
                 return redirect(RouteServiceProvider::HOME);
             }

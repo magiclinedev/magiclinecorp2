@@ -33,15 +33,29 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        // $request->authenticate();
+
+        // $user = Auth::user(); // Retrieve the authenticated user
+
+        // $request->session()->regenerate();
+
+        // event(new UserLoggedIn($user->name)); // Pass the user's name to the event
+
+        // return redirect()->intended(RouteServiceProvider::HOME);
         $request->authenticate();
 
-        $user = Auth::user(); // Retrieve the authenticated user
+        if (Auth::check()) {
+            $user = Auth::user(); // Retrieve the authenticated user
 
-        $request->session()->regenerate();
+            $request->session()->regenerate();
 
-        event(new UserLoggedIn($user->name)); // Pass the user's name to the event
+            event(new UserLoggedIn($user->name)); // Pass the user's name to the event
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+            return redirect()->intended(RouteServiceProvider::HOME);
+        } else {
+            // Authentication failed
+            return redirect()->route('login')->withErrors(['login' => 'These credentials do not match our records.']);
+        }
     }
 
     /**

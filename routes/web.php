@@ -33,7 +33,7 @@ Route::middleware(['auth', 'admin-access'])->group(function () {
     // Only Admin 1 can access these routes(and owner i guess)
     //Trashcan
     Route::get('/collection-trash', [CollectionController::class, 'trashcan'])->name('collection.trashcan');//view trashcan view
-    Route::post('/collection/{id}', [CollectionController::class, 'trash'])->name('collection.trash');//change activeStatus of product/mannequin to 0
+    Route::get('/collection-trashed/{id}', [CollectionController::class, 'trash'])->name('collection.trash');//change activeStatus of product/mannequin to 0
     Route::get('collection/{id}', [CollectionController::class, 'restore'])->name('collection.restore');//change activeStatus of product/mannequin back to 1
     Route::get('collection-delete/{id}', [CollectionController::class, 'destroy'])->name('collection.delete');//permanent delete
 
@@ -69,11 +69,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Collection/Product
     Route::get('/collection', [CollectionController::class, 'index'])->name('collection');
-    Route::get('/collection-view/{encryptedId}', [CollectionController::class, 'view'])->name('collection.view_prod');
+    Route::get('/collection-view/{id}', [CollectionController::class, 'view'])->name('collection.view_prod');
     Route::get('/collection-add', [CollectionController::class, 'add'])->name('collection.add');//go to add view
 
     Route::post('/dropbox-image', [CollectionController::class, 'uploadToDropbox'])->name('upload-dropbox');//UPLOAD TO DROPBOX
-    Route::get('/remove-image', [CollectionController::class, 'removeDropboxImage'])->name('remove-image');//image removal in add
+    Route::post('/remove-image', [CollectionController::class, 'removeDropboxImage'])->name('remove-image');//image removal in add
     // Route::post('/remove-image', [CollectionController::class, 'remove'])->name('remove-image');//image removal in add
 
     Route::put('/collection-store', [CollectionController::class, 'store'])->name('collection.store');//add product

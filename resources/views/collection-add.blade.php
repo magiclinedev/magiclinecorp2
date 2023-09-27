@@ -267,7 +267,7 @@
         // Initialize FilePond with the desired configuration, including the imagePreview plugin
         const pond = FilePond.create(inputElement, {
             allowMultiple: true, // Allow multiple files
-            allowRevert: true, // Allow reverting uploaded files
+            revert: true, // Allow reverting uploaded files
             allowRemove: true,
             maxFileSize: '2MB', // Allow removing uploaded files
             server: {
@@ -281,10 +281,11 @@
                 },
                 revert: {
                     url: '/remove-image', // Point this to your server endpoint for file removal
-                    method: 'GET', // Use POST method
+                    method: 'DELETE', // Use POST method
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}' // Include CSRF token if needed
                     },
+
                     // Additional revert options if needed
                 },
 
@@ -310,7 +311,18 @@
                 });
                 pond.removeFile(file); // Remove the invalid file from FilePond
             }
-        });
+            else {
+                    // Add a cancel button to the file item
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.textContent = 'Cancel Upload';
+                    cancelBtn.className = 'filepond--action';
+                    cancelBtn.addEventListener('click', () => {
+                        pond.removeFile(file);
+                    });
+
+                    file.info.appendChild(cancelBtn);
+                }
+            });
     </script>
 
 

@@ -84,7 +84,7 @@
                                         <span class="itemref-text">{{ $mannequin->itemref }}</span>
                                         {{-- HOVER to show read, update, and delete --}}
                                         <div class="action-buttons">
-                                            <a href="{{ route('collection.view_prod', ['encryptedId' => Crypt::encrypt($mannequin->id)]) }}" class="btn-view">
+                                            <a href="{{ route('collection.view_prod', ['id' => Crypt::encrypt($mannequin->id)]) }}" class="btn-view">
                                                 <i class="fas fa-eye"></i> View
                                             </a>
                                             <a href="#" class="btn-view restore-button" onclick="confirmRestore('{{ route('collection.restore', ['id' => $mannequin->id]) }}')">

@@ -62,10 +62,85 @@ class CollectionController extends Controller
         $selectedCompany = $request->query('company', '');
         // $companies = Company::all(); // Fetch all companies
 
+        //DATATBLES
+        if($request->ajax()){
+            if ($user->status == 1) {
+                $mannequins = Mannequin::all();
+            } else {
+                $mannequins = Mannequin::whereIn('company', $user->companies->pluck('name'))->get();
+            }
+
+            $data = collect();
+
+            $mannequins = Mannequin::where('activeStatus', 1)->get();
+            if(count($mannequins) > 0) {
+                foreach ($mannequins as $m) {
+                    // Cache the image URL with a reasonable duration (e.g., 1 hour)
+                    $imageCacheKey = 'image_' . $m->id;
+                    $imageUrl = Cache::remember($imageCacheKey, now()->addHour(1), function () use ($m) {
+                        $imagePaths = explode(',', $m->images);
+                        $firstImagePath = $imagePaths[0] ?? null;
+
+                        if (Storage::disk('dropbox')->exists($firstImagePath)) {
+                            return Storage::disk('dropbox')->url($firstImagePath);
+                        } else {
+                            return null;
+                        }
+                    });
+                    // Delete Message
+                    $confirmMessage = __('Are you sure you want to delete this item?');
+                    $data->push([
+                        'image' => $imageUrl,
+                        'itemref' => $m->itemref,
+                        'company' => $m->company,
+                        'category' => $m->category,
+                        'type' => $m->type,
+                        'addedBy' => $m->addedBy,
+                        'created_at' => $m->created_at->toDateTimeString(),
+                        'action' => '
+                        <a href="'.route('collection.view_prod', ['id' => Crypt::encrypt($m->id)]).'" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded">
+                        <i class="fas fa-eye"></i></a>
+
+                        <a href="'.route('collection.edit', ['id' => Crypt::encrypt($m->id)]).'" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded">
+                        <i class="fas fa-edit"></i></a>
+
+                        <a href="' . route('collection.trash', $m->id) . '" class="btn-delete bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-2 border border-red-500 hover:border-transparent rounded"
+                        onclick="showDeleteConfirmation(event)">
+                        <i class="fas fa-trash-alt"></i>
+                        </a>
+                        <script>
+                            function showDeleteConfirmation(event) {
+                                event.preventDefault();
+                                Swal.fire({
+                                    title: "Delete Item",
+                                    text: "' . $confirmMessage . '",
+                                    icon: "warning",
+                                    showCancelButton: true,
+                                    confirmButtonColor: "#d33",
+                                    cancelButtonColor: "#3085d6",
+                                    confirmButtonText: "Yes, delete it!",
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        // If confirmed, proceed with the deletion
+                                        window.location.href = event.target.href;
+                                    }
+                                });
+                            }
+                        </script>
+                        ',
+                    ]);
+                }
+            }
+
+            return DataTables::of($data)->rawColumns(['action'])->make(true);
+        }
+
+        //COMPANIES
         if ($user->status == 1) {
-            $mannequins = Mannequin::all(); // Super users see all data
             $companies = Company::all();
-        } else {
+            $mannequins = Mannequin::all();
+        }
+        else {
             $mannequins = Mannequin::whereIn('company', $user->companies->pluck('name'))->get();
             $companies = $user->companies;
         }
@@ -152,21 +227,32 @@ class CollectionController extends Controller
         return view('collection-add')->with(['categories' => $categories, 'types' => $types, 'companies' => $companies]);
     }
 
-    //ADD DROPBOX
+    //ADD DROPBOX in filepond
     public function uploadToDropbox(Request $request)
     {
         $photoPaths = [];
+        $success = true; // Flag to track successful uploads
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $photo) {
                 $photoName = time() . '_' . $photo->getClientOriginalName();
                 $path = 'Magicline Database/images/product/' . $photoName; // Relative path within Dropbox
 
-                // Upload the image to Dropbox
-                Storage::disk('dropbox')->put($path, file_get_contents($photo));
+                // Try to upload the image to Dropbox
+                try {
+                    Storage::disk('dropbox')->put($path, file_get_contents($photo));
+                    // Store the Dropbox path in your array
+                    $photoPaths[] = $path;
+                } catch (\Exception $e) {
+                    // Handle the exception, for example, log it
+                    \Log::error('Error uploading file to Dropbox: ' . $e->getMessage());
+                    $success = false; // Mark the upload as failed
+                }
+            }
 
-                // Store the Dropbox path in your array
-                $photoPaths[] = $path;
+            // Check if any uploads failed
+            if (!$success) {
+                return redirect('/collection-add')->with('error', 'Some files failed to upload to Dropbox.');
             }
         }
 
@@ -176,7 +262,19 @@ class CollectionController extends Controller
     // DROPBOX RFEMOVE IMAGES
     public function removeDropboxImage(Request $request)
     {
+        $deleted = true; // Flag to track successful deletion
 
+        // Loop through the files to delete
+        foreach ($request->input('filePaths') as $filePath) {
+            // Try to delete the file from Dropbox
+            try {
+                Storage::disk('dropbox')->delete($filePath);
+            } catch (\Exception $e) {
+                // Handle the exception, for example, log it
+                \Log::error('Error deleting file from Dropbox: ' . $e->getMessage());
+                $deleted = false; // Mark the deletion as failed
+            }
+        }
     }
 
     // ADD PRODUCT
@@ -212,6 +310,7 @@ class CollectionController extends Controller
                 ->withInput();
         }
 
+        //IMAGES PATH
         $inputArray = $request->input('images');
 
         $photoPaths = [];
@@ -260,22 +359,28 @@ class CollectionController extends Controller
             'pdf' => $pdfFileName
         ]);
         $this->setActionBy($mannequin, 'Added');
+        try {
+            if ($mannequin->save()) {
+                // Add audit trail for the "Added" action with the item reference
+                $activity = "Added " . $request->itemRef;
+                $this->logAuditTrail(auth()->user(), $activity);
 
-        if ($mannequin->save()) {
-            // Add audit trail for the "Added" action with the item reference
-            $activity = "Added " . $request->itemRef;
-            $this->logAuditTrail(auth()->user(), $activity);
-
-            return redirect('/collection')->with('success_message', 'Collection has been successfully added!');
-        }
-        else {
-            return redirect('/collection')->with('danger_message', 'DATABASE ERROR!');
+                return redirect('/collection')->with('success_message', 'Collection has been successfully added!');
+            }
+            else {
+                return redirect('/collection')->with('danger_message', 'DATABASE ERROR!');
+            }
+        } catch (\Exception $e) {
+            // Log the exception
+            \Log::error('Database error: ' . $e->getMessage());
+            return redirect('/collection')->with('danger_message', 'Database error occurred.');
         }
     }
 
     //View selected product for editing
     public function edit($id)
     {
+        $id = Crypt::decrypt($id);
         // Get the authenticated user
         $user = Auth::user();
 
@@ -463,6 +568,7 @@ class CollectionController extends Controller
     //DELETE(to trashcan make active status = 0)
     public function trash($id)
     {
+        // $mannequinId = Crypt::decrypt($id);
         $mannequin = Mannequin::find($id);
         if ($mannequin) {
             // Store the original item reference for the audit trail
@@ -476,9 +582,9 @@ class CollectionController extends Controller
             $activity = "Trashed $originalItemref";
             $this->logAuditTrail(auth()->user(), $activity);
 
-            return response()->json(['success' => true]);
+            return redirect()->back()->with('success_message', 'Item deleted.');
         }
-        return response()->json(['success' => false]);
+        return redirect()->back()->with('danger_message', 'Item not deleted.');
     }
 
     // Trash Multiple Products

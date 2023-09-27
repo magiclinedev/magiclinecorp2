@@ -8,7 +8,6 @@
             {{ __('Magic Line') }}
         </h2>
     </x-slot>
-
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-2">
             <div class="flex flex-wrap ">
@@ -16,7 +15,15 @@
                 {{-- ALL PRODUCT access admin 1 and owner--}}
                 @can('super_admin', Auth::user())
                 <div class="w-full sm:w-1/5 p-4 ">
-                    <a href="#" class="showAllProducts block text-center relative overflow-hidden group">
+                    {{-- admin 1, 2 and viewer has href --}}
+                    @can('users_access', Auth::user())
+                    <a href="{{ route('collection')}}" class="block text-center relative overflow-hidden group">{{-- {{ route('collection', ['company' => $company->name]) }} --}}
+                    @endcan
+                    {{-- owner shows table below --}}
+                    @can('owner', Auth::user())
+                    <a href="" class="showAllProducts block text-center relative overflow-hidden group">
+                    @endcan
+                    {{-- <a href="#" class="showAllProducts block text-center relative overflow-hidden group"> --}}
                         <!-- Content for the first square -->
                         <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                             <div class="relative">
@@ -175,84 +182,21 @@
                     </button>
 
                     {{-- TABLE --}}
-                    <table id="mannequinsTable" class="w-full table-auto border-collapse border">
+                    <table id="mannequinsTable" class="w-auto table-auto border-collapse border responsive">
                         <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
                             <tr>
-                                <th class="px-4 py-2 border">
-                                    <input type="checkbox" id="selectAllCheckbox">
-                                </th>
                                 <th class="px-4 py-2 border">Image</th>
                                 <th class="px-4 py-2 border">Item Reference</th>
                                 <th class="px-4 py-2 border">Company</th>
                                 <th class="px-4 py-2 border">Category</th>
                                 <th class="px-4 py-2 border">Type</th>
+                                <th class="px-4 py-2 border">Action Type</th>
+                                {{-- <th class="px-4 py-2 border">Created at</th> --}}
                                 <th class="px-4 py-2 border">Action By</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @foreach ($mannequins as $mannequin)
-                                @if ($mannequin->activeStatus != 0)
-                                    <tr data-item-id="{{ $mannequin->id }}" class="border">
-                                        {{-- Checkbox --}}
-                                        @can('super_admin', Auth::user())
-                                        <td class="px-7 py-2 border">
-                                            <!-- Add the checkbox input here -->
-                                            <input type="checkbox" class="row-checkbox center pb-4" data-item-id="{{ $mannequin->id }}" >
-                                        </td>
-                                        @endcan
-                                        {{-- Images --}}
-                                        @php
-                                            // Cache the image URL for a limited time (e.g., 1 hour)
-                                            $imageCacheKey = 'image_' . $mannequin->id;
-                                            $imageUrl = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($mannequin) {
-                                                // Split the image paths string into an array
-                                                $imagePaths = explode(',', $mannequin->images);
-                                                // Get the first image path from the array
-                                                $firstImagePath = $imagePaths[0] ?? null;
-
-                                                if (Storage::disk('dropbox')->exists($firstImagePath)) {
-                                                    return Storage::disk('dropbox')->url($firstImagePath);
-                                                } else {
-                                                    return null;
-                                                }
-                                            });
-                                        @endphp
-
-                                        <td class="px-7 py-2 border">
-                                            @if ($imageUrl)
-                                            <img src="{{ $imageUrl }}" alt="Mannequin Image" class="w-16 h-16 object-contain" loading="lazy">
-
-                                            @else
-                                                <p>Image not found</p>
-                                            @endif
-                                        </td>
-                                        <td class="px-4 py-2 border itemref-cell">
-                                            <span class="itemref-text">{{ $mannequin->itemref }}</span>
-                                            {{-- HOVER to show read, update, and delete --}}
-                                            <div class="action-buttons">
-
-                                                <a href="{{ route('collection.view_prod', ['encryptedId' => Crypt::encrypt($mannequin->id)]) }}" class="btn-view">
-                                                    <i class="fas fa-eye"></i> View
-                                                </a>
-                                                {{-- Admin --}}
-                                                <a href="{{ route('collection.edit', ['id' => $mannequin->id]) }}" class="btn-view">
-                                                    <i class="fas fa-edit"></i> Edit
-                                                </a>
-                                                <button class="btn-delete"data-transfer-url="{{ route('collection.trash', ['id' => $mannequin->id]) }}">
-                                                    <i class="fas fa-trash-alt"></i> Delete
-                                                </button>
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-2 border">{{ $mannequin->company }}</td>
-                                        <td class="px-4 py-2 border">{{ $mannequin->category }}</td>
-                                        <td class="px-4 py-2 border">{{ $mannequin->type }}</td>
-                                        <td class="px-4 py-2 border">{{ $mannequin->addedBy }}</td>
-                                    </tr>
-                                @endif
-                            @endforeach
-                        </tbody>
                     </table>
-                {{-- END TABLE --}}
+                    {{-- END TABLE --}}
                 </div>
                 @endcan
 
@@ -261,25 +205,81 @@
     </div>
 
     {{-- datables --}}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function() {
             var table = $('#mannequinsTable').DataTable({
+                order: [[6, 'desc']],
                 lengthChange: false,
-                "dom": 'lrtip'
+                "dom": 'lrtip',
+                processing: true,
+                serverSide: true,
+                deferRender: true,
+                "deferLoading": [ 100, 1000 ],
+                ajax:{
+                    url: '{{ route('dashboard') }}?cacheBuster=' + new Date().getTime(),
+                },
+                columnDefs: [
+                    // {
+                    //     targets: [6], // 6 is the index of the 'created_at' column (zero-based index)
+                    //     visible: false,
+
+                    // },
+                    {
+                        targets: '_all',
+                        className: ' border text-center',
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'image',
+                        name: 'image',
+                        render: function(data, type, full, meta) {
+                            if (type == 'display') {
+                                if (data) {
+                                    // Display the image as an <img> tag
+                                    return '<img src="' + data + '" alt="Mannequin Image" class="w-16 h-16 object-contain" loading="lazy">';
+                                } else {
+                                    // Display a message if the image is not found
+                                    return 'Image not found';
+                                }
+                            }
+                            return data;
+                        }
+                    },
+                    { data: 'itemref', name: 'itemref' },
+                    { data: 'company', name: 'company' },
+                    { data: 'category', name: 'category' },
+                    { data: 'type', name: 'type' },
+                    { data: 'addedBy', name: 'addedBy' },
+                    // { data: 'created_at', name: 'created_at' },
+                    { data: 'action', name: 'action', orderable: false, searchable: false }
+                ],
+                // pagingType: 'full_numbers',
+                language: {
+                    emptyTable: 'No User available',
+                },
+                searching: true,
             });
 
-            // Handle company filter(ON TOP OF TABLE)
-            $('#companyFilter').on('change', function() {
+             // Check if the table is empty and reload if it is
+             if (table.data().count() == 0) {
+                table.ajax.reload();
+            }
+
+            // Handle company filter(ON TOP OF TABLE
+             $('#companyFilter').on('change', function() {
                 var company = $(this).val();
-                table.column(3).search(company).draw();
+                table.column(2) // Company column index (0-based)
+                    .search(company)
+                    .draw();
             });
 
             // Handle category filter change(on table)
             $('#categoryFilter').on('change', function() {
                 var category = $(this).val();
-                table.column(4).search(category).draw();
+                table.column(3).search(category).draw();
             });
 
             // Show All Products button
@@ -292,68 +292,12 @@
                 scrollToElement('tableContainer');
             });
 
-
-            // Handle "select all" checkbox
-            $('#selectAllCheckbox').on('change', function() {
-                var isChecked = this.checked;
-                $('td input.row-checkbox').each(function() {
-                    this.checked = isChecked;
-                });
-
-                // Show/hide the "Delete All" button based on the checked status
-                $('#bulkAction').toggleClass('hidden', !isChecked);
-            });
-
-            // Listen for checkbox changes
-            $('td input.row-checkbox').on('change', function() {
-                var anyChecked = $('td input.row-checkbox:checked').length > 0;
-                $('#bulkAction').toggleClass('hidden', !anyChecked);
-
-                // Check/uncheck the "Select All" checkbox based on the checked status
-                var allCheckboxesChecked = $('td input.row-checkbox').length == $('td input.row-checkbox:checked').length;
-                $('#selectAllCheckbox').prop('checked', allCheckboxesChecked);
-            });
-
-            // Handle "Delete All" button click
-            $('#bulkAction').on('click', function() {
-                console.log('Button clicked');
-
-                var selectedIds = [];
-                $('td input.row-checkbox:checked').each(function() {
-                    selectedIds.push($(this).data('item-id'));
-                });
-                console.log(selectedIds);
-                if (selectedIds.length > 0) {
-                    $.ajax({
-                        url: '{{ route('collection.trashMultiple') }}', // Correct route generation
-                        method: 'POST',
-                        data: { ids: selectedIds },
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}' // Include the CSRF token
-
-                        },
-                        success: function(response)
-                        {
-                            console.log('url:', response.url);
-                            console.log('method:', response.method);
-                            console.log('Response:', response.data);
-                            if (response.success) {
-                                console.log('Response:', response.data);
-                                // Refresh the page or update the table as needed
-                                location.reload();
-                            }
-                        }
-                    });
-                }
-            });
-
             // Company Filter links
             $('.companyFilter').on('click', function(event) {
                 event.preventDefault();
                 var company = $(this).data('company');
                 table.search('').draw();
-                table.column(3).search(company).draw();
+                table.column(2).search(company).draw();
                 $('#companyFilter').val(company);
                 $('#customSearchInput').val(''); // Clear custom search input
                 scrollToElement('tableContainer');
@@ -379,14 +323,6 @@
                 }
             }
         });
-
-        document.addEventListener('mousemove', function () {
-    console.log('Mouse moved');
-    redirectAfterTimeout();
-});
-
-
-
 
     </script>
 
