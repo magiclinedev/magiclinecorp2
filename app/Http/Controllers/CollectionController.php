@@ -58,92 +58,74 @@ class CollectionController extends Controller
         if (!$user) {
             return redirect()->route('login');
         }
+
         $categories = Category::all();
         $selectedCompany = $request->query('company', '');
-        // $companies = Company::all(); // Fetch all companies
 
         //DATATBLES
         if($request->ajax()){
+
+            // company access
             if ($user->status == 1) {
-                $mannequins = Mannequin::all();
+                $mannequins = Mannequin::where('activeStatus', 1)->get();
             } else {
                 $mannequins = Mannequin::whereIn('company', $user->companies->pluck('name'))->get();
             }
 
             $data = collect();
 
-            $mannequins = Mannequin::where('activeStatus', 1)->get();
-            if(count($mannequins) > 0) {
-                foreach ($mannequins as $m) {
-                    // Cache the image URL with a reasonable duration (e.g., 1 hour)
-                    $imageCacheKey = 'image_' . $m->id;
-                    $imageUrl = Cache::remember($imageCacheKey, now()->addHour(1), function () use ($m) {
-                        $imagePaths = explode(',', $m->images);
-                        $firstImagePath = $imagePaths[0] ?? null;
+            // DATATABLE DATA
+            foreach ($mannequins as $m) {
 
-                        if (Storage::disk('dropbox')->exists($firstImagePath)) {
-                            return Storage::disk('dropbox')->url($firstImagePath);
-                        } else {
-                            return null;
+                // Cache the image URL with a reasonable duration (e.g., 1 hour)
+                $imageUrl = Cache::rememberForever('image_' . $m->id, function () use ($m) {
+                    return $this->getImageUrl($m);
+                });
+
+                // Action BUtton
+                $action = $this->generateActionButtons($user, $m);
+
+                // Delete Message
+                $confirmMessage = __('Are you sure you want to delete this item?');
+                $data->push([
+                    'image' => $imageUrl,
+                    'itemref' => $m->itemref,
+                    'company' => $m->company,
+                    'category' => $m->category,
+                    'type' => $m->type,
+                    'addedBy' => $m->addedBy,
+                    'created_at' => $m->created_at->toDateTimeString(),
+                    'action' => '
+                    <a href="' . route('collection.view_prod', ['id' => Crypt::encrypt($m->id)]) . '" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded">
+                    <i class="fas fa-eye"></i></a>
+                    '.$action.'
+                    <script>
+                        function showDeleteConfirmation(event) {
+                            event.preventDefault();
+                            Swal.fire({
+                                title: "Delete Item",
+                                text: "' . $confirmMessage . '",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonColor: "#d33",
+                                cancelButtonColor: "#3085d6",
+                                confirmButtonText: "Yes, delete it!",
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // If confirmed, proceed with the deletion
+                                    window.location.href = event.target.href;
+                                }
+                            });
                         }
-                    });
-                    // Delete Message
-                    $confirmMessage = __('Are you sure you want to delete this item?');
-                    $data->push([
-                        'image' => $imageUrl,
-                        'itemref' => $m->itemref,
-                        'company' => $m->company,
-                        'category' => $m->category,
-                        'type' => $m->type,
-                        'addedBy' => $m->addedBy,
-                        'created_at' => $m->created_at->toDateTimeString(),
-                        'action' => '
-                        <a href="'.route('collection.view_prod', ['id' => Crypt::encrypt($m->id)]).'" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded">
-                        <i class="fas fa-eye"></i></a>
-
-                        <a href="'.route('collection.edit', ['id' => Crypt::encrypt($m->id)]).'" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded">
-                        <i class="fas fa-edit"></i></a>
-
-                        <a href="' . route('collection.trash', $m->id) . '" class="btn-delete bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-2 border border-red-500 hover:border-transparent rounded"
-                        onclick="showDeleteConfirmation(event)">
-                        <i class="fas fa-trash-alt"></i>
-                        </a>
-                        <script>
-                            function showDeleteConfirmation(event) {
-                                event.preventDefault();
-                                Swal.fire({
-                                    title: "Delete Item",
-                                    text: "' . $confirmMessage . '",
-                                    icon: "warning",
-                                    showCancelButton: true,
-                                    confirmButtonColor: "#d33",
-                                    cancelButtonColor: "#3085d6",
-                                    confirmButtonText: "Yes, delete it!",
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        // If confirmed, proceed with the deletion
-                                        window.location.href = event.target.href;
-                                    }
-                                });
-                            }
-                        </script>
-                        ',
-                    ]);
-                }
+                    </script>
+                    ',
+                ]);
             }
-
             return DataTables::of($data)->rawColumns(['action'])->make(true);
         }
-
         //COMPANIES
-        if ($user->status == 1) {
-            $companies = Company::all();
-            $mannequins = Mannequin::all();
-        }
-        else {
-            $mannequins = Mannequin::whereIn('company', $user->companies->pluck('name'))->get();
-            $companies = $user->companies;
-        }
+        $companies = $user->status == 1 ? Company::all() : $user->companies;
+        $mannequins = Mannequin::where('activeStatus', 0)->get();
 
         return view('collection')->with([
             'categories' => $categories,
@@ -153,6 +135,44 @@ class CollectionController extends Controller
             'user' => $user,
             // 'dropboxFiles' => $files,
         ]);
+    }
+
+    // IMAGE FOR DATATABLE
+    private function getImageUrl($mannequin)
+    {
+        $imagePaths = explode(',', $mannequin->images);
+        $firstImagePath = $imagePaths[0] ?? null;
+
+        if (Storage::disk('dropbox')->exists($firstImagePath)) {
+            return Storage::disk('dropbox')->url($firstImagePath);
+        } else {
+            return null;
+        }
+    }
+
+    // ACTION BUTTONS FOR DATATABLES
+    private function generateActionButtons($user, $mannequin)
+    {
+        $action = '';
+
+        if (Gate::allows('super_admin', $user)) {
+            $action = '
+                <a href="' . route('collection.edit', ['id' => Crypt::encrypt($mannequin->id)]) . '" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded">
+                <i class="fas fa-edit"></i></a>
+
+                <a href="' . route('collection.trash', $mannequin->id) . '" class="btn-delete bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-2 border border-red-500 hover:border-transparent rounded"
+                onclick="showDeleteConfirmation(event)">
+                <i class="fas fa-trash-alt"></i>
+                </a>
+            ';
+        } elseif (Gate::allows('admin_access', $user)) {
+            $action = '
+            <a href="' . route('collection.edit', ['id' => Crypt::encrypt($mannequin->id)]) . '" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded">
+            <i class="fas fa-edit"></i></a>
+            ';
+        }
+
+        return $action;
     }
 
     //AddedBy User(used for all not just added by)
@@ -431,6 +451,7 @@ class CollectionController extends Controller
         ]);
     }
 
+    // UPDATE PRODUCT
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -570,6 +591,7 @@ class CollectionController extends Controller
     {
         // $mannequinId = Crypt::decrypt($id);
         $mannequin = Mannequin::find($id);
+        Cache::forget('images_' . $mannequin->id);
         if ($mannequin) {
             // Store the original item reference for the audit trail
             $originalItemref = $mannequin->itemref;
@@ -613,6 +635,7 @@ class CollectionController extends Controller
     public function destroy($id)
     {
         $mannequin = Mannequin::findOrFail($id);
+        Cache::forget('images_' . $mannequin->id);
 
         // Store the original item reference for the audit trail
         $originalItemref = $mannequin->itemref;

@@ -114,6 +114,7 @@
     {{--START scripts --}}
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    {{-- DATA TABLE --}}
     <script>
         $(document).ready(function() {
             var table = $('#mannequinsTable').DataTable({
@@ -123,10 +124,13 @@
                 processing: true,
                 serverSide: true,
                 deferRender: true,
-                "deferLoading": [ 100, 1000 ],
+                recordsTotal: 57,
+                recordsFiltered: 57,
                 ajax:{
-                    url: '{{ route('collection') }}?cacheBuster=' + new Date().getTime(),
+                    url: '{{ route('collection') }}' ,
                 },
+                deferLoading: (10, 100),
+
                 columnDefs: [
                     {
                         targets: [6], // 6 is the index of the 'created_at' column (zero-based index)
@@ -164,7 +168,7 @@
                     {
                         data:'action',
                         name: 'action',
-                        orderable: false, searchable: false
+                        orderable: false, searchable: false,
                     }
                 ],
                 // pagingType: 'full_numbers',

@@ -92,14 +92,14 @@ class DashboardController extends Controller
                         // 'created_at' => $m->created_at->toDateTimeString(),
                         'action' => '
                         <a href="'.route('collection.view_prod', ['id' => Crypt::encrypt($m->id)]).'" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded">
-                        <i class="fas fa-eye"></i></a>
-
-                        <a href="'.route('collection.edit', ['id' => Crypt::encrypt($m->id)]).'" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded">
-                        <i class="fas fa-edit"></i></a>
-
-                        <a href="'.route('collection.trash', $m->id).'" class="btn-delete bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-2 border border-red-500 hover:border-transparent rounded">
-                        <i class="fas fa-trash-alt"></i></button>',
+                        <i class="fas fa-eye"></i>View</a>',
                     ]);
+
+                        // <a href="'.route('collection.edit', ['id' => Crypt::encrypt($m->id)]).'" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded">
+                        // <i class="fas fa-edit"></i></a>
+
+                        // <a href="'.route('collection.trash', $m->id).'" class="btn-delete bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-2 border border-red-500 hover:border-transparent rounded">
+                        // <i class="fas fa-trash-alt"></i></button>
                 }
             }
 

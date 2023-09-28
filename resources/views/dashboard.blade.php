@@ -167,14 +167,14 @@
                         </div>
 
                         {{-- Trashcan Button --}}
-                        @if ($mannequins->contains('activeStatus', 0))
+                        {{-- @if ($mannequins->contains('activeStatus', 0))
                             <div class="pt-2">
                                 <a href="{{ route('collection.trashcan') }}" class="text-gray-800 hover:text-gray-600">
                                     <i class="fas fa-trash-alt"></i> Trash
                                     <span class="badge">{{ $mannequins->where('activeStatus', 0)->count() }}</span>
                                 </a>
                             </div>
-                        @endif
+                        @endif --}}
                     </div>
 
                     <button id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
@@ -192,7 +192,7 @@
                                 <th class="px-4 py-2 border">Type</th>
                                 <th class="px-4 py-2 border">Action Type</th>
                                 {{-- <th class="px-4 py-2 border">Created at</th> --}}
-                                <th class="px-4 py-2 border">Action By</th>
+                                <th class="px-4 py-2 border">Action</th>
                             </tr>
                         </thead>
                     </table>
@@ -210,7 +210,7 @@
     <script>
         $(document).ready(function() {
             var table = $('#mannequinsTable').DataTable({
-                order: [[6, 'desc']],
+                order: [[5, 'desc']],
                 lengthChange: false,
                 "dom": 'lrtip',
                 processing: true,

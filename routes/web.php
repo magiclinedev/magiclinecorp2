@@ -67,8 +67,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    Route::get('/loadMoreData', [CollectionController::class, 'loadMoreData'])->name('load-more-data');
+
     // Collection/Product
     Route::get('/collection', [CollectionController::class, 'index'])->name('collection');
+
     Route::get('/collection-view/{id}', [CollectionController::class, 'view'])->name('collection.view_prod');
     Route::get('/collection-add', [CollectionController::class, 'add'])->name('collection.add');//go to add view
 
