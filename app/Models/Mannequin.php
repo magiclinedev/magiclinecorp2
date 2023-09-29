@@ -24,5 +24,14 @@ class Mannequin extends Model
         'activeStatus',
     ];
 
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category');
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'company');
+    }
 
 }

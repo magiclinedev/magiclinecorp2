@@ -59,18 +59,79 @@ class CollectionController extends Controller
             return redirect()->route('login');
         }
 
+        $selectedCategory = $request->input('category');
         $categories = Category::all();
         $selectedCompany = $request->query('company', '');
 
         //DATATBLES
         if($request->ajax()){
 
-            // company access
-            if ($user->status == 1) {
-                $mannequins = Mannequin::where('activeStatus', 1)->get();
-            } else {
-                $mannequins = Mannequin::whereIn('company', $user->companies->pluck('name'))->get();
+            // Get the page number and number of records per page from the request
+            $page = $request->input('start') / $request->input('length') + 1;
+            $perPage = $request->input('length');
+
+            // Modify your query to load the data for the current page
+            $query = Mannequin::query();
+
+            $query->orderBy('created_at', 'desc');
+
+            $searchQuery = $request->input('search');
+            $selectedCategory = $request->input('category');
+            $selectedCompany = $request->query('company', '');
+
+            // Modify your query to add search functionality
+            if (!empty($searchQuery)) {
+                $query->where(function ($subquery) use ($searchQuery) {
+                    $subquery->where('itemref', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('company', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('category', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('type', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('addedBy', 'like', '%' . $searchQuery . '%');
+                });
             }
+
+            if (!empty($selectedCategory)) {
+                $query->where('category', $selectedCategory);
+            }
+            if (!empty($selectedCompany)) {
+                $query->where('company', $selectedCompany);
+            }
+
+            //Filter
+            // if (!empty($selectedCategory)) {
+            //     $query->where('category', $selectedCategory);
+            // }
+            // if (!empty($selectedCompany)) {
+            //     $query->where('company', $selectedCompany);
+            // }
+
+            // Product Access
+            if ($user->status == 1) {
+                // If user's status is 1, query for activeStatus = 1
+                $query->where('activeStatus', 1);
+            } else {
+                // If user's status is not 1, query based on user's companies
+                $companies = $user->companies->pluck('name')->toArray();
+                $query->whereIn('company', $companies);
+            }
+
+            // $searchQuery = $request->input('search'); // Get the search query parameter from the client
+
+            // // Modify your query to add search functionality
+            // if (!empty($searchQuery)) {
+            //     $query->where('itemref', 'like', '%' . $searchQuery . '%')
+            //           ->orWhere('company', 'like', '%' . $searchQuery . '%')
+            //           ->orWhere('category', 'like', '%' . $searchQuery . '%')
+            //           ->orWhere('type', 'like', '%' . $searchQuery . '%')
+            //           ->orWhere('addedBy', 'like', '%' . $searchQuery . '%');
+            // }
+
+            $totalRecords = $query->count(); // Get the total number of records
+
+            $mannequins = $query
+                ->skip(($page - 1) * $perPage)
+                ->take($perPage)
+                ->get();
 
             $data = collect();
 
@@ -78,7 +139,7 @@ class CollectionController extends Controller
             foreach ($mannequins as $m) {
 
                 // Cache the image URL with a reasonable duration (e.g., 1 hour)
-                $imageUrl = Cache::rememberForever('image_' . $m->id, function () use ($m) {
+                $imageUrl = Cache::remember('image_' . $m->id, now()->addHour(1), function () use ($m) {
                     return $this->getImageUrl($m);
                 });
 
@@ -121,7 +182,12 @@ class CollectionController extends Controller
                     ',
                 ]);
             }
-            return DataTables::of($data)->rawColumns(['action'])->make(true);
+            return response()->json([
+                'draw' => $request->input('draw'),
+                'recordsTotal' => $totalRecords, // Total number of records in the database
+                'recordsFiltered' => $totalRecords, // Total number of records after filtering (if any)
+                'data' => $data, // Your paginated data
+            ]);
         }
         //COMPANIES
         $companies = $user->status == 1 ? Company::all() : $user->companies;

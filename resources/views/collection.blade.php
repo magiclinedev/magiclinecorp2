@@ -52,9 +52,9 @@
                     {{-- category --}}
                     <div class="filter-dropdown">
                         <select id="categoryFilter" class="block w-52 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Category">
-                            <option value="">Categories </option>
+                            <option value="">Categories</option>
                             @foreach ($categories as $category)
-                                <option value="{{ $category->name }}"> {{ $category->name }} </option>
+                                <option value="{{ $category->name }}">{{ $category->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -124,13 +124,18 @@
                 processing: true,
                 serverSide: true,
                 deferRender: true,
-                recordsTotal: 57,
-                recordsFiltered: 57,
+                scrollY: false,
+                pageLength: 10,
                 ajax:{
                     url: '{{ route('collection') }}' ,
+                    data: function (data) {
+                        // Add additional filter data
+                        data.category = $('#categoryFilter').val(); // Get the selected category value
+                        data.company = $('#companyFilter').val();
+                        data.search = $('#customSearchInput').val();
+                    },
                 },
                 deferLoading: (10, 100),
-
                 columnDefs: [
                     {
                         targets: [6], // 6 is the index of the 'created_at' column (zero-based index)
@@ -145,6 +150,8 @@
                     {
                         data: 'image',
                         name: 'image',
+                        orderable: false,
+                        searchable: false,
                         render: function(data, type, full, meta) {
                             if (type == 'display') {
                                 if (data) {
@@ -156,6 +163,7 @@
                                 }
                             }
                             return data;
+
                         }
                     },
                     { data: 'itemref', name: 'itemref' },
@@ -183,48 +191,23 @@
                 table.ajax.reload();
             }
 
-            //Category Filter
-            $('#categoryFilter').on('change', function() {
-                var category = $(this).val();
-
-                if ({{ Auth::user()->status }} === 1 || {{ Auth::user()->status }} === 4) {
-                    // Admin 1 or Owner(4) filter logic
-                    table.column(3) // Category column index (0-based)
-                        .search(category)
-                        .draw();
-                }
-                else {
-                    // Other users filter logic
-                    table.column(3) // Category column index (0-based)
-                        .search(category)
-                        .draw();
-                }
+            // Category Filter
+            // Add event listener for category filter
+            $('#categoryFilter').on('change', function () {
+                table.draw(); // Redraw the table to apply the filter
             });
 
             // Handle company filter change
             $('#companyFilter').on('change', function() {
-                var company = $(this).val();
-
-                if ({{ Auth::user()->status }} === 1 || {{ Auth::user()->status }} === 4) {
-                    // Admin 1 or Owner(4) filter logic
-                    table.column(2) // Company column index (0-based)
-                        .search(company)
-                        .draw();
-                }
-                else {
-                    // Other users filter logic
-                    table.column(2) // Company column index for non-admin users (0-based)
-                        .search(company)
-                        .draw();
-                }
+                table.draw();
             });
 
-            // Custom search input handler using input event
-            $('#customSearchInput').keyup(function(){
-                table.search( $(this).val() ).draw() ;
+            // Add event listener for custom search input
+            $('#customSearchInput').on('keyup', function () {
+                table.search(this.value).draw(); // This will send the search query to the server
             });
 
-            // Trigger initial filter changes after DataTable initializes(from dashboard)
+            // Trigger initial filter changes after DataTable initializes
             $('#categoryFilter').trigger('change');
             $('#companyFilter').trigger('change');
         });

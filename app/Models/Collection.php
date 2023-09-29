@@ -10,3 +10,4 @@ class Collection extends Model
     use HasFactory;
     protected $fillable = ['collection_name','collection_code', 'collection_cost', 'collection_quantity', 'active_status'];
 }
+
