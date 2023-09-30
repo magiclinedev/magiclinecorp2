@@ -133,6 +133,11 @@
                         data.category = $('#categoryFilter').val(); // Get the selected category value
                         data.company = $('#companyFilter').val();
                         data.search = $('#customSearchInput').val();
+
+                        //added today
+                        if (window.location.search.includes('date=today')) {
+                            data.date = 'today';
+                        }
                     },
                 },
                 deferLoading: (10, 100),

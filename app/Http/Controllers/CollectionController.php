@@ -73,6 +73,7 @@ class CollectionController extends Controller
             // Modify your query to load the data for the current page
             $query = Mannequin::query();
 
+
             $query->orderBy('created_at', 'desc');
 
             $searchQuery = $request->input('search');
@@ -89,6 +90,11 @@ class CollectionController extends Controller
                             ->orWhere('addedBy', 'like', '%' . $searchQuery . '%');
                 });
             }
+            $dateFilter = $request->input('date');
+if ($dateFilter == 'today') {
+    // Modify your query to filter products added today
+    $query->whereDate('created_at', now()->toDateString());
+}
 
             if (!empty($selectedCategory)) {
                 $query->where('category', $selectedCategory);
@@ -96,14 +102,6 @@ class CollectionController extends Controller
             if (!empty($selectedCompany)) {
                 $query->where('company', $selectedCompany);
             }
-
-            //Filter
-            // if (!empty($selectedCategory)) {
-            //     $query->where('category', $selectedCategory);
-            // }
-            // if (!empty($selectedCompany)) {
-            //     $query->where('company', $selectedCompany);
-            // }
 
             // Product Access
             if ($user->status == 1) {
@@ -114,17 +112,6 @@ class CollectionController extends Controller
                 $companies = $user->companies->pluck('name')->toArray();
                 $query->whereIn('company', $companies);
             }
-
-            // $searchQuery = $request->input('search'); // Get the search query parameter from the client
-
-            // // Modify your query to add search functionality
-            // if (!empty($searchQuery)) {
-            //     $query->where('itemref', 'like', '%' . $searchQuery . '%')
-            //           ->orWhere('company', 'like', '%' . $searchQuery . '%')
-            //           ->orWhere('category', 'like', '%' . $searchQuery . '%')
-            //           ->orWhere('type', 'like', '%' . $searchQuery . '%')
-            //           ->orWhere('addedBy', 'like', '%' . $searchQuery . '%');
-            // }
 
             $totalRecords = $query->count(); // Get the total number of records
 

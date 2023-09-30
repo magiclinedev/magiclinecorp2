@@ -136,6 +136,49 @@
                 </div>
                 @endcan
 
+                {{-- ADDED PROD TODAY --}}
+                @can('super_admin', Auth::user())
+                <div class="w-full sm:w-1/5 p-4">
+                    {{-- admin 1, 2 and viewer has href --}}
+                    @can('users_access', Auth::user())
+                    <a href="{{ route('collection', ['date' => 'today']) }}" class="block text-center relative overflow-hidden group">
+                    @endcan
+                    {{-- owner shows table below --}}
+                    @can('owner', Auth::user())
+                    <a href="" class="showAllProducts block text-center relative overflow-hidden group">
+                    @endcan
+                        <!-- Content for the first square -->
+                        <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
+                            <div class="relative">
+                                <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
+                                    <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
+                                        <i class="fas fa-plus fa-3x text-black"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Content container -->
+                                <div class="p-6 items-end flex justify-end">
+                                    <div class="text-sm text-gray-500">
+                                        <div class="text-right">
+                                            <div class="text-2xl font-semibold text-white-800">
+                                                <span class="text-5xl text-800 text-white">
+                                                    {{ $productsCreatedToday }}
+                                                </span>
+                                            </div>
+                                            <div class="text-xs text-white-500">
+                                                <p class="text-white">Added Product Today</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Pseudo-element for hover effect -->
+                        <div class="absolute left-0 bottom-0 h-0 w-full bg-gradient-to-t from-gray-400 to-transparent transition-all duration-300 ease-in-out group-hover:h-full"></div>
+                    </a>
+                </div>
+                @endcan
+
                 {{-- TABLE (for owner) --}}
                 @can('owner', Auth::user())
                 <div id="tableContainer" class="bg-white shadow-sm sm:rounded-lg w-full p-4" style="display: none;">

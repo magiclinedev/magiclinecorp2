@@ -53,6 +53,7 @@ class DashboardController extends Controller
         $categories = Category::all();
         $users = User::all();
 
+
          // Check if the user is a super user (status 1 or 4)
         if ($user->status == 1 || $user->status == 4) {
             // Super users see all mannequins and companies
@@ -63,6 +64,10 @@ class DashboardController extends Controller
             $mannequins = Mannequin::whereIn('company', $user->companies->pluck('name'))->get();
             $companies = $user->companies;
         }
+
+        $productsCreatedToday = Mannequin::whereDate('created_at', Carbon::today())
+        ->where('activeStatus', 1)
+        ->count();
 
         if($request->ajax()){
 
@@ -112,6 +117,7 @@ class DashboardController extends Controller
             // 'companyName' => $selectedCompany,
             'user' => $user,
             'users' => $users,
+            'productsCreatedToday' => $productsCreatedToday,
         ]);
     }
 }
