@@ -79,6 +79,7 @@ class CollectionController extends Controller
             $searchQuery = $request->input('search');
             $selectedCategory = $request->input('category');
             $selectedCompany = $request->query('company', '');
+            $dateFilter = $request->input('date');
 
             // Modify your query to add search functionality
             if (!empty($searchQuery)) {
@@ -90,12 +91,12 @@ class CollectionController extends Controller
                             ->orWhere('addedBy', 'like', '%' . $searchQuery . '%');
                 });
             }
-            $dateFilter = $request->input('date');
-if ($dateFilter == 'today') {
-    // Modify your query to filter products added today
-    $query->whereDate('created_at', now()->toDateString());
-}
 
+            // FILTERS
+            if ($dateFilter == 'today') {
+                // Modify your query to filter products added today
+                $query->whereDate('created_at', now()->toDateString());
+            }
             if (!empty($selectedCategory)) {
                 $query->where('category', $selectedCategory);
             }
@@ -130,7 +131,7 @@ if ($dateFilter == 'today') {
                     return $this->getImageUrl($m);
                 });
 
-                // Action BUtton
+                // Action Button
                 $action = $this->generateActionButtons($user, $m);
 
                 // Delete Message
@@ -335,19 +336,18 @@ if ($dateFilter == 'today') {
     // DROPBOX RFEMOVE IMAGES
     public function removeDropboxImage(Request $request)
     {
-        $deleted = true; // Flag to track successful deletion
+        // // Get the filename to be removed from the client-side
+        // $filename = $request->input('filename'); // Change 'images' to 'filename'
+        // // dd($filename);
 
-        // Loop through the files to delete
-        foreach ($request->input('filePaths') as $filePath) {
-            // Try to delete the file from Dropbox
-            try {
-                Storage::disk('dropbox')->delete($filePath);
-            } catch (\Exception $e) {
-                // Handle the exception, for example, log it
-                \Log::error('Error deleting file from Dropbox: ' . $e->getMessage());
-                $deleted = false; // Mark the deletion as failed
-            }
-        }
+        // // Delete the file from Dropbox or any other storage
+        // try {
+        //     Storage::disk('dropbox')->delete('Magicline Database/images/product/' . $filename);
+        //     return response()->json(['message' => 'Image removed successfully'], 200);
+        // } catch (\Exception $e) {
+        //     \Log::error('Error removing file from Dropbox: ' . $e->getMessage());
+        //     return response()->json(['error' => 'Image removal failed'], 500);
+        // }
     }
 
     // ADD PRODUCT

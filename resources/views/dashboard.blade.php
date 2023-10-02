@@ -61,7 +61,7 @@
                 <div class="w-full sm:w-1/5 p-4 ">
                     {{-- admin 1, 2 and viewer has href --}}
                     @can('users_access', Auth::user())
-                    <a href="{{ route('collection', ['company' => $company->name]) }}" class="block text-center relative overflow-hidden group" data-company="{{ $company->name }}">{{-- {{ route('collection', ['company' => $company->name]) }} --}}
+                    <a href="{{ route('collection', ['company' => $company->name, 'companySelected' => 'true']) }}" class="block text-center relative overflow-hidden group" data-company="{{ $company->name }}">{{-- {{ route('collection', ['company' => $company->name]) }} --}}
                     @endcan
                     {{-- owner shows table below --}}
                     @can('owner', Auth::user())
@@ -145,7 +145,7 @@
                     @endcan
                     {{-- owner shows table below --}}
                     @can('owner', Auth::user())
-                    <a href="" class="showAllProducts block text-center relative overflow-hidden group">
+                    <a href="" class="showAddedTodayProducts block text-center relative overflow-hidden group">
                     @endcan
                         <!-- Content for the first square -->
                         <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
@@ -225,8 +225,8 @@
                     </button>
 
                     {{-- TABLE --}}
-                    <table id="mannequinsTable" class="w-auto table-auto border-collapse border responsive">
-                        <thead class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
+                    <table id="mannequinsTable" class="w-full table-auto border-collapse border">
+                        <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                             <tr>
                                 <th class="px-4 py-2 border">Image</th>
                                 <th class="px-4 py-2 border">Item Reference</th>
@@ -234,7 +234,7 @@
                                 <th class="px-4 py-2 border">Category</th>
                                 <th class="px-4 py-2 border">Type</th>
                                 <th class="px-4 py-2 border">Action Type</th>
-                                {{-- <th class="px-4 py-2 border">Created at</th> --}}
+                                <th class="px-4 py-2 border">Created at</th>
                                 <th class="px-4 py-2 border">Action</th>
                             </tr>
                         </thead>
@@ -253,31 +253,40 @@
     <script>
         $(document).ready(function() {
             var table = $('#mannequinsTable').DataTable({
-                order: [[5, 'desc']],
+                // order: [[6, 'desc']],
                 lengthChange: false,
                 "dom": 'lrtip',
                 processing: true,
                 serverSide: true,
                 deferRender: true,
-                "deferLoading": [ 100, 1000 ],
+                scrollY: false,
+                pageLength: 10,
                 ajax:{
-                    url: '{{ route('dashboard') }}?cacheBuster=' + new Date().getTime(),
+                    url: '{{ route('dashboard') }}',
+                    data: function (data) {
+                        // Add additional filter data
+                        data.category = $('#categoryFilter').val(); // Get the selected category value
+                        data.company = $('#companyFilter').val();
+                        data.search = $('#customSearchInput').val();
+                    },
                 },
+                deferLoading: (10, 100),
                 columnDefs: [
-                    // {
-                    //     targets: [6], // 6 is the index of the 'created_at' column (zero-based index)
-                    //     visible: false,
-
-                    // },
+                    {
+                        targets: [6], // 6 is the index of the 'created_at' column (zero-based index)
+                        visible: false,
+                    },
                     {
                         targets: '_all',
-                        className: ' border text-center',
-                    }
+                        className: 'px-2 py-2 border text-center',
+                    },
                 ],
                 columns: [
                     {
                         data: 'image',
                         name: 'image',
+                        orderable: false,
+                        searchable: false,
                         render: function(data, type, full, meta) {
                             if (type == 'display') {
                                 if (data) {
@@ -289,6 +298,7 @@
                                 }
                             }
                             return data;
+
                         }
                     },
                     { data: 'itemref', name: 'itemref' },
@@ -296,55 +306,85 @@
                     { data: 'category', name: 'category' },
                     { data: 'type', name: 'type' },
                     { data: 'addedBy', name: 'addedBy' },
-                    // { data: 'created_at', name: 'created_at' },
-                    { data: 'action', name: 'action', orderable: false, searchable: false }
+                    { data: 'created_at', name: 'created_at' },
+
+                    {
+                        data:'action',
+                        name: 'action',
+                        orderable: false, searchable: false,
+                    }
                 ],
                 // pagingType: 'full_numbers',
                 language: {
-                    emptyTable: 'No User available',
+                    emptyTable: 'No Data available',
                 },
                 searching: true,
             });
 
-             // Check if the table is empty and reload if it is
-             if (table.data().count() == 0) {
+            // Check if the table is empty and reload if it is
+            if (table.data().count() == 0) {
                 table.ajax.reload();
             }
 
-            // Handle company filter(ON TOP OF TABLE
-             $('#companyFilter').on('change', function() {
-                var company = $(this).val();
-                table.column(2) // Company column index (0-based)
-                    .search(company)
-                    .draw();
+            // Category Filter
+            // Add event listener for category filter
+            $('#categoryFilter').on('change', function () {
+                table.draw(); // Redraw the table to apply the filter
             });
 
-            // Handle category filter change(on table)
-            $('#categoryFilter').on('change', function() {
-                var category = $(this).val();
-                table.column(3).search(category).draw();
+            // Handle company filter change
+            // When the company filter link is clicked
+            $('.companyFilter').on('click', function(event) {
+                event.preventDefault();
+                var company = $(this).data('company');
+
+                // Update the select element
+                $('#companyFilter').val(company);
+
+                // Trigger the DataTable's filtering logic
+                table.search('').draw();
+                table.column(2).search(company).draw();
             });
+
+            // Add event listener for custom search input
+            $('#customSearchInput').on('keyup', function () {
+                table.search(this.value).draw(); // This will send the search query to the server
+            });
+
+            // Trigger initial filter changes after DataTable initializes
+            $('#categoryFilter').trigger('change');
+            $('#companyFilter').trigger('change');
 
             // Show All Products button
             $('.showAllProducts').on('click', function(event) {
                 event.preventDefault();
                 $('#tableContainer').show();
-                table.search('').columns().search('').draw();
                 $('#companyFilter').val('');
-                $('#customSearchInput').val(''); // Clear custom search input
+                $('#customSearchInput').val('');
+                table.draw(); // Clear custom search input
+                scrollToElement('tableContainer');
+            });
+
+            $('.showAddedTodayProducts').on('click', function(event) {
+                event.preventDefault();
+                var dateFilter = 'today';
+                $('#tableContainer').show();
+                $('#companyFilter').val('');
+                $('#customSearchInput').val('');
+                table.draw(); // Clear custom search input
                 scrollToElement('tableContainer');
             });
 
             // Company Filter links
-            $('.companyFilter').on('click', function(event) {
-                event.preventDefault();
-                var company = $(this).data('company');
-                table.search('').draw();
-                table.column(2).search(company).draw();
-                $('#companyFilter').val(company);
-                $('#customSearchInput').val(''); // Clear custom search input
-                scrollToElement('tableContainer');
-            });
+            // $('.companyFilter').on('click', function(event) {
+            //     event.preventDefault();
+            //     var company = $(this).data('company');
+            //     table.search('').draw();
+            //     table.column(2).search(company).draw();
+            //     $('#companyFilter').val(company);
+            //     $('#customSearchInput').val(''); // Clear custom search input
+            //     scrollToElement('tableContainer');
+            // });
 
             // Show Table button
             $('.show-table-button').on('click', function(event) {
@@ -365,81 +405,6 @@
                     element.scrollIntoView({ behavior: 'smooth' });
                 }
             }
-        });
-
-    </script>
-
-    {{-- sweet alert --}}
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-    <script>
-        @if(session('success_message'))
-            Swal.fire({
-                title: 'Done!',
-                text: '{{ session('success_message') }}',
-                icon: 'success',
-                timer: 3000,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Close'
-            });
-        @elseif(session('danger_message'))
-            Swal.fire({
-                title: 'Error!',
-                text: '{{session('danger_message') }}',
-                icon: 'error',
-                timer: 3000,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-            });
-        @endif
-    </script>
-    {{-- Sweet Alert for Delete --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const deleteButtons = document.querySelectorAll('.btn-delete');
-
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const recordId = this.getAttribute('data-id');
-                    const transferUrl = this.getAttribute('data-transfer-url');
-
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: 'You won\'t be able to revert this!',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Yes, delete it!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Perform AJAX request to delete the record
-                            axios.post(transferUrl)
-                                 .then(response => {
-                                     if (response.data.success) {
-                                         Swal.fire(
-                                             'Deleted!',
-                                             'Your record has been deleted.',
-                                             'success'
-                                         ).then(() => {
-                                             // Refresh the page after successful deletion
-                                             window.location.reload();
-                                         });
-                                     }
-                                 })
-                            .catch(error => {
-                                Swal.fire(
-                                    'Error!',
-                                    'An error occurred while deleting the record.',
-                                    'error'
-                                );
-                            });
-                        }
-                    });
-                });
-            });
         });
     </script>
 </x-app-layout>

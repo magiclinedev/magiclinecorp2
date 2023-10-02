@@ -172,18 +172,17 @@
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Close'
             });
-            @elseif(session('danger_message'))
-                Swal.fire({
-                    title: 'Error!',
-                    html: `{!! implode('<br>', $errors->all()) !!}`,
-                    icon: 'error',
-                    timer: 6000,
-                    showCancelButton: false,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                });
-            @endif
-
+        @elseif(session('danger_message'))
+            Swal.fire({
+                title: 'Error!',
+                html: `{!! implode('<br>', $errors->all()) !!}`,
+                icon: 'error',
+                timer: 6000,
+                showCancelButton: false,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+            });
+        @endif
     </script>
 
     {{-- Description Quill --}}
@@ -279,16 +278,6 @@
                     },
                     // Additional process options if needed
                 },
-                revert: {
-                    url: '/remove-image', // Point this to your server endpoint for file removal
-                    method: 'DELETE', // Use POST method
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}' // Include CSRF token if needed
-                    },
-
-                    // Additional revert options if needed
-                },
-
             },
             // Add the imagePreview plugin options
             imagePreviewHeight: 150, // Set the height of the image preview
@@ -296,7 +285,6 @@
             imagePreviewWidth: 150, // Set the width of the image preview
             imagePreviewMaxWidth: 300, // Set the maximum width of the image preview
         });
-
         // Hook into the addfile event to validate file size
         pond.on('addfile', (error, file) => {
             if (error || file.fileSize > 2 * 1024 * 1024) { // Check if the file size exceeds 2MB
@@ -323,7 +311,33 @@
                     file.info.appendChild(cancelBtn);
                 }
             });
+
+            // Hook into the removefile event to handle image removal
+            pond.on('removefile', (error, file) => {
+                if (!error) {
+                    const filename = file.filename; // Get the filename of the file to remove
+
+                    // Send a single filename for removal
+                    fetch('/remove-image', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ filename: filename }),
+                    })
+                    .then((response) => {
+                        if (response.ok) {
+                            // File removed successfully
+                        } else {
+                            // Handle the error
+                        }
+                    })
+                    .catch((error) => {
+                        // Handle network error
+                    });
+                }
+            });
+
     </script>
-
-
 </x-app-layout>

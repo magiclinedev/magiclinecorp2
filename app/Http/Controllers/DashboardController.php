@@ -53,8 +53,7 @@ class DashboardController extends Controller
         $categories = Category::all();
         $users = User::all();
 
-
-         // Check if the user is a super user (status 1 or 4)
+        // Check if the user is a super user (status 1 or 4)
         if ($user->status == 1 || $user->status == 4) {
             // Super users see all mannequins and companies
             $mannequins = Mannequin::all();
@@ -71,44 +70,99 @@ class DashboardController extends Controller
 
         if($request->ajax()){
 
-            $data = collect();
+            // Get the page number and number of records per page from the request
+            $page = $request->input('start') / $request->input('length') + 1;
+            $perPage = $request->input('length');
 
-            if(count($mannequins) > 0) {
-                foreach ($mannequins as $m) {
-                    // Cache the image URL with a reasonable duration (e.g., 1 hour)
-                    $imageCacheKey = 'image_' . $m->id;
-                    $imageUrl = Cache::remember($imageCacheKey, now()->addHour(1), function () use ($m) {
-                        $imagePaths = explode(',', $m->images);
-                        $firstImagePath = $imagePaths[0] ?? null;
+            // Modify your query to load the data for the current page
+            $dateFilter = $request->input('dateFilter');
 
-                        if (Storage::disk('dropbox')->exists($firstImagePath)) {
-                            return Storage::disk('dropbox')->url($firstImagePath);
-                        } else {
-                            return null;
-                        }
-                    });
-                    $data->push([
-                        'image' => $imageUrl,
-                        'itemref' => $m->itemref,
-                        'company' => $m->company,
-                        'category' => $m->category,
-                        'type' => $m->type,
-                        'addedBy' => $m->addedBy,
-                        // 'created_at' => $m->created_at->toDateTimeString(),
-                        'action' => '
-                        <a href="'.route('collection.view_prod', ['id' => Crypt::encrypt($m->id)]).'" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded">
-                        <i class="fas fa-eye"></i>View</a>',
-                    ]);
-
-                        // <a href="'.route('collection.edit', ['id' => Crypt::encrypt($m->id)]).'" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded">
-                        // <i class="fas fa-edit"></i></a>
-
-                        // <a href="'.route('collection.trash', $m->id).'" class="btn-delete bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-2 border border-red-500 hover:border-transparent rounded">
-                        // <i class="fas fa-trash-alt"></i></button>
-                }
+            if ($dateFilter == 'today') {
+                // Modify your query to filter products added today
+                $query = Mannequin::whereDate('created_at', now()->toDateString());
+            } else {
+                // Your regular query for other filters or all products
+                $query = Mannequin::query();
             }
 
-            return DataTables::of($data)->rawColumns(['action'])->make(true);
+            $query->orderBy('created_at', 'desc');
+
+            $searchQuery = $request->input('search');
+            $selectedCategory = $request->input('category');
+            $selectedCompany = $request->query('company', '');
+            // $dateFilter = $request->input('date');
+
+            // Modify your query to add search functionality
+            if (!empty($searchQuery)) {
+                $query->where(function ($subquery) use ($searchQuery) {
+                    $subquery->where('itemref', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('company', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('category', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('type', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('addedBy', 'like', '%' . $searchQuery . '%');
+                });
+            }
+
+            // FILTERS
+            // if ($dateFilter == 'today') {
+            //     // Modify your query to filter products added today
+            //     $query->whereDate('created_at', now()->toDateString());
+            // }
+            if (!empty($selectedCategory)) {
+                $query->where('category', $selectedCategory);
+            }
+            if (!empty($selectedCompany)) {
+                $query->where('company', $selectedCompany);
+            }
+
+            // Product Access
+
+            $query->where('activeStatus', 1);
+
+
+            $totalRecords = $query->count(); // Get the total number of records
+
+            $mannequins = $query
+                ->skip(($page - 1) * $perPage)
+                ->take($perPage)
+                ->get();
+
+            $data = collect();
+
+            foreach ($mannequins as $m) {
+                // Cache the image URL with a reasonable duration (e.g., 1 hour)
+                $imageCacheKey = 'image_' . $m->id;
+                $imageUrl = Cache::remember($imageCacheKey, now()->addHour(1), function () use ($m) {
+                    $imagePaths = explode(',', $m->images);
+                    $firstImagePath = $imagePaths[0] ?? null;
+
+                    if (Storage::disk('dropbox')->exists($firstImagePath)) {
+                        return Storage::disk('dropbox')->url($firstImagePath);
+                    } else {
+                        return null;
+                    }
+                });
+                $data->push([
+                    'image' => $imageUrl,
+                    'itemref' => $m->itemref,
+                    'company' => $m->company,
+                    'category' => $m->category,
+                    'type' => $m->type,
+                    'addedBy' => $m->addedBy,
+                    'created_at' => $m->created_at->toDateTimeString(),
+                    // 'created_at' => $m->created_at->toDateTimeString(),
+                    'action' => '
+                    <a href="'.route('collection.view_prod', ['id' => Crypt::encrypt($m->id)]).'" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded">
+                    <i class="fas fa-eye"></i>View</a>',
+                ]);
+            }
+
+            return response()->json([
+                'draw' => $request->input('draw'),
+                'recordsTotal' => $totalRecords, // Total number of records in the database
+                'recordsFiltered' => $totalRecords, // Total number of records after filtering (if any)
+                'data' => $data, // Your paginated data
+            ]);
         }
         return view('dashboard')->with([
             'categories' => $categories,

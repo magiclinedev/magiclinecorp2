@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 id="pageTitle" class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Product') }}
             </h2>
             {{-- Admin Buttons(Add Products, Type, Category) --}}
@@ -59,7 +59,7 @@
                         </select>
                     </div>
                     {{-- company --}}
-                    <div class="filter-dropdown">
+                    <div class="filter-dropdown" id="companyDropdown">
                         <select id="companyFilter" class="block w-52 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
                             <option value="">All Companies</option>
                             @foreach ($companies as $company)
@@ -67,6 +67,7 @@
                             @endforeach
                         </select>
                     </div>
+
 
                     {{-- Searchbox --}}
                     <div class="w-full">
@@ -114,9 +115,9 @@
     {{--START scripts --}}
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    {{-- DATA TABLE --}}
     <script>
         $(document).ready(function() {
+            // DATATBLE
             var table = $('#mannequinsTable').DataTable({
                 order: [[6, 'desc']],
                 lengthChange: false,
@@ -215,6 +216,20 @@
             // Trigger initial filter changes after DataTable initializes
             $('#categoryFilter').trigger('change');
             $('#companyFilter').trigger('change');
+
+            // SELECTED COMPANY FROM DASHBOARD
+            var companySelected = '{{ request()->input('companySelected') }}';
+            if (companySelected === 'true') {
+                // Get a reference to the company filter dropdown
+                var companyDropdown = $('#companyDropdown');
+                // Hide the company dropdown
+                companyDropdown.hide();
+
+                // TITLE CAHANGE TO COMPANY NAME
+                var selectedCompany = '{{ request()->input('company') }}';
+                // Update the heading with the selected company's name
+                $('#pageTitle').text(selectedCompany);
+            }
         });
     </script>
 
