@@ -83,6 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/collection-edit/{id}', [CollectionController::class, 'edit'])->name('collection.edit');//go
     Route::put('/collection-update/{id}', [CollectionController::class, 'update'])->name('collection.update');
     Route::post('/collection/trash-multiple', [CollectionController::class, 'trashMultiple'])->name('collection.trashMultiple');
+    Route::post('/collection/restore-multiple', [CollectionController::class, 'restoreMultiple'])->name('collection.restoreMultiple');
 
     // Category
     Route::get('/collection-category', [CollectionController::class, 'category'])->name('collection.category');

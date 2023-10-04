@@ -51,9 +51,10 @@ class CollectionController extends Controller
         });
     }
 
-    //Collection View
+    //Collection View (Datatble for collection)
     public function index(Request $request)
     {
+        // check user if logged in
         $user = Auth::user();
         if (!$user) {
             return redirect()->route('login');
@@ -70,18 +71,17 @@ class CollectionController extends Controller
             $page = $request->input('start') / $request->input('length') + 1;
             $perPage = $request->input('length');
 
-            // Modify your query to load the data for the current page
+            // Modify your query to load the data for the current page and order by recently added
             $query = Mannequin::query();
-
-
             $query->orderBy('created_at', 'desc');
 
+            // FILTERS
+            $dateFilter = $request->input('date');
             $searchQuery = $request->input('search');
             $selectedCategory = $request->input('category');
             $selectedCompany = $request->query('company', '');
-            $dateFilter = $request->input('date');
 
-            // Modify your query to add search functionality
+            // SEARCH in datatable
             if (!empty($searchQuery)) {
                 $query->where(function ($subquery) use ($searchQuery) {
                     $subquery->where('itemref', 'like', '%' . $searchQuery . '%')
@@ -91,9 +91,10 @@ class CollectionController extends Controller
                             ->orWhere('addedBy', 'like', '%' . $searchQuery . '%');
                 });
             }
-            // FILTERS
+
+            //filter
             if ($dateFilter == 'today') {
-                // Modify your query to filter products added today
+                // Modify your query to filter products added today(in dashboard)
                 $query->whereDate('created_at', now()->toDateString());
             }
             if (!empty($selectedCategory)) {
@@ -103,9 +104,9 @@ class CollectionController extends Controller
                 $query->where('company', $selectedCompany);
             }
 
-            // Product Access
+            // Product Access()
             if ($user->status == 1) {
-                // If user's status is 1, query for activeStatus = 1
+                // If user's status is 1(superadmin), query for activeStatus = 1
                 $query->where('activeStatus', 1);
             } else {
                 // If user's status is not 1, query based on user's companies
@@ -113,8 +114,10 @@ class CollectionController extends Controller
                 $query->whereIn('company', $companies);
             }
 
-            $totalRecords = $query->count(); // Get the total number of records
+            // Get the total number of records
+            $totalRecords = $query->count();
 
+            // limit page loadding(only 10)
             $mannequins = $query
                 ->skip(($page - 1) * $perPage)
                 ->take($perPage)
@@ -125,7 +128,7 @@ class CollectionController extends Controller
             // DATATABLE DATA
             foreach ($mannequins as $m) {
 
-                // Cache the image URL with a reasonable duration (e.g., 1 hour)
+                // IMAGE(Cache the image URL with a reasonable duration (e.g., 1 hour))
                 $imageUrl = Cache::remember('image_' . $m->id, now()->addHour(1), function () use ($m) {
                     return $this->getImageUrl($m);
                 });
@@ -134,7 +137,8 @@ class CollectionController extends Controller
                 $action = $this->generateActionButtons($user, $m);
 
                 // Delete Message
-                $confirmMessage = __('Are you sure you want to delete this item?');
+                $confirmDeleteMessage = __('Are you sure you want to delete this item?');
+                // data
                 $data->push([
                     'checkbox'=> '<input type="checkbox" name="" class="prod_checkbox row-checkbox center pb-4 checkbox" value="'.$m->id.'">',
                     'image' => $imageUrl,
@@ -145,7 +149,7 @@ class CollectionController extends Controller
                     'addedBy' => $m->addedBy,
                     'created_at' => $m->created_at->toDateTimeString(),
                     'action' => '
-                    <div class="flex flex-wrap justify-center items-center">
+                    <div class="flex justify-between">
                         <a href="' . route('collection.view_prod', ['id' => Crypt::encrypt($m->id)]) . '" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded" title="View">
                         <i class="fas fa-eye"></i></a>
                         '.$action.'
@@ -155,7 +159,7 @@ class CollectionController extends Controller
                             event.preventDefault();
                             Swal.fire({
                                 title: "Delete Item",
-                                text: "' . $confirmMessage . '",
+                                text: "' . $confirmDeleteMessage . '",
                                 icon: "warning",
                                 showCancelButton: true,
                                 confirmButtonColor: "#d33",
@@ -212,7 +216,8 @@ class CollectionController extends Controller
         $action = '';
 
         if (Gate::allows('super_admin', $user)) {
-            $action = '
+            if($mannequin->activeStatus == 1){
+                $action = '
                 <a href="' . route('collection.edit', ['id' => Crypt::encrypt($mannequin->id)]) . '" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded" title="Edit">
                 <i class="fas fa-edit"></i></a>
 
@@ -220,14 +225,28 @@ class CollectionController extends Controller
                 onclick="showDeleteConfirmation(event)">
                 <i class="fas fa-trash-alt"></i>
                 </a>
-            ';
+                ';
+            }
+            // For Trashcan
+            else{
+                $action = '
+                <a href="' . route('collection.restore', $mannequin->id) . '" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded" title="Restore"
+                onclick="showRestoreConfirmation(event)">
+                <i class="fas fa-undo"></i></a>
+
+                <a href="' . route('collection.delete', $mannequin->id) . '" class="btn-delete bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-2 border border-red-500 hover:border-transparent rounded" title="Delete"
+                onclick="showDeleteConfirmation(event)">
+                <i class="fas fa-trash-alt"></i>
+                </a>
+                ';
+            }
+
         } elseif (Gate::allows('admin_access', $user)) {
             $action = '
             <a href="' . route('collection.edit', ['id' => Crypt::encrypt($mannequin->id)]) . '" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded" title="Edit">
             <i class="fas fa-edit"></i></a>
             ';
         }
-
         return $action;
     }
 
@@ -307,49 +326,46 @@ class CollectionController extends Controller
     public function uploadToDropbox(Request $request)
     {
         $photoPaths = [];
-        $success = true; // Flag to track successful uploads
 
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $photo) {
-                $photoName = time() . '_' . $photo->getClientOriginalName();
-                $path = 'Magicline Database/images/product/' . $photoName; // Relative path within Dropbox
+            try {
+                foreach ($request->file('images') as $photo) {
+                    $photoName = time() . '_' . $photo->getClientOriginalName();
+                    $path = 'Magicline Database/images/product/' . $photoName; // Relative path within Dropbox
 
-                // Try to upload the image to Dropbox
-                try {
+                    // Try to upload the image to Dropbox
+
                     Storage::disk('dropbox')->put($path, file_get_contents($photo));
                     // Store the Dropbox path in your array
                     $photoPaths[] = $path;
-                } catch (\Exception $e) {
-                    // Handle the exception, for example, log it
-                    \Log::error('Error uploading file to Dropbox: ' . $e->getMessage());
-                    $success = false; // Mark the upload as failed
                 }
             }
-
-            // Check if any uploads failed
-            if (!$success) {
-                return redirect('/collection-add')->with('error', 'Some files failed to upload to Dropbox.');
+            catch (\Exception $e) {
+                // Handle the exception and return a response
+                \Log::error('Error uploading file to Dropbox: ' . $e->getMessage());
+                return redirect('/collection-add')->with('error', 'File upload to Dropbox failed: ' . $e->getMessage());
             }
         }
 
         return $photoPaths;
     }
 
+
     // DROPBOX RFEMOVE IMAGES
     public function removeDropboxImage(Request $request)
     {
-            // // Get the filename to be removed from the client-side
-            // $filename = $request->input('filename'); // Change 'images' to 'filename'
-            // // dd($filename);
+        // // Get the filename to be removed from the client-side
+        // $filename = $request->input('filename'); // Change 'images' to 'filename'
+        // // dd($filename);
 
-            // // Delete the file from Dropbox or any other storage
-            // try {
-            //     Storage::disk('dropbox')->delete('Magicline Database/images/product/' . $filename);
-            //     return response()->json(['message' => 'Image removed successfully'], 200);
-            // } catch (\Exception $e) {
-            //     \Log::error('Error removing file from Dropbox: ' . $e->getMessage());
-            //     return response()->json(['error' => 'Image removal failed'], 500);
-            // }
+        // // Delete the file from Dropbox or any other storage
+        // try {
+        //     Storage::disk('dropbox')->delete('Magicline Database/images/product/' . $filename);
+        //     return response()->json(['message' => 'Image removed successfully'], 200);
+        // } catch (\Exception $e) {
+        //     \Log::error('Error removing file from Dropbox: ' . $e->getMessage());
+        //     return response()->json(['error' => 'Image removal failed'], 500);
+        // }
     }
 
     // ADD PRODUCT
@@ -569,7 +585,6 @@ class CollectionController extends Controller
 
             // Clear the cache associated with the first cache key
 
-
             // Clear the cache associated with the second cache key
             Cache::forget('images_' . $mannequin->id);
 
@@ -628,6 +643,7 @@ class CollectionController extends Controller
             $this->logAuditTrail(auth()->user(), $activity);
         }
 
+        // Owner go to dashboard, others go to collection
         $routeName = $user->status == 4 ? 'dashboard' : 'collection';
 
         return redirect()->route($routeName, $mannequin->id)->with('success_message', 'Product details updated successfully.');
@@ -635,18 +651,163 @@ class CollectionController extends Controller
 
 
     //SHOW TRASHCAN
-    public function trashcan()
+    public function trashcan(Request $request)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $selectedCategory = $request->input('category');
+        $categories = Category::all();
+        $selectedCompany = $request->query('company', '');
+
+         //DATATBLES
+        if($request->ajax()){
+
+            // Get the page number and number of records per page from the request
+            $page = $request->input('start') / $request->input('length') + 1;
+            $perPage = $request->input('length');
+
+            // Modify your query to load the data for the current page
+            $query = Mannequin::query();
+
+
+            $query->orderBy('created_at', 'desc');
+
+            $searchQuery = $request->input('search');
+            $selectedCategory = $request->input('category');
+            $selectedCompany = $request->query('company', '');
+            $dateFilter = $request->input('date');
+
+            // Modify your query to add search functionality
+            if (!empty($searchQuery)) {
+                $query->where(function ($subquery) use ($searchQuery) {
+                    $subquery->where('itemref', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('company', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('category', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('type', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('addedBy', 'like', '%' . $searchQuery . '%');
+                });
+            }
+            // FILTERS
+            if ($dateFilter == 'today') {
+                // Modify your query to filter products added today
+                $query->whereDate('created_at', now()->toDateString());
+            }
+            if (!empty($selectedCategory)) {
+                $query->where('category', $selectedCategory);
+            }
+            if (!empty($selectedCompany)) {
+                $query->where('company', $selectedCompany);
+            }
+
+            // Product Access
+            if ($user->status == 1) {
+                // If user's status is 1, query for activeStatus = 1
+                $query->where('activeStatus', 0);
+            } else {
+                // If user's status is not 1, query based on user's companies
+                $companies = $user->companies->pluck('name')->toArray();
+                $query->whereIn('company', $companies);
+            }
+
+            $totalRecords = $query->count(); // Get the total number of records
+
+            $mannequins = $query
+                ->skip(($page - 1) * $perPage)
+                ->take($perPage)
+                ->get();
+
+            $data = collect();
+
+            // DATATABLE DATA
+            foreach ($mannequins as $m) {
+
+                // Cache the image URL with a reasonable duration (e.g., 1 hour)
+                $imageUrl = Cache::remember('image_' . $m->id, now()->addHour(1), function () use ($m) {
+                    return $this->getImageUrl($m);
+                });
+
+                // Action Button
+                $action = $this->generateActionButtons($user, $m);
+
+                // Delete Message
+                $confirmDeleteMessage = __('Are you sure you want to delete this item?');
+                $confirmRestoreMessage = __('Are you sure you want to restore this item?');
+                $data->push([
+                    'checkbox'=> '<input type="checkbox" name="" class="prod_checkbox row-checkbox center pb-4 checkbox" value="'.$m->id.'">',
+                    'image' => $imageUrl,
+                    'itemref' => $m->itemref,
+                    'company' => $m->company,
+                    'category' => $m->category,
+                    'type' => $m->type,
+                    'addedBy' => $m->addedBy,
+                    'action' => '
+                    <div class="flex justify-between">
+                        <a href="' . route('collection.view_prod', ['id' => Crypt::encrypt($m->id)]) . '" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded" title="View">
+                        <i class="fas fa-eye"></i></a>
+                        '.$action.'
+                    </div>
+                    <script>
+                        function showDeleteConfirmation(event) {
+                            event.preventDefault();
+                            Swal.fire({
+                                title: "Delete Item",
+                                text: "' . $confirmDeleteMessage . '",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonColor: "#d33",
+                                cancelButtonColor: "#3085d6",
+                                confirmButtonText: "Yes, delete it!",
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // If confirmed, proceed with the deletion
+                                    window.location.href = event.target.href;
+                                }
+                            });
+                        }
+                        function showRestoreConfirmation(event) {
+                            event.preventDefault();
+                            Swal.fire({
+                                title: "Restore Item",
+                                text: "' . $confirmRestoreMessage . '",
+                                icon: "info",
+                                showCancelButton: true,
+                                confirmButtonColor: "#d33",
+                                cancelButtonColor: "#3085d6",
+                                confirmButtonText: "Yes, restore it!",
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // If confirmed, proceed with the deletion
+                                    window.location.href = event.target.href;
+                                }
+                            });
+                        }
+                    </script>
+                    ',
+                ]);
+            }
+            return response()->json([
+                'draw' => $request->input('draw'),
+                'recordsTotal' => $totalRecords, // Total number of records in the database
+                'recordsFiltered' => $totalRecords, // Total number of records after filtering (if any)
+                'data' => $data, // Your paginated data
+            ]);
+        }
         $mannequins = Mannequin::where('activeStatus', '<', 1)->get();
-        return view('collection-trash')->with(['mannequins' => $mannequins,]);;
+        return view('collection-trash')->with(['mannequins' => $mannequins,]);
     }
 
     //DELETE(to trashcan make active status = 0)
     public function trash($id)
     {
+        if (!$id) {
+            return redirect()->back()->with('danger_message', 'Item not Deleted.');
+        }
         // $mannequinId = Crypt::decrypt($id);
-        $mannequin = Mannequin::find($id);
-        Cache::forget('images_' . $mannequin->id);
+        $mannequin = Mannequin::findOrFail($id);
+        // Cache::forget('images_' . $mannequin->id);
         if ($mannequin) {
             // Store the original item reference for the audit trail
             $originalItemref = $mannequin->itemref;
@@ -661,7 +822,9 @@ class CollectionController extends Controller
 
             return redirect()->back()->with('success_message', 'Item deleted.');
         }
-        return redirect()->back()->with('danger_message', 'Item not deleted.');
+        else {
+            return redirect()->back()->with('danger_message', 'Item not deleted.');
+        }
     }
 
     // Trash Multiple Products
@@ -669,12 +832,37 @@ class CollectionController extends Controller
     {
         $selectedIds = $request->input('ids');
 
+        // Retrieve the selected items
+        $selectedItems = Mannequin::whereIn('id', $selectedIds)->get();
+
+        // Iterate through the selected items
+        foreach ($selectedItems as $item) {
+            if ($item->activeStatus == 1) {
+                // If activeStatus is 1, set it to 0
+                $item->update(['activeStatus' => 0]);
+            }
+            else{
+                // If activeStatus is 0, delete the item
+                $item->delete();
+                foreach (explode(',', $item->images) as $imagePath) {
+                    Storage::disk('dropbox')->delete($imagePath);
+                }
+            }
+        }
+
+        return response()->json(['message' => 'Items updated and deleted successfully']);
+    }
+
+    // RESTORE MULTIPLE
+    public function restoreMultiple(Request $request)
+    {
+        $selectedIds = $request->input('ids');
+
         // Update the activeStatus for the selected items
-        Mannequin::whereIn('id', $selectedIds)->update(['activeStatus' => 0]);
+        Mannequin::whereIn('id', $selectedIds)->update(['activeStatus' => 1]);
 
         return response()->json(['message' => 'Items updated successfully']);
     }
-
 
     //Delete (PERMANENTLY from database to storage)
     public function destroy($id)
@@ -706,24 +894,30 @@ class CollectionController extends Controller
     //RESTORE trashed prod(active status = 1 again)
     public function restore($id)
     {
+        if (!$id) {
+            return redirect()->back()->with('danger_message', 'Item not restored.');
+        }
+
         $mannequin = Mannequin::findOrFail($id);
-        // Check if the item is actually deleted (activeStatus = 0)
-        if ($mannequin->activeStatus == 0) {
+        // Cache::forget('images_' . $mannequin->id);
+        // dd( $id);
+        if ($mannequin) {
             // Store the original item reference for the audit trail
             $originalItemref = $mannequin->itemref;
 
+            $mannequin->activeStatus = 1;
             $this->setActionBy($mannequin, 'Restored');
-            $mannequin->update(['activeStatus' => 1]);
+            $mannequin->save();
 
-            // Add audit trail for the "Restored" action with the original item reference
+            // Add audit trail for the "restored" action with the original item reference
             $activity = "Restored $originalItemref";
             $this->logAuditTrail(auth()->user(), $activity);
 
-            return redirect()->route('collection')->with('success_message', 'Item restored successfully.');
-        } else {
-            return redirect()->route('collection')->with('danger_message', 'Item is not restored.');
+            return redirect()->back()->with('success_message', 'Item Restored.');
         }
-        return redirect()->back()->with('error', 'An error occurred while restoring the item.');
+        else{
+            return redirect()->back()->with('danger_message', 'Item not Restored.');
+        }
     }
 
     //SHOW CATEGORIES MODULE
@@ -763,9 +957,6 @@ class CollectionController extends Controller
     public function trash_category($id)
     {
         $type = type::findOrFail($id);
-        // Perform any additional tasks related to deletion, if needed
-
-        // Delete the category
         $type->delete();
 
         return response()->json(['success' => true]);
@@ -808,9 +999,6 @@ class CollectionController extends Controller
     public function trash_type($id)
     {
         $type = Type::findOrFail($id);
-        // Perform any additional tasks related to deletion, if needed
-
-        // Delete the type
         $type->delete();
 
         return response()->json(['success' => true]);

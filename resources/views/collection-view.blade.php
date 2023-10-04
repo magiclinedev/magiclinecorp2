@@ -62,7 +62,7 @@ Collection
                 <ol class="flex items-center space-x-2 text-gray-500">
                     @can('users', Auth::user())
                     <li>
-                        <a href="{{ route('collection') }}" class="hover:text-gray-700">Collection</a>
+                        <a href="javascript:history.go(-1);" class="hover:text-gray-700">Go Back</a>
                     </li>
                     @endcan
                     @can('owner', Auth::user())

@@ -5,22 +5,22 @@
 <x-app-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between space-x-4">
             <h2 id="pageTitle" class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Product') }}
             </h2>
             {{-- Admin Buttons(Add Products, Type, Category) --}}
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-3">
                 {{-- Access for buttons --}}
                 @can('admin_access', Auth::user())
                     <a href="{{ route('collection.add') }}" class="text-gray-800 hover:text-gray-600">
-                        <i class="fas fa-plus-circle"></i> Add Product
+                        <i class="fas fa-plus-circle"></i> ADD PRODUCT
                     </a>
                     <a href="{{ route('collection.category') }}" class="text-gray-800 hover:text-gray-600">
-                        <i class="fas fa-folder-plus"></i> Add Category
+                        <i class="fas fa-folder-plus"></i> ADD CATEGORY
                     </a>
                     <a href="{{ route('collection.type') }}" class="text-gray-800 hover:text-gray-600">
-                        <i class="fas fa-tags"></i> Add Type
+                        <i class="fas fa-tags"></i> ADD TYPE
                     </a>
                 @endcan
 
@@ -29,7 +29,7 @@
                     @if ($mannequins->contains('activeStatus', 0))
                         <div class="ml-2">
                             <a href="{{ route('collection.trashcan') }}" class="text-gray-800 hover:text-gray-600">
-                                <i class="fas fa-trash-alt"></i> Trash
+                                <i class="fas fa-trash-alt"></i> TRASH
                                 <span class="badge">{{ $mannequins->where('activeStatus', 0)->count() }}</span>
                             </a>
                         </div>
@@ -48,7 +48,7 @@
                     <h1 class="text-2xl font-bold"><i class="fas fa-list-alt"></i> Product List</h1>
                 </div>
                 {{-- FILTER --}}
-                <div class="flex space-x-4 my-4">
+                <div class="flex space-x-2 my-2">
                     {{-- category --}}
                     <div class="filter-dropdown">
                         <select id="categoryFilter" class="block w-52 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Category">
@@ -76,7 +76,7 @@
 
                 {{-- DELETE/TRASH ALL BUTTON --}}
                 <button name="bulkAction" id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                    Trash All
+                    <i class="fas fa-trash-alt"></i> Delete
                 </button>
 
                 {{-- TABLE --}}
@@ -94,7 +94,6 @@
                             <th class="px-4 py-2 border">Category</th>
                             <th class="px-4 py-2 border">Type</th>
                             <th class="px-4 py-2 border">Action Type</th>
-                            <th class="px-4 py-2 border">Created at</th>
                             <th class="px-4 py-2 border">Action</th>
                         </tr>
                     </thead>
@@ -140,10 +139,6 @@
                 deferLoading: (10, 100),
                 columnDefs: [
                     {
-                        targets: [7], // created at
-                        visible: false,
-                    },
-                    {
                         targets: '_all',
                         className: 'px-2 py-2 border text-center',
                     },
@@ -177,8 +172,6 @@
                     { data: 'category', name: 'category' },
                     { data: 'type', name: 'type' },
                     { data: 'addedBy', name: 'addedBy' },
-                    { data: 'created_at', name: 'created_at' },
-
                     {
                         data:'action',
                         name: 'action',
@@ -283,7 +276,7 @@
                                     // Reload the page after a short delay (e.g., 1 second)
                                     setTimeout(function () {
                                         location.reload();
-                                    }, 1000); // 1000 milliseconds = 1 second
+                                    }, 1500); // 1500 milliseconds = 1 second
 
                                     // datatable reload
                                     table.ajax.reload();

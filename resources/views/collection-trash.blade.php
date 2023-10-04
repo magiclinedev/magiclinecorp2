@@ -31,29 +31,42 @@
                     <div class="flex items-center mb-2">
                         <h1 class="text-2xl font-bold">Deleted Products</h1>
                     </div>
+                    <div class="flex items-center mb-2">
+                    {{-- DELETE/TRASH ALL BUTTON --}}
+                        <button name="bulkActionRestore" id="bulkActionRestore" class="hidden mr-2 bg-blue-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <i class="fas fa-undo-alt"></i> Restore
+                        </button>
+                        <button name="bulkAction" id="bulkAction" class="hidden mr-2 bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <i class="fas fa-trash-alt"></i> Permanently Delete
+                        </button>
+                    </div>
+
                     <table id="trashTable" class="w-full table-auto border-collapse border">
                         <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                             <tr>
-                                <th class="px-4 py-2 border">
-                                    <input type="checkbox" id="selectAllCheckbox">
+                                <th class="px-4 py-2 border text-center">
+                                    <div class="flex items-center justify-center">
+                                        <input type="checkbox" id="selectAllCheckbox">
+                                    </div>
                                 </th>
                                 <th class="px-4 py-2 border">Image</th>
                                 <th class="px-4 py-2 border">Item Reference</th>
                                 <th class="px-4 py-2 border">Company</th>
                                 <th class="px-4 py-2 border">Category</th>
                                 <th class="px-4 py-2 border">Type</th>
-                                <th class="px-4 py-2 border">Added By</th>
+                                <th class="px-4 py-2 border">Deleted By</th>
+                                <th class="px-4 py-2 border">Action</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        {{-- <tbody>
                             @foreach ($mannequins as $mannequin)
                                 <tr class="border">
                                     <td class="px-4 py-2 border">
-                                        <!-- Add the checkbox input here -->
+                                        <!-- Add the checkbox input here-->
                                         <input type="checkbox" class=" row-checkbox center pb-4">
                                     </td>
 
-                                    {{-- Images --}}
+                                    <!-- Images -->
                                     @php
                                         // Cache the image URL for a limited time (e.g., 1 hour)
                                         $imageCacheKey = 'image_' . $mannequin->id;
@@ -82,7 +95,7 @@
 
                                     <td class="px-4 py-2 border itemref-cell">
                                         <span class="itemref-text">{{ $mannequin->itemref }}</span>
-                                        {{-- HOVER to show read, update, and delete --}}
+                                        <!-- HOVER to show read, update, and delete -->
                                         <div class="action-buttons">
                                             <a href="{{ route('collection.view_prod', ['id' => Crypt::encrypt($mannequin->id)]) }}" class="btn-view">
                                                 <i class="fas fa-eye"></i> View
@@ -102,19 +115,21 @@
                                     <td class="px-4 py-2 border">{{ $mannequin->addedBy }}</td>
                                 </tr>
                             @endforeach
-                        </tbody>
+                        </tbody> --}}
                     </table>
                 </div>
             </div>
         </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    {{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function() {
             var table = $('#trashTable').DataTable({
                 lengthChange: false,
                 searching: false,
+                serverSide: true,
+                proccessing: true,
             });
             // Handle "select all" checkbox
             $('#selectAllCheckbox').on('change', function() {
@@ -123,6 +138,283 @@
                     this.checked = isChecked;
                 });
             });
+        });
+    </script> --}}
+      {{--START scripts --}}
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // DATATBLE
+            var table = $('#trashTable').DataTable({
+                order: [[6, 'asc']],
+                lengthChange: false,
+                "dom": 'lrtip',
+                processing: true,
+                "autoWidth": false,
+                serverSide: true,
+                deferRender: true,
+                "scrollX": true,
+                responsive: true,
+                // pageLength: 10,
+                ajax:{
+                    url: '{{ route('collection.trashcan') }}' ,
+                    data: function (data) {
+                        // Add additional filter data
+                        data.category = $('#categoryFilter').val(); // Get the selected category value
+                        data.company = $('#companyFilter').val();
+                        data.search = $('#customSearchInput').val();
+
+                        //added today
+                        if (window.location.search.includes('date=today')) {
+                            data.date = 'today';
+                        }
+                    },
+                },
+                deferLoading: (10, 100),
+                columnDefs: [
+                //   {
+                //       targets: [7], // created at
+                //       visible: false,
+                //   },
+                    {
+                        targets: '_all',
+                        className: 'px-2 py-2 border text-center',
+                    },
+                ],
+                columns: [
+                    {
+                        data: 'checkbox',
+                        name: 'checkbox',
+                        orderable: false, searchable: false,
+                    },
+                    {
+                        data: 'image',
+                        name: 'image',
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, full, meta) {
+                            if (type == 'display') {
+                                if (data) {
+                                    // Display the image as an <img> tag
+                                    return '<img src="' + data + '" alt="Mannequin Image" class="w-16 h-16 object-contain" loading="lazy">';
+                                } else {
+                                    // Display a message if the image is not found
+                                    return 'Image not found';
+                                }
+                            }
+                            return data;
+                        },
+                    },
+                    { data: 'itemref', name: 'itemref',},
+                    { data: 'company', name: 'company' },
+                    { data: 'category', name: 'category' },
+                    { data: 'type', name: 'type' },
+                    { data: 'addedBy', name: 'addedBy' },
+                //   { data: 'created_at', name: 'created_at' },
+
+                    {
+                        data:'action',
+                        name: 'action',
+                        orderable: false, searchable: false,
+                    }
+                ],
+                // pagingType: 'full_numbers',
+                language: {
+                    emptyTable: 'No Data available',
+                },
+                searching: true,
+
+                // CHECKBOX
+                initComplete: function () {
+                    // Handle "Select All" checkbox
+                    $('#selectAllCheckbox').on('change', function () {
+                        var isChecked = $(this).prop('checked');
+                        $('input.row-checkbox').prop('checked', isChecked);
+                    });
+                }
+            });
+
+            // Check if the table is empty and reload if it is
+            if (table.data().count() == 0) {
+                table.ajax.reload();
+            }
+
+            // Category Filter
+            $('#categoryFilter').on('change', function () {
+                table.draw();
+            });
+
+            // Handle company filter change
+            $('#companyFilter').on('change', function() {
+                table.draw();
+            });
+
+            // Add event listener for custom search input
+            $('#customSearchInput').on('keyup', function () {
+                table.search(this.value).draw();
+            });
+
+            // Trigger initial filter changes after DataTable initializes
+            $('#categoryFilter').trigger('change');
+            $('#companyFilter').trigger('change');
+
+            // SELECTED COMPANY FROM DASHBOARD
+            var companySelected = '{{ request()->input('companySelected') }}';
+            if (companySelected === 'true') {
+                // Get a reference to the company filter dropdown
+                var companyDropdown = $('#companyDropdown');
+                // Hide the company dropdown
+                companyDropdown.hide();
+
+                // TITLE CAHANGE TO COMPANY NAME
+                var selectedCompany = '{{ request()->input('company') }}';
+                // Update the heading with the selected company's name
+                $('#pageTitle').text(selectedCompany);
+            }
+
+            //Handles individual row checkboxes
+            $('#trashTable').on('change', 'input.row-checkbox', function () {
+                var allChecked = $('input.row-checkbox:checked').length === $('input.row-checkbox').length;
+                $('#selectAllCheckbox').prop('checked', allChecked);
+            });
+
+            // Handle the "Delete/Trash All" button click event
+            $('#bulkAction').on('click', function () {
+                var selectedIds = [];
+                $('input.row-checkbox:checked').each(function () {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length > 0) {
+                    Swal.fire({
+                        title: "Are you sure?",
+                        text: "Do you want to trash the selected items?",
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonColor: "#d33",
+                        cancelButtonColor: "#3085d6",
+                        confirmButtonText: "Yes, trash them",
+                        cancelButtonText: "No, cancel"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // User confirmed, proceed with the update
+                            $.ajax({
+                                url: '/collection/trash-multiple',
+                                type: 'POST',
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    ids: selectedIds
+                                },
+                                success: function (response) {
+                                    // Handle the response from the server, e.g., show a success message
+                                    Swal.fire({
+                                        title: "Items Updated",
+                                        text: "Selected items have been trashed.",
+                                        icon: "success"
+                                    });
+
+                                    // Reload the page after a short delay (e.g., 1 second)
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 1000); // 1000 milliseconds = 1 second
+
+                                    // datatable reload
+                                    table.ajax.reload();
+                                },
+                                error: function (error) {
+                                    Swal.fire({
+                                        title: "Error",
+                                        text: "An error occurred while trashing items.",
+                                        icon: "error"
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+                else {
+                    // No checkboxes were selected, provide feedback to the user.
+                    Swal.fire({
+                        title: "No Items Selected",
+                        text: "Please select items to trash.",
+                        icon: "info"
+                    });
+                }
+            });
+
+            // Handles Restore all click evemt
+            $('#bulkActionRestore').on('click', function () {
+                var selectedIds = [];
+                $('input.row-checkbox:checked').each(function () {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length > 0) {
+                    Swal.fire({
+                        title: "Are you sure?",
+                        text: "Do you want to Restore the selected items?",
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonColor: "#d33",
+                        cancelButtonColor: "#3085d6",
+                        confirmButtonText: "Yes, restore them",
+                        cancelButtonText: "No, cancel"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // User confirmed, proceed with the update
+                            $.ajax({
+                                url: '/collection/restore-multiple',
+                                type: 'POST',
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    ids: selectedIds
+                                },
+                                success: function (response) {
+                                    // Handle the response from the server, e.g., show a success message
+                                    Swal.fire({
+                                        title: "Items Updated",
+                                        text: "Selected items have been restored.",
+                                        icon: "success"
+                                    });
+
+                                    // datatable reload
+                                    table.ajax.reload();
+                                },
+                                error: function (error) {
+                                    Swal.fire({
+                                        title: "Error",
+                                        text: "An error occurred while trashing items.",
+                                        icon: "error"
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+                else {
+                    // No checkboxes were selected, provide feedback to the user.
+                    Swal.fire({
+                        title: "No Items Selected",
+                        text: "Please select items to trash.",
+                        icon: "info"
+                    });
+                }
+            });
+
+            //Handles Trash/Delete Button show
+            function updateBulkButtonVisibility() {
+                var anyCheckboxChecked = $('input.row-checkbox:checked').length > 0;
+                $('#bulkAction').toggleClass('hidden', !anyCheckboxChecked);
+                $('#bulkActionRestore').toggleClass('hidden', !anyCheckboxChecked);
+            }
+
+            $('#selectAllCheckbox').on('change', function () {
+                $('input.row-checkbox').prop('checked', $(this).prop('checked'));
+                updateBulkButtonVisibility();
+            });
+
+            $('#trashTable').on('change', 'input.row-checkbox', updateBulkButtonVisibility);
         });
     </script>
     {{-- SweetAlert --}}
@@ -150,44 +442,5 @@
                 cancelButtonColor: '#d33',
             });
         @endif
-
-        function confirmRestore(restoreUrl) {
-            Swal.fire({
-                title: 'Restore Image',
-                text: 'Are you sure you want to restore this image?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Restore',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = restoreUrl;
-                }
-            });
-
-            return false; // Prevent the default link behavior
-        }
-        function confirmDelete(button) {
-            var id = button.getAttribute('data-id');
-            var deleteUrl = button.getAttribute('data-transfer-url');
-
-            Swal.fire({
-                title: 'Delete Product',
-                text: 'Are you sure you want to delete this product?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#d9534f',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Delete',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Redirect to the delete URL
-                    window.location.href = deleteUrl;
-                }
-            });
-        }
     </script>
 </x-app-layout>
