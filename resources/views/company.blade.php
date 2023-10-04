@@ -33,7 +33,7 @@
                 {{-- search box --}}
                 <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm mb-4" placeholder="Search...">
                 {{-- Table --}}
-                <table id="categoriesTable" class="w-full border-collapse">
+                <table id="companiesTable" class="w-full table-auto border-collapse border">
                     <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                         <tr>
                             <th class="px-4 py-2 border">Logo</th>
@@ -71,9 +71,10 @@
     <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function() {
-            var table = $('#categoriesTable').DataTable({
+            var table = $('#companiesTable').DataTable({
                 lengthChange: false,
                 "dom": 'lrtip'
+                scrollX: false,
             });
 
              // Custom search input handler using input event

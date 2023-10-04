@@ -91,7 +91,6 @@ class CollectionController extends Controller
                             ->orWhere('addedBy', 'like', '%' . $searchQuery . '%');
                 });
             }
-
             // FILTERS
             if ($dateFilter == 'today') {
                 // Modify your query to filter products added today
@@ -137,6 +136,7 @@ class CollectionController extends Controller
                 // Delete Message
                 $confirmMessage = __('Are you sure you want to delete this item?');
                 $data->push([
+                    'checkbox'=> '<input type="checkbox" name="" class="prod_checkbox row-checkbox center pb-4 checkbox" value="'.$m->id.'">',
                     'image' => $imageUrl,
                     'itemref' => $m->itemref,
                     'company' => $m->company,
@@ -145,9 +145,11 @@ class CollectionController extends Controller
                     'addedBy' => $m->addedBy,
                     'created_at' => $m->created_at->toDateTimeString(),
                     'action' => '
-                    <a href="' . route('collection.view_prod', ['id' => Crypt::encrypt($m->id)]) . '" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded">
-                    <i class="fas fa-eye"></i></a>
-                    '.$action.'
+                    <div class="flex flex-wrap justify-center items-center">
+                        <a href="' . route('collection.view_prod', ['id' => Crypt::encrypt($m->id)]) . '" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded" title="View">
+                        <i class="fas fa-eye"></i></a>
+                        '.$action.'
+                    </div>
                     <script>
                         function showDeleteConfirmation(event) {
                             event.preventDefault();
@@ -211,17 +213,17 @@ class CollectionController extends Controller
 
         if (Gate::allows('super_admin', $user)) {
             $action = '
-                <a href="' . route('collection.edit', ['id' => Crypt::encrypt($mannequin->id)]) . '" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded">
+                <a href="' . route('collection.edit', ['id' => Crypt::encrypt($mannequin->id)]) . '" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded" title="Edit">
                 <i class="fas fa-edit"></i></a>
 
-                <a href="' . route('collection.trash', $mannequin->id) . '" class="btn-delete bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-2 border border-red-500 hover:border-transparent rounded"
+                <a href="' . route('collection.trash', $mannequin->id) . '" class="btn-delete bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-2 border border-red-500 hover:border-transparent rounded" title="Delete"
                 onclick="showDeleteConfirmation(event)">
                 <i class="fas fa-trash-alt"></i>
                 </a>
             ';
         } elseif (Gate::allows('admin_access', $user)) {
             $action = '
-            <a href="' . route('collection.edit', ['id' => Crypt::encrypt($mannequin->id)]) . '" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded">
+            <a href="' . route('collection.edit', ['id' => Crypt::encrypt($mannequin->id)]) . '" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded" title="Edit">
             <i class="fas fa-edit"></i></a>
             ';
         }
@@ -336,18 +338,18 @@ class CollectionController extends Controller
     // DROPBOX RFEMOVE IMAGES
     public function removeDropboxImage(Request $request)
     {
-        // // Get the filename to be removed from the client-side
-        // $filename = $request->input('filename'); // Change 'images' to 'filename'
-        // // dd($filename);
+            // // Get the filename to be removed from the client-side
+            // $filename = $request->input('filename'); // Change 'images' to 'filename'
+            // // dd($filename);
 
-        // // Delete the file from Dropbox or any other storage
-        // try {
-        //     Storage::disk('dropbox')->delete('Magicline Database/images/product/' . $filename);
-        //     return response()->json(['message' => 'Image removed successfully'], 200);
-        // } catch (\Exception $e) {
-        //     \Log::error('Error removing file from Dropbox: ' . $e->getMessage());
-        //     return response()->json(['error' => 'Image removal failed'], 500);
-        // }
+            // // Delete the file from Dropbox or any other storage
+            // try {
+            //     Storage::disk('dropbox')->delete('Magicline Database/images/product/' . $filename);
+            //     return response()->json(['message' => 'Image removed successfully'], 200);
+            // } catch (\Exception $e) {
+            //     \Log::error('Error removing file from Dropbox: ' . $e->getMessage());
+            //     return response()->json(['error' => 'Image removal failed'], 500);
+            // }
     }
 
     // ADD PRODUCT
@@ -665,22 +667,12 @@ class CollectionController extends Controller
     // Trash Multiple Products
     public function trashMultiple(Request $request)
     {
-        dd($request->input('selectedItems'));
-        $selectedItemIds = $request->input('selectedItems');
+        $selectedIds = $request->input('ids');
 
-        if (!empty($selectedItemIds)) {
-            foreach ($selectedItemIds as $itemId) {
-                $mannequin = Mannequin::find($itemId);
+        // Update the activeStatus for the selected items
+        Mannequin::whereIn('id', $selectedIds)->update(['activeStatus' => 0]);
 
-                if ($mannequin) {
-                    $mannequin->activeStatus = 0;
-                    $this->setActionBy($mannequin, 'Deleted');
-                    $mannequin->save();
-                }
-            }
-            return response()->json(['success' => true, 'message' => 'Items deleted permanently']);
-        }
-        return response()->json(['success' => false, 'message' => 'No items selected for deletion']);
+        return response()->json(['message' => 'Items updated successfully']);
     }
 
 

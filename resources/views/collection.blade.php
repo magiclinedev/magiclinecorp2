@@ -68,32 +68,26 @@
                         </select>
                     </div>
 
-
                     {{-- Searchbox --}}
                     <div class="w-full">
                         <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
                     </div>
                 </div>
-                {{-- BUTTON FOR DELETING SELECTED CHECKBOXES --}}
-                {{-- <div class="filter-dropdown">
-                    <select id="bulk" class=" block w-52 mb-2 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
-                        <option value="">Bulk Action</option>
-                            <option>Delete Selected Item/s</option>
-                    </select>
-                </div> --}}
 
-                <button name="bulkAction" id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" onclick="deleteSelectedMannequins()">
-                    Delete All</button>
+                {{-- DELETE/TRASH ALL BUTTON --}}
+                <button name="bulkAction" id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    Trash All
+                </button>
 
                 {{-- TABLE --}}
-                <table id="mannequinsTable" class="w-full table-auto border-collapse border">
+                <table id="mannequinsTable" class="w-full border-collapse border">
                     <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                         <tr>
-                            {{-- @can('super_admin', Auth::user())
-                            <th class="px-4 py-2 border">
-                                <input type="checkbox" id="selectAllCheckbox">
+                            <th class="px-4 py-2 border text-center">
+                                <div class="flex items-center justify-center">
+                                    <input type="checkbox" id="selectAllCheckbox">
+                                </div>
                             </th>
-                            @endcan --}}
                             <th class="px-4 py-2 border">Image</th>
                             <th class="px-4 py-2 border">Item Reference</th>
                             <th class="px-4 py-2 border">Company</th>
@@ -119,14 +113,16 @@
         $(document).ready(function() {
             // DATATBLE
             var table = $('#mannequinsTable').DataTable({
-                order: [[6, 'desc']],
+                order: [[7, 'desc']],
                 lengthChange: false,
                 "dom": 'lrtip',
                 processing: true,
+                "autoWidth": false,
                 serverSide: true,
                 deferRender: true,
-                scrollY: false,
-                pageLength: 10,
+                "scrollX": true,
+                responsive: true,
+                // pageLength: 10,
                 ajax:{
                     url: '{{ route('collection') }}' ,
                     data: function (data) {
@@ -144,7 +140,7 @@
                 deferLoading: (10, 100),
                 columnDefs: [
                     {
-                        targets: [6], // 6 is the index of the 'created_at' column (zero-based index)
+                        targets: [7], // created at
                         visible: false,
                     },
                     {
@@ -153,6 +149,11 @@
                     },
                 ],
                 columns: [
+                    {
+                        data: 'checkbox',
+                        name: 'checkbox',
+                        orderable: false, searchable: false,
+                    },
                     {
                         data: 'image',
                         name: 'image',
@@ -169,10 +170,9 @@
                                 }
                             }
                             return data;
-
-                        }
+                        },
                     },
-                    { data: 'itemref', name: 'itemref' },
+                    { data: 'itemref', name: 'itemref',},
                     { data: 'company', name: 'company' },
                     { data: 'category', name: 'category' },
                     { data: 'type', name: 'type' },
@@ -190,6 +190,15 @@
                     emptyTable: 'No Data available',
                 },
                 searching: true,
+
+                // CHECKBOX
+                initComplete: function () {
+                    // Handle "Select All" checkbox
+                    $('#selectAllCheckbox').on('change', function () {
+                        var isChecked = $(this).prop('checked');
+                        $('input.row-checkbox').prop('checked', isChecked);
+                    });
+                }
             });
 
             // Check if the table is empty and reload if it is
@@ -198,9 +207,8 @@
             }
 
             // Category Filter
-            // Add event listener for category filter
             $('#categoryFilter').on('change', function () {
-                table.draw(); // Redraw the table to apply the filter
+                table.draw();
             });
 
             // Handle company filter change
@@ -210,7 +218,7 @@
 
             // Add event listener for custom search input
             $('#customSearchInput').on('keyup', function () {
-                table.search(this.value).draw(); // This will send the search query to the server
+                table.search(this.value).draw();
             });
 
             // Trigger initial filter changes after DataTable initializes
@@ -230,6 +238,89 @@
                 // Update the heading with the selected company's name
                 $('#pageTitle').text(selectedCompany);
             }
+
+            //Handles individual row checkboxes
+            $('#mannequinsTable').on('change', 'input.row-checkbox', function () {
+                var allChecked = $('input.row-checkbox:checked').length === $('input.row-checkbox').length;
+                $('#selectAllCheckbox').prop('checked', allChecked);
+            });
+
+            // Handle the "Delete/Trash All" button click event
+            $('#bulkAction').on('click', function () {
+                var selectedIds = [];
+                $('input.row-checkbox:checked').each(function () {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length > 0) {
+                    Swal.fire({
+                        title: "Are you sure?",
+                        text: "Do you want to trash the selected items?",
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonColor: "#d33",
+                        cancelButtonColor: "#3085d6",
+                        confirmButtonText: "Yes, trash them",
+                        cancelButtonText: "No, cancel"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // User confirmed, proceed with the update
+                            $.ajax({
+                                url: '/collection/trash-multiple',
+                                type: 'POST',
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    ids: selectedIds
+                                },
+                                success: function (response) {
+                                    // Handle the response from the server, e.g., show a success message
+                                    Swal.fire({
+                                        title: "Items Updated",
+                                        text: "Selected items have been trashed.",
+                                        icon: "success"
+                                    });
+
+                                    // Reload the page after a short delay (e.g., 1 second)
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 1000); // 1000 milliseconds = 1 second
+
+                                    // datatable reload
+                                    table.ajax.reload();
+                                },
+                                error: function (error) {
+                                    Swal.fire({
+                                        title: "Error",
+                                        text: "An error occurred while trashing items.",
+                                        icon: "error"
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+                else {
+                    // No checkboxes were selected, provide feedback to the user.
+                    Swal.fire({
+                        title: "No Items Selected",
+                        text: "Please select items to trash.",
+                        icon: "info"
+                    });
+                }
+            });
+
+            //Handles Trash/Delete Button show
+            function updateDeleteButtonVisibility() {
+                var anyCheckboxChecked = $('input.row-checkbox:checked').length > 0;
+                $('#bulkAction').toggleClass('hidden', !anyCheckboxChecked);
+            }
+
+            $('#selectAllCheckbox').on('change', function () {
+                $('input.row-checkbox').prop('checked', $(this).prop('checked'));
+                updateDeleteButtonVisibility();
+            });
+
+            $('#mannequinsTable').on('change', 'input.row-checkbox', updateDeleteButtonVisibility);
         });
     </script>
 

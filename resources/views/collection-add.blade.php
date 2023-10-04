@@ -25,7 +25,7 @@
     </x-slot>
 
     {{-- IMG VIEW CONTAINER --}}
-    <style>
+    {{-- <style>
         .image-container {
             display: inline-block;
             position: relative;
@@ -59,7 +59,7 @@
             height: 100%;
             object-fit: cover;
         }
-    </style>
+    </style> --}}
 
     <div class="container mx-auto px-4 py-8">
         <form action="{{ route('collection.store') }}" method="POST" enctype="multipart/form-data" class="bg-white shadow-md rounded-lg px-8 py-6">
@@ -265,10 +265,10 @@
 
         // Initialize FilePond with the desired configuration, including the imagePreview plugin
         const pond = FilePond.create(inputElement, {
-            allowMultiple: true, // Allow multiple files
-            revert: true, // Allow reverting uploaded files
+            allowMultiple: true,
+            revert: true,
             allowRemove: true,
-            maxFileSize: '2MB', // Allow removing uploaded files
+            maxFileSize: '2MB',
             server: {
                 process: {
                     url: '/dropbox-image', // Point this to your server endpoint for processing the upload
