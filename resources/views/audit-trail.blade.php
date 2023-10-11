@@ -29,7 +29,7 @@
                     </div>
 
                 </div>
-
+                {{-- TABLE --}}
                 <table id="auditTrailTable" class="w-full table-auto border-collapse border">
                     <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                         <tr>

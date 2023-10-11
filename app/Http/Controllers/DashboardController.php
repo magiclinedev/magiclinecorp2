@@ -58,7 +58,8 @@ class DashboardController extends Controller
             // Super users see all mannequins and companies
             $mannequins = Mannequin::all();
             $companies = Company::all();
-        } else {
+        }
+        else {
              // admin 2 and viewer can only see mannequins and companies associated with their companies
             $mannequins = Mannequin::whereIn('company', $user->companies->pluck('name'))->get();
             $companies = $user->companies;
@@ -118,7 +119,6 @@ class DashboardController extends Controller
             // Product Access
 
             $query->where('activeStatus', 1);
-
 
             $totalRecords = $query->count(); // Get the total number of records
 

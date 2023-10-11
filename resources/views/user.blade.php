@@ -374,25 +374,25 @@
                         if (result.isConfirmed) {
                             // Perform AJAX request to delete the record
                             axios.post(transferUrl)
-                                .then(response => {
-                                    if (response.data.success) {
-                                        Swal.fire(
-                                            'Deleted!',
-                                            response.data.message, // Use the message from the server's response
-                                            'success'
-                                        ).then(() => {
-                                            // Refresh the page after successful deletion
-                                            window.location.reload();
-                                        });
-                                    }
-                                })
-                                .catch(error => {
+                            .then(response => {
+                                if (response.data.success) {
                                     Swal.fire(
-                                        'Error!',
-                                        'An error occurred while deleting the record.',
-                                        'error'
-                                    );
-                                });
+                                        'Deleted!',
+                                        response.data.message, // Use the message from the server's response
+                                        'success'
+                                    ).then(() => {
+                                        // Refresh the page after successful deletion
+                                        window.location.reload();
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                Swal.fire(
+                                    'Error!',
+                                    'An error occurred while deleting the record.',
+                                    'error'
+                                );
+                            });
                         }
                     });
                 });
@@ -415,25 +415,25 @@
                         if (result.isConfirmed) {
                             // Perform AJAX request to change the active status
                             axios.post(transferUrl)
-                                .then(response => {
-                                    if (response.data.success) {
-                                        Swal.fire(
-                                            'Changed!',
-                                            'The user\'s status has been updated.',
-                                            'success'
-                                        ).then(() => {
-                                            // Refresh the page after successful update
-                                            window.location.reload();
-                                        });
-                                    }
-                                })
-                                .catch(error => {
+                            .then(response => {
+                                if (response.data.success) {
                                     Swal.fire(
-                                        'Error!',
-                                        'An error occurred while updating the active status.',
-                                        'error'
-                                    );
-                                });
+                                        'Changed!',
+                                        'The user\'s status has been updated.',
+                                        'success'
+                                    ).then(() => {
+                                        // Refresh the page after successful update
+                                        window.location.reload();
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                Swal.fire(
+                                    'Error!',
+                                    'An error occurred while updating the active status.',
+                                    'error'
+                                );
+                            });
                         }
                     });
                 });
@@ -441,5 +441,4 @@
         });
     </script>
     {{-- END SCRIPTS --}}
-
 </x-app-layout>

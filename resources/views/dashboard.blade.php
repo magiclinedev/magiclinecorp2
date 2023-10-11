@@ -14,235 +14,214 @@
 
                 {{-- ALL PRODUCT access admin 1 and owner--}}
                 @can('super_admin', Auth::user())
-                <div class="w-full sm:w-1/5 p-4 ">
-                    {{-- admin 1, 2 and viewer has href --}}
-                    @can('users_access', Auth::user())
-                    <a href="{{ route('collection')}}" class="block text-center relative overflow-hidden group">{{-- {{ route('collection', ['company' => $company->name]) }} --}}
-                    @endcan
-                    {{-- owner shows table below --}}
-                    @can('owner', Auth::user())
-                    <a href="" class="showAllProducts block text-center relative overflow-hidden group">
-                    @endcan
-                    {{-- <a href="#" class="showAllProducts block text-center relative overflow-hidden group"> --}}
-                        <!-- Content for the first square -->
-                        <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
-                            <div class="relative">
-                                <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
-                                    <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
-                                        <i class="fas fa-database fa-3x text-black"></i>
+                    <div class="w-full sm:w-1/5 p-4 ">
+                        {{-- admin 1, 2 and viewer has href --}}
+                        @can('users_access', Auth::user())
+                            <a href="{{ route('collection')}}" class="block text-center relative overflow-hidden group">{{-- {{ route('collection', ['company' => $company->name]) }} --}}
+                        @endcan
+                        {{-- owner shows table below --}}
+                        @can('owner', Auth::user())
+                            <a href="" class="showAllProducts block text-center relative overflow-hidden group">
+                        @endcan
+                            <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
+                                <div class="relative">
+                                    <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
+                                        <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
+                                            <i class="fas fa-database fa-3x text-black"></i>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <!-- Content container -->
-                                <div class="p-6 items-end flex justify-end">
-                                    <div class="text-sm text-gray-500">
-                                        <div class="text-right">
-                                            <div class="text-2xl font-semibold text-white-800">
-                                                <span class="text-5xl text-800 text-white">
-                                                    {{ $mannequins->where('activeStatus', 1)->count() }}
-                                                </span>
-                                            </div>
-                                            <div class="text-xs text-white-500">
-                                                <p class="text-white">All Products Available</p>
+                                    <!-- Content container -->
+                                    <div class="p-6 items-end flex justify-end">
+                                        <div class="text-sm text-gray-500">
+                                            <div class="text-right">
+                                                <div class="text-2xl font-semibold text-white-800">
+                                                    <span class="text-5xl text-800 text-white">
+                                                        {{ $mannequins->where('activeStatus', 1)->count() }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-xs text-white-500">
+                                                    <p class="text-white">All Products Available</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Pseudo-element for hover effect -->
-                        <div class="absolute left-0 bottom-0 h-0 w-full bg-gradient-to-t from-gray-400 to-transparent transition-all duration-300 ease-in-out group-hover:h-full"></div>
-                    </a>
-                </div>
+                            <!-- Pseudo-element for hover effect -->
+                            <div class="absolute left-0 bottom-0 h-0 w-full bg-gradient-to-t from-gray-400 to-transparent transition-all duration-300 ease-in-out group-hover:h-full"></div>
+                        </a>
+                    </div>
                 @endcan
 
                 {{-- PRODUCT COUNT PER COMPANY --}}
                 @foreach ($companies as $company)
-                <div class="w-full sm:w-1/5 p-4 ">
-                    {{-- admin 1, 2 and viewer has href --}}
-                    @can('users_access', Auth::user())
-                    <a href="{{ route('collection', ['company' => $company->name, 'companySelected' => 'true']) }}" class="block text-center relative overflow-hidden group" data-company="{{ $company->name }}">{{-- {{ route('collection', ['company' => $company->name]) }} --}}
-                    @endcan
-                    {{-- owner shows table below --}}
-                    @can('owner', Auth::user())
-                    <a href="#" id="showTableButton" class="companyFilter show-table-button block text-center relative overflow-hidden group" data-company="{{ $company->name }}">{{-- {{ route('collection', ['company' => $company->name]) }} --}}
-                    @endcan
-                        <!-- Content for the first square -->
-                        <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
-                            <div class="relative">
-                                <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
-                                    <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
-                                        <img src="{{ asset('storage/' . $company->images) }}" alt="Company Image" class="w-16 h-16 object-contain">
+                    <div class="w-full sm:w-1/5 p-4 ">
+                        {{-- admin 1, 2 and viewer has href --}}
+                        @can('users_access', Auth::user())
+                            <a href="{{ route('collection', ['company' => $company->name, 'companySelected' => 'true']) }}" class="block text-center relative overflow-hidden group" data-company="{{ $company->name }}">{{-- {{ route('collection', ['company' => $company->name]) }} --}}
+                        @endcan
+                        {{-- owner shows table below --}}
+                        @can('owner', Auth::user())
+                            <a href="#" id="showTableButton" class="companyFilter show-table-button block text-center relative overflow-hidden group" data-company="{{ $company->name }}">{{-- {{ route('collection', ['company' => $company->name]) }} --}}
+                        @endcan
+                            <!-- Content for the first square -->
+                            <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
+                                <div class="relative">
+                                    <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
+                                        <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
+                                            <img src="{{ asset('storage/' . $company->images) }}" alt="Company Image" class="w-16 h-16 object-contain">
+                                        </div>
                                     </div>
-                                </div>
 
-                                <!-- Content container -->
-                                <div class="p-6 items-end flex justify-end">
-                                    <div class="text-sm text-gray-500">
-                                        <div class="text-right">
-                                            <div class="text-2xl font-semibold text-white-800">
-                                                <span class="text-5xl text-800 text-white">
-                                                    {{ $mannequins->where('company', $company->name)->where('activeStatus', 1)->count() }}
-                                                </span>
-                                            </div>
-                                            <div class="text-xs text-white-500">
-                                                <p class="text-white">{{ $company->name }}'s Products</p>
+                                    <!-- Content container -->
+                                    <div class="p-6 items-end flex justify-end">
+                                        <div class="text-sm text-gray-500">
+                                            <div class="text-right">
+                                                <div class="text-2xl font-semibold text-white-800">
+                                                    <span class="text-5xl text-800 text-white">
+                                                        {{ $mannequins->where('company', $company->name)->where('activeStatus', 1)->count() }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-xs text-white-500">
+                                                    <p class="text-white">{{ $company->name }}'s Products</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Pseudo-element for hover effect -->
-                        <div class="absolute left-0 bottom-0 h-0 w-full bg-gradient-to-t from-gray-400 to-transparent transition-all duration-300 ease-in-out group-hover:h-full"></div>
-                    </a>
-                </div>
+                            <!-- Pseudo-element for hover effect -->
+                            <div class="absolute left-0 bottom-0 h-0 w-full bg-gradient-to-t from-gray-400 to-transparent transition-all duration-300 ease-in-out group-hover:h-full"></div>
+                        </a>
+                    </div>
                 @endforeach
 
 
                 {{-- USERS --}}
                 @can('super_admin', Auth::user())
-                <div class="w-full sm:w-1/5 p-4">
-                    <a href="users" class="block text-center relative overflow-hidden group">
-                        <!-- Content for the first square -->
-                        <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
-                            <div class="relative">
-                                <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
-                                    <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
-                                        <i class="fas fa-users fa-3x text-black"></i>
+                    <div class="w-full sm:w-1/5 p-4">
+                        <a href="users" class="block text-center relative overflow-hidden group">
+                            <!-- Content for the first square -->
+                            <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
+                                <div class="relative">
+                                    <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
+                                        <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
+                                            <i class="fas fa-users fa-3x text-black"></i>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <!-- Content container -->
-                                <div class="p-6 items-end flex justify-end">
-                                    <div class="text-sm text-gray-500">
-                                        <div class="text-right">
-                                            <div class="text-2xl font-semibold text-white-800">
-                                                <span class="text-5xl text-800 text-white">
-                                                    {{ $users->count() }}
-                                                </span>
-                                            </div>
-                                            <div class="text-xs text-white-500">
-                                                <p class="text-white">Users Available</p>
+                                    <!-- Content container -->
+                                    <div class="p-6 items-end flex justify-end">
+                                        <div class="text-sm text-gray-500">
+                                            <div class="text-right">
+                                                <div class="text-2xl font-semibold text-white-800">
+                                                    <span class="text-5xl text-800 text-white">
+                                                        {{ $users->count() }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-xs text-white-500">
+                                                    <p class="text-white">Users Available</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Pseudo-element for hover effect -->
-                        <div class="absolute left-0 bottom-0 h-0 w-full bg-gradient-to-t from-gray-400 to-transparent transition-all duration-300 ease-in-out group-hover:h-full"></div>
-                    </a>
-                </div>
+                            <!-- Pseudo-element for hover effect -->
+                            <div class="absolute left-0 bottom-0 h-0 w-full bg-gradient-to-t from-gray-400 to-transparent transition-all duration-300 ease-in-out group-hover:h-full"></div>
+                        </a>
+                    </div>
                 @endcan
 
                 {{-- ADDED PROD TODAY --}}
                 @can('super_admin', Auth::user())
-                <div class="w-full sm:w-1/5 p-4">
-                    {{-- admin 1, 2 and viewer has href --}}
-                    @can('users_access', Auth::user())
-                    <a href="{{ route('collection', ['date' => 'today']) }}" class="block text-center relative overflow-hidden group">
-                    @endcan
-                    {{-- owner shows table below --}}
-                    @can('owner', Auth::user())
-                    <a href="" class="showAddedTodayProducts block text-center relative overflow-hidden group">
-                    @endcan
-                        <!-- Content for the first square -->
-                        <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
-                            <div class="relative">
-                                <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
-                                    <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
-                                        <i class="fas fa-plus fa-3x text-black"></i>
+                    <div class="w-full sm:w-1/5 p-4">
+                        {{-- admin 1, 2 and viewer has href --}}
+                        @can('users_access', Auth::user())
+                            <a href="{{ route('collection', ['date' => 'today']) }}" class="block text-center relative overflow-hidden group">
+                        @endcan
+                        {{-- owner shows table below --}}
+                        @can('owner', Auth::user())
+                            <a href="" class="showAddedTodayProducts block text-center relative overflow-hidden group">
+                        @endcan
+                            <!-- Content for the first square -->
+                            <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
+                                <div class="relative">
+                                    <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
+                                        <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
+                                            <i class="fas fa-plus fa-3x text-black"></i>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <!-- Content container -->
-                                <div class="p-6 items-end flex justify-end">
-                                    <div class="text-sm text-gray-500">
-                                        <div class="text-right">
-                                            <div class="text-2xl font-semibold text-white-800">
-                                                <span class="text-5xl text-800 text-white">
-                                                    {{ $productsCreatedToday }}
-                                                </span>
-                                            </div>
-                                            <div class="text-xs text-white-500">
-                                                <p class="text-white">Added Product Today</p>
+                                    <!-- Content container -->
+                                    <div class="p-6 items-end flex justify-end">
+                                        <div class="text-sm text-gray-500">
+                                            <div class="text-right">
+                                                <div class="text-2xl font-semibold text-white-800">
+                                                    <span class="text-5xl text-800 text-white">
+                                                        {{ $productsCreatedToday }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-xs text-white-500">
+                                                    <p class="text-white">Added Product Today</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Pseudo-element for hover effect -->
-                        <div class="absolute left-0 bottom-0 h-0 w-full bg-gradient-to-t from-gray-400 to-transparent transition-all duration-300 ease-in-out group-hover:h-full"></div>
-                    </a>
-                </div>
+                            <!-- Pseudo-element for hover effect -->
+                            <div class="absolute left-0 bottom-0 h-0 w-full bg-gradient-to-t from-gray-400 to-transparent transition-all duration-300 ease-in-out group-hover:h-full"></div>
+                        </a>
+                    </div>
                 @endcan
 
                 {{-- TABLE (for owner) --}}
                 @can('owner', Auth::user())
-                <div id="tableContainer" class="bg-white shadow-sm sm:rounded-lg w-full p-4" style="display: none;">
-
-                    <div class="flex flex-wrap space-x-4 my-4">
-                        {{-- company FILTER --}}
-                        <div class="filter-dropdown flex-1">
-                            <select id="companyFilter" class="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Category">
-                                <option value="">All Companies</option>
-                                @foreach ($companies as $company)
-                                    <option value="{{ $company->name }}">{{ $company->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        {{-- category FILTER --}}
-                        <div class="filter-dropdown flex-1">
-                            <select id="categoryFilter" class="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
-                                <option value="">Categories</option>
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->name }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        {{-- Searchbox --}}
-                        <div class="w-1/2">
-                            <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
-                        </div>
-
-                        {{-- Trashcan Button --}}
-                        {{-- @if ($mannequins->contains('activeStatus', 0))
-                            <div class="pt-2">
-                                <a href="{{ route('collection.trashcan') }}" class="text-gray-800 hover:text-gray-600">
-                                    <i class="fas fa-trash-alt"></i> Trash
-                                    <span class="badge">{{ $mannequins->where('activeStatus', 0)->count() }}</span>
-                                </a>
+                    <div id="tableContainer" class="bg-white shadow-sm sm:rounded-lg w-full p-4" style="display: none;">
+                        <div class="flex flex-wrap space-x-4 my-4">
+                            {{-- company FILTER --}}
+                            <div class="filter-dropdown flex-1">
+                                <select id="companyFilter" class="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Category">
+                                    <option value="">All Companies</option>
+                                    @foreach ($companies as $company)
+                                        <option value="{{ $company->name }}">{{ $company->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-                        @endif --}}
+                            {{-- category FILTER --}}
+                            <div class="filter-dropdown flex-1">
+                                <select id="categoryFilter" class="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Company">
+                                    <option value="">Categories</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->name }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            {{-- Searchbox --}}
+                            <div class="w-1/2">
+                                <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
+                            </div>
+                        </div>
+                        {{-- TABLE --}}
+                        <table id="mannequinsTable" class="w-full table-auto border-collapse border">
+                            <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
+                                <tr>
+                                    <th class="px-4 py-2 border">Image</th>
+                                    <th class="px-4 py-2 border">Item Reference</th>
+                                    <th class="px-4 py-2 border">Company</th>
+                                    <th class="px-4 py-2 border">Category</th>
+                                    <th class="px-4 py-2 border">Type</th>
+                                    <th class="px-4 py-2 border">Action Type</th>
+                                    <th class="px-4 py-2 border">Created at</th>
+                                    <th class="px-4 py-2 border">Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                        {{-- END TABLE --}}
                     </div>
-
-                    <button id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        Delete All
-                    </button>
-
-                    {{-- TABLE --}}
-                    <table id="mannequinsTable" class="w-full table-auto border-collapse border">
-                        <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
-                            <tr>
-                                <th class="px-4 py-2 border">Image</th>
-                                <th class="px-4 py-2 border">Item Reference</th>
-                                <th class="px-4 py-2 border">Company</th>
-                                <th class="px-4 py-2 border">Category</th>
-                                <th class="px-4 py-2 border">Type</th>
-                                <th class="px-4 py-2 border">Action Type</th>
-                                <th class="px-4 py-2 border">Created at</th>
-                                <th class="px-4 py-2 border">Action</th>
-                            </tr>
-                        </thead>
-                    </table>
-                    {{-- END TABLE --}}
-                </div>
                 @endcan
-
             </div>
         </div>
     </div>
@@ -374,17 +353,6 @@
                 table.draw(); // Clear custom search input
                 scrollToElement('tableContainer');
             });
-
-            // Company Filter links
-            // $('.companyFilter').on('click', function(event) {
-            //     event.preventDefault();
-            //     var company = $(this).data('company');
-            //     table.search('').draw();
-            //     table.column(2).search(company).draw();
-            //     $('#companyFilter').val(company);
-            //     $('#customSearchInput').val(''); // Clear custom search input
-            //     scrollToElement('tableContainer');
-            // });
 
             // Show Table button
             $('.show-table-button').on('click', function(event) {

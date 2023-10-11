@@ -43,7 +43,8 @@ class CompanyController extends Controller
 
             // Update the $photoPath with the path to the uploaded photo
             $photoPath = 'images/' . $photoName;
-        } else {
+        }
+        else {
             return redirect()->back()->withInput()->with('danger_message', 'Please upload an image.');
         }
 

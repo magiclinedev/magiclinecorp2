@@ -22,6 +22,7 @@ Collection
     </style>
     <script src="{{ asset('js/magnifier.js') }}"></script>
 
+    {{-- FOR IMAGES --}}
     @php
         // Split the image paths string into an array
         $imagePaths = explode(',', $mannequin->images);
@@ -130,7 +131,6 @@ Collection
                         <div class="w-1/3 font-bold text-gray-700">Type:</div>
                         <div class="w-2/3">{{ $mannequin->type }}</div>
                     </div>
-
                     {{-- PRICE --}}
                     @if ($canViewPrice)
                         <div class="flex my-2">
@@ -140,21 +140,19 @@ Collection
                             </div>
                         </div>
                     @endif
-
-                    {{-- DECRIPTION --}}
+                    {{-- DESCRIPTION --}}
                     <div class="mb-4">
                         <div class="w-1/3 font-bold text-gray-700">Description:</div>
                         <div class="max-h-full overflow-y-auto">{!! $mannequin->description !!}</div>
                     </div>
-
                     {{-- UPLOADS --}}
                     <div class="flex">
                         {{-- PDF --}}
                         {{-- <div class="w-1/3 font-bold text-gray-700">PDF:</div> --}}
                         <div class="w-2/3">
-                            @if ($mannequin->pdf)
-                                <a href="{{ asset('storage/' . $mannequin->pdf) }}" target="_blank">
-                                    <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-all">
+                            @if ($pdfUrls)
+                                <a href="{{ $pdfUrls }}" target="_blank">
+                                    <button class="bg-red-500 hover-bg-red-600 text-white px-3 py-1 rounded transition-all">
                                         Download PDF <i class="fa fa-download ml-2"></i>
                                     </button>
                                 </a>
@@ -162,10 +160,20 @@ Collection
                         </div>
                         {{-- COSTING/EXCEL FILES --}}
                         <div class="w-2/3">
-                            @if ($mannequin->file)
-                                <a href="{{ asset('storage/' . $mannequin->file) }}" target="_blank">
+                            @if ($fileUrls)
+                                <a href="{{ $fileUrls }}" target="_blank">
                                     <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-all">
                                         Download Costing <i class="fa fa-download ml-2"></i>
+                                    </button>
+                                </a>
+                            @endif
+                        </div>
+                        {{-- 3D FIle --}}
+                        <div class="w-2/3">
+                            @if ($threeDUrls)
+                                <a href="{{ $threeDUrls }}" target="_blank">
+                                    <button class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition-all">
+                                        Download 3D <i class="fa fa-download ml-2"></i>
                                     </button>
                                 </a>
                             @endif

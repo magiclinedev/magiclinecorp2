@@ -67,18 +67,15 @@
                             @endforeach
                         </select>
                     </div>
-
                     {{-- Searchbox --}}
                     <div class="w-full">
                         <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
                     </div>
                 </div>
-
                 {{-- DELETE/TRASH ALL BUTTON --}}
                 <button name="bulkAction" id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                     <i class="fas fa-trash-alt"></i> Delete
                 </button>
-
                 {{-- TABLE --}}
                 <table id="mannequinsTable" class="w-full border-collapse border">
                     <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
@@ -110,18 +107,19 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function() {
+            // user status for checkbox
+            var userStatus = {{ $status }};
             // DATATBLE
             var table = $('#mannequinsTable').DataTable({
-                order: [[7, 'desc']],
+                order: [[2, 'asc']],
                 lengthChange: false,
                 "dom": 'lrtip',
                 processing: true,
                 "autoWidth": false,
                 serverSide: true,
-                deferRender: true,
-                "scrollX": true,
-                responsive: true,
-                // pageLength: 10,
+                // deferRender: true,
+                scrollX: true,
+                // responsive: true,
                 ajax:{
                     url: '{{ route('collection') }}' ,
                     data: function (data) {
@@ -136,12 +134,16 @@
                         }
                     },
                 },
-                deferLoading: (10, 100),
+                deferLoading: (10),
                 columnDefs: [
                     {
                         targets: '_all',
                         className: 'px-2 py-2 border text-center',
                     },
+                    {
+                        targets: [0],
+                        visible: userStatus == 1
+                    }
                 ],
                 columns: [
                     {
@@ -211,7 +213,20 @@
 
             // Add event listener for custom search input
             $('#customSearchInput').on('keyup', function () {
-                table.search(this.value).draw();
+                var searchValue = this.value;
+
+                // If there's a search query, apply custom sorting to your_custom_column in ascending order
+                if (searchValue) {
+                    table.order([2, 'asc']).draw(); // Assuming your_custom_column is the first column
+                }
+                else {
+                    // Otherwise, use default sorting in descending order
+                    table.order([0, 'desc']).draw(); // Assuming your_custom_column is the first column
+                }
+
+                // Perform the search
+                table.search(searchValue).draw();
+                // table.search(this.value).draw();
             });
 
             // Trigger initial filter changes after DataTable initializes

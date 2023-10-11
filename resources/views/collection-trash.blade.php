@@ -23,7 +23,6 @@
             </nav>
         </div>
     </x-slot>
-
     <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-3 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-4">
@@ -40,7 +39,7 @@
                             <i class="fas fa-trash-alt"></i> Permanently Delete
                         </button>
                     </div>
-
+                    {{-- table --}}
                     <table id="trashTable" class="w-full table-auto border-collapse border">
                         <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
                             <tr>
@@ -58,89 +57,12 @@
                                 <th class="px-4 py-2 border">Action</th>
                             </tr>
                         </thead>
-                        {{-- <tbody>
-                            @foreach ($mannequins as $mannequin)
-                                <tr class="border">
-                                    <td class="px-4 py-2 border">
-                                        <!-- Add the checkbox input here-->
-                                        <input type="checkbox" class=" row-checkbox center pb-4">
-                                    </td>
-
-                                    <!-- Images -->
-                                    @php
-                                        // Cache the image URL for a limited time (e.g., 1 hour)
-                                        $imageCacheKey = 'image_' . $mannequin->id;
-                                        $imageUrl = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($mannequin) {
-                                            // Split the image paths string into an array
-                                            $imagePaths = explode(',', $mannequin->images);
-                                            // Get the first image path from the array
-                                            $firstImagePath = $imagePaths[0] ?? null;
-
-                                            if (Storage::disk('dropbox')->exists($firstImagePath)) {
-                                                return Storage::disk('dropbox')->url($firstImagePath);
-                                            } else {
-                                                return null;
-                                            }
-                                        });
-                                    @endphp
-
-                                    <td class="px-7 py-2 border">
-                                        @if ($imageUrl)
-                                        <img src="{{ $imageUrl }}" alt="Mannequin Image" class="w-16 h-16 object-contain" loading="lazy">
-
-                                        @else
-                                            <p>Image not found</p>
-                                        @endif
-                                    </td>
-
-                                    <td class="px-4 py-2 border itemref-cell">
-                                        <span class="itemref-text">{{ $mannequin->itemref }}</span>
-                                        <!-- HOVER to show read, update, and delete -->
-                                        <div class="action-buttons">
-                                            <a href="{{ route('collection.view_prod', ['id' => Crypt::encrypt($mannequin->id)]) }}" class="btn-view">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
-                                            <a href="#" class="btn-view restore-button" onclick="confirmRestore('{{ route('collection.restore', ['id' => $mannequin->id]) }}')">
-                                                <i class="fas fa-check"></i> Restore
-                                            </a>
-                                            <button class="btn-delete" data-id="{{ $mannequin->id }}" data-transfer-url="{{ route('collection.delete', ['id' => $mannequin->id]) }}"
-                                                onclick="confirmDelete(this)">
-                                                <i class="fas fa-trash-alt"></i> Delete
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-2 border">{{ $mannequin->company }}</td>
-                                    <td class="px-4 py-2 border">{{ $mannequin->category }}</td>
-                                    <td class="px-4 py-2 border">{{ $mannequin->type }}</td>
-                                    <td class="px-4 py-2 border">{{ $mannequin->addedBy }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody> --}}
                     </table>
                 </div>
             </div>
         </div>
     </div>
-    {{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            var table = $('#trashTable').DataTable({
-                lengthChange: false,
-                searching: false,
-                serverSide: true,
-                proccessing: true,
-            });
-            // Handle "select all" checkbox
-            $('#selectAllCheckbox').on('change', function() {
-                var isChecked = this.checked;
-                $('td input.row-checkbox').each(function() {
-                    this.checked = isChecked;
-                });
-            });
-        });
-    </script> --}}
-      {{--START scripts --}}
+    {{--START scripts --}}
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>

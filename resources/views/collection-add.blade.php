@@ -23,50 +23,11 @@
             </nav>
         </div>
     </x-slot>
-
-    {{-- IMG VIEW CONTAINER --}}
-    {{-- <style>
-        .image-container {
-            display: inline-block;
-            position: relative;
-            margin: 5px;
-        }
-
-        .remove-image {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 50%;
-            color: #FF0000;
-            font-weight: bold;
-            font-size: 16px;
-            line-height: 1;
-        }
-
-        .image-preview {
-            max-width: 100px;
-            max-height: 100px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        .image-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-    </style> --}}
-
     <div class="container mx-auto px-4 py-8">
         <form action="{{ route('collection.store') }}" method="POST" enctype="multipart/form-data" class="bg-white shadow-md rounded-lg px-8 py-6">
             @csrf
             @method('PUT')
             <div class="grid grid-cols-2 gap-4">
-
                 {{-- Purchase order --}}
                 <div class="col-span-2 sm:col-span-1">
                     <label for="po" class="block font-bold mb-2">PO</label>
@@ -136,10 +97,9 @@
                         data-max-file-size="2MB"
                         data-max-files="8" >
 
-
-                    <div id="image-preview" class="mt-3">
+                    <!--<div id="image-preview" class="mt-3">
                         {{-- Placeholder for image preview --}}
-                    </div>
+                    </div>-->
                 </div>
                 {{-- file --}}
                 <div class="col-span-2">
@@ -216,48 +176,7 @@
             document.querySelector('#description').value = editorContent;
         });
     </script>
-
-    {{-- image holder --}}
-    <script>
-        document.getElementById("images").addEventListener("change", function (event) {
-            const imagePreview = document.getElementById("image-preview");
-            imagePreview.innerHTML = ""; // Clear previous preview
-
-            const files = event.target.files;
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const reader = new FileReader();
-
-                reader.onload = function (e) {
-                    const imageContainer = document.createElement("div");
-                    imageContainer.className = "image-container";
-
-                    const imagePreviewDiv = document.createElement("div");
-                    imagePreviewDiv.className = "image-preview";
-
-                    const image = document.createElement("img");
-                    image.src = e.target.result;
-                    image.alt = "Preview";
-
-                    const removeButton = document.createElement("span");
-                    removeButton.className = "remove-image";
-                    removeButton.innerHTML = "&times;";
-                    removeButton.addEventListener("click", function () {
-                        imageContainer.remove();
-                    });
-
-                    imagePreviewDiv.appendChild(image);
-                    imageContainer.appendChild(imagePreviewDiv);
-                    imageContainer.appendChild(removeButton);
-                    imagePreview.appendChild(imageContainer);
-                };
-
-                reader.readAsDataURL(file);
-            }
-        });
-    </script>
-
-    {{-- iMAGE UPLOAD --}}
+    {{-- IMAGE UPLOAD filepond--}}
     <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
     <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
     <script>
@@ -278,12 +197,47 @@
                     },
                     // Additional process options if needed
                 },
-            },
-            // Add the imagePreview plugin options
-            imagePreviewHeight: 150, // Set the height of the image preview
-            imagePreviewMaxHeight: 300, // Set the maximum height of the image preview
-            imagePreviewWidth: 150, // Set the width of the image preview
-            imagePreviewMaxWidth: 300, // Set the maximum width of the image preview
+                remove: {
+                    url: '/remove-image', // Endpoint for deleting images
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    // Include a function to specify which file to remove
+                    onRemove: (source, load, error) => {
+                        // Retrieve the file path from the data attribute
+                        const filePath = source.getAttribute('data-file-path');
+
+                        // Send a request to your server with the file path
+                        fetch('/remove-image', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ file_path: filePath }),
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                // Handle the response from the server
+                                if (data.success) {
+                                    load();
+                                } else {
+                                    error('Error removing file');
+                                }
+                            })
+                            .catch(error => {
+                                error('Error removing file');
+                            });
+                    },
+                },
+            }
+        });
+        // Attach the file path to each FilePond file input element
+        pond.on('addfile', (error, file) => {
+            if (!error) {
+                // The file has been added, set the file path data attribute
+                file.source.setAttribute('data-file-path', file.serverId);
+            }
         });
         // Hook into the addfile event to validate file size
         pond.on('addfile', (error, file) => {
@@ -310,34 +264,6 @@
 
                     file.info.appendChild(cancelBtn);
                 }
-            });
-
-            // Hook into the removefile event to handle image removal
-            pond.on('removefile', (error, file) => {
-                if (!error) {
-                    const filename = file.filename; // Get the filename of the file to remove
-
-                    // Send a single filename for removal
-                    fetch('/remove-image', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ filename: filename }),
-                    })
-                    .then((response) => {
-                        if (response.ok) {
-                            // File removed successfully
-                        } else {
-                            // Handle the error
-                        }
-                    })
-                    .catch((error) => {
-                        // Handle network error
-                    });
-                }
-            });
-
+        });
     </script>
 </x-app-layout>

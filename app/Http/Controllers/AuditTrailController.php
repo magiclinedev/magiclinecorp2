@@ -15,7 +15,8 @@ class AuditTrailController extends Controller
 
         if ($request->has('showAll')) {
             $audits = $query->get();
-        } else {
+        }
+        else {
             $perPage = 30;
             $audits = $query->paginate($perPage);
         }

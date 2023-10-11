@@ -34,4 +34,12 @@ class Mannequin extends Model
         return $this->belongsTo(Company::class, 'company');
     }
 
+    public function mannequin()
+    {
+        return $this->hasMany('po');
+    }
+    public function po()
+    {
+        return $this->hasMany('itemref');
+    }
 }

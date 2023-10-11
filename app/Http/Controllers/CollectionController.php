@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Support\Facades\Str;
 use Livewire\WithPagination;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
@@ -60,6 +59,7 @@ class CollectionController extends Controller
             return redirect()->route('login');
         }
 
+        $status = $user->status;
         $selectedCategory = $request->input('category');
         $categories = Category::all();
         $selectedCompany = $request->query('company', '');
@@ -90,6 +90,8 @@ class CollectionController extends Controller
                             ->orWhere('type', 'like', '%' . $searchQuery . '%')
                             ->orWhere('addedBy', 'like', '%' . $searchQuery . '%');
                 });
+                // Apply an ORDER BY clause for search in ascending order
+                $query->orderBy('created_at', 'asc')->get();
             }
 
             //filter
@@ -108,7 +110,8 @@ class CollectionController extends Controller
             if ($user->status == 1) {
                 // If user's status is 1(superadmin), query for activeStatus = 1
                 $query->where('activeStatus', 1);
-            } else {
+            }
+            else {
                 // If user's status is not 1, query based on user's companies
                 $companies = $user->companies->pluck('name')->toArray();
                 $query->whereIn('company', $companies);
@@ -147,7 +150,6 @@ class CollectionController extends Controller
                     'category' => $m->category,
                     'type' => $m->type,
                     'addedBy' => $m->addedBy,
-                    'created_at' => $m->created_at->toDateTimeString(),
                     'action' => '
                     <div class="flex justify-between">
                         <a href="' . route('collection.view_prod', ['id' => Crypt::encrypt($m->id)]) . '" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded" title="View">
@@ -193,11 +195,12 @@ class CollectionController extends Controller
             'companies' => $companies,
             'companyName' => $selectedCompany,
             'user' => $user,
+            'status' => $status,
             // 'dropboxFiles' => $files,
         ]);
     }
 
-    // IMAGE FOR DATATABLE
+    // IMAGE FOR DATATABLES
     private function getImageUrl($mannequin)
     {
         $imagePaths = explode(',', $mannequin->images);
@@ -205,7 +208,8 @@ class CollectionController extends Controller
 
         if (Storage::disk('dropbox')->exists($firstImagePath)) {
             return Storage::disk('dropbox')->url($firstImagePath);
-        } else {
+        }
+        else {
             return null;
         }
     }
@@ -214,7 +218,6 @@ class CollectionController extends Controller
     private function generateActionButtons($user, $mannequin)
     {
         $action = '';
-
         if (Gate::allows('super_admin', $user)) {
             if($mannequin->activeStatus == 1){
                 $action = '
@@ -241,7 +244,8 @@ class CollectionController extends Controller
                 ';
             }
 
-        } elseif (Gate::allows('admin_access', $user)) {
+        }
+        elseif (Gate::allows('admin_access', $user)) {
             $action = '
             <a href="' . route('collection.edit', ['id' => Crypt::encrypt($mannequin->id)]) . '" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-2 border border-blue-500 hover:border-transparent rounded" title="Edit">
             <i class="fas fa-edit"></i></a>
@@ -282,6 +286,63 @@ class CollectionController extends Controller
             return redirect()->route('collection')->with('danger_message', 'Mannequin not found.');
         }
 
+        // PDF
+        $pdfPath = $mannequin->pdf;
+        if($pdfPath)
+        {
+            $pdfUrls = $pdfPath; // Initialize with the PDF path
+            // dd($pdfUrls);
+            if (Storage::disk('dropbox')->exists($pdfPath)) {
+                $pdfUrls = Storage::disk('dropbox')->url($pdfPath);
+            }
+            else {
+                // Handle the case when the file does not exist
+                $pdfUrls = null;
+            }
+        }
+        else {
+            $pdfUrls = null;
+        }
+
+        // COSTING / EXCEL
+        $filePath = $mannequin->file;
+        if($filePath)
+        {
+            $fileUrls = $filePath; // Initialize with the file path
+            // dd($fileUrls);
+            if (Storage::disk('dropbox')->exists($filePath)) {
+                $fileUrls = Storage::disk('dropbox')->url($filePath);
+            }
+            else {
+                // Handle the case when the file does not exist
+                $fileUrls = null;
+            }
+
+        }
+        else {
+            $fileUrls = null;
+        }
+
+        // 3D PATH .stl
+        $itemref = $mannequin->itemref; // Assuming $mannequin->itemref is the name of the 3D file
+        $threeDPath = 'Magicline Database/files/3D/' . $itemref . '.stl'; // Concatenate the file name and path
+        if($threeDPath)
+        {
+            $threeDUrls = $threeDPath; // Initialize with the threeD path
+            // dd($threeDUrls);
+            if (Storage::disk('dropbox')->exists($threeDPath)) {
+                $threeDUrls = Storage::disk('dropbox')->url($threeDPath);
+            }
+            else {
+                // Handle the case when the threeD does not exist
+                $threeDUrls = null;
+            }
+
+        }
+        else {
+            $threeDUrls = null;
+        }
+
         // Get the authenticated user
         $user = Auth::user();
 
@@ -301,6 +362,9 @@ class CollectionController extends Controller
             'mannequin' => $mannequin,
             'encryptedId' => $encryptedId,
             'canViewPrice' => $canViewPrice,
+            'pdfUrls' => $pdfUrls,
+            'fileUrls' => $fileUrls,
+            'threeDUrls' => $threeDUrls,
         ]);
     }
 
@@ -328,44 +392,34 @@ class CollectionController extends Controller
         $photoPaths = [];
 
         if ($request->hasFile('images')) {
-            try {
-                foreach ($request->file('images') as $photo) {
-                    $photoName = time() . '_' . $photo->getClientOriginalName();
-                    $path = 'Magicline Database/images/product/' . $photoName; // Relative path within Dropbox
+            foreach ($request->file('images') as $photo) {
+                $photoName = time() . '_' . $photo->getClientOriginalName();
+                $path = 'Magicline Database/images/product/' . $photoName; // Relative path within Dropbox
 
-                    // Try to upload the image to Dropbox
-
-                    Storage::disk('dropbox')->put($path, file_get_contents($photo));
-                    // Store the Dropbox path in your array
-                    $photoPaths[] = $path;
-                }
-            }
-            catch (\Exception $e) {
-                // Handle the exception and return a response
-                \Log::error('Error uploading file to Dropbox: ' . $e->getMessage());
-                return redirect('/collection-add')->with('error', 'File upload to Dropbox failed: ' . $e->getMessage());
+                Storage::disk('dropbox')->put($path, file_get_contents($photo));
+                // Store the Dropbox path in your array
+                $photoPaths[] = $path;
             }
         }
-
         return $photoPaths;
     }
 
-
-    // DROPBOX RFEMOVE IMAGES
+    // DROPBOX RFEMOVE IMAGES(not yet working)
     public function removeDropboxImage(Request $request)
     {
-        // // Get the filename to be removed from the client-side
-        // $filename = $request->input('filename'); // Change 'images' to 'filename'
-        // // dd($filename);
+        $filePath = $request->input('file_path');
 
-        // // Delete the file from Dropbox or any other storage
-        // try {
-        //     Storage::disk('dropbox')->delete('Magicline Database/images/product/' . $filename);
-        //     return response()->json(['message' => 'Image removed successfully'], 200);
-        // } catch (\Exception $e) {
-        //     \Log::error('Error removing file from Dropbox: ' . $e->getMessage());
-        //     return response()->json(['error' => 'Image removal failed'], 500);
-        // }
+        try {
+            // Use the Dropbox API or your existing Dropbox removal logic here
+            // For example, you can use the Dropbox SDK to delete the file:
+            Storage::disk('dropbox')->delete($filePath);
+
+            // If the file is deleted successfully, return a success response
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false]);
+        }
+
     }
 
     // ADD PRODUCT
@@ -426,8 +480,11 @@ class CollectionController extends Controller
             if ($request->hasFile($fileKey)) {
                 $file = $request->file($fileKey);
                 $fileName = time() . '_' . $file->getClientOriginalName();
-                $file->storeAs('public/files/' . $pathPrefix, $fileName);
-                return 'files/' . $pathPrefix . $fileName;
+                $path = 'Magicline Database/files/'. $pathPrefix . $fileName; // Relative path within Dropbox
+
+                Storage::disk('dropbox')->put($path, file_get_contents($file));
+
+                return 'Magicline Database/files/' . $pathPrefix . $fileName;
             }
             return null;
         };
@@ -449,6 +506,7 @@ class CollectionController extends Controller
             'file' => $excelFileName,
             'pdf' => $pdfFileName
         ]);
+
         $this->setActionBy($mannequin, 'Added');
         try {
             if ($mannequin->save()) {
@@ -583,8 +641,6 @@ class CollectionController extends Controller
         if ($request->hasFile('images')) {
             $imagePaths = [];
 
-            // Clear the cache associated with the first cache key
-
             // Clear the cache associated with the second cache key
             Cache::forget('images_' . $mannequin->id);
 
@@ -612,26 +668,30 @@ class CollectionController extends Controller
         }
 
         // Handle file uploads
-        $fileFields = ['file', 'pdf'];
+        $updateFile = function ($fileKey, $pathPrefix) use ($request, $mannequin) {
+            if ($request->hasFile($fileKey)) {
+                $file = $request->file($fileKey);
 
-        foreach ($fileFields as $field) {
-            if ($request->hasFile($field)) {
                 // Remove the old file if it exists
-                if ($mannequin->{$field}) {
-                    Storage::delete('public/files/' . $mannequin->{$field});
+                if ($mannequin->{$fileKey}) {
+                    Storage::disk('dropbox')->delete($mannequin->{$fileKey});
                 }
 
-                $file = $request->file($field);
-                $filename = $file->getClientOriginalName();
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $path = 'Magicline Database/files/' . $pathPrefix . $fileName; // Relative path within Dropbox
 
-                // Store the file in the desired storage location (public disk in this case)
-                $file->storeAs('public/files', $filename);
+                // Use the Laravel Filesystem to store the updated file
+                Storage::disk('dropbox')->put($path, file_get_contents($file));
 
                 // Update the file field in the database
-                $mannequin->{$field} = $filename;
-                $updates[] = ucfirst($field);
+                $mannequin->{$fileKey} = $path;
+                $mannequin->save();
             }
-        }
+        };
+
+        // Update the "excel" and "pdf" files
+        $updateFile('file', 'excel/');
+        $updateFile('pdf', 'pdf/');
 
         $this->setActionBy($mannequin, 'Modified');
 
@@ -648,7 +708,6 @@ class CollectionController extends Controller
 
         return redirect()->route($routeName, $mannequin->id)->with('success_message', 'Product details updated successfully.');
     }
-
 
     //SHOW TRASHCAN
     public function trashcan(Request $request)
@@ -706,7 +765,8 @@ class CollectionController extends Controller
             if ($user->status == 1) {
                 // If user's status is 1, query for activeStatus = 1
                 $query->where('activeStatus', 0);
-            } else {
+            }
+            else {
                 // If user's status is not 1, query based on user's companies
                 $companies = $user->companies->pluck('name')->toArray();
                 $query->whereIn('company', $companies);
@@ -835,21 +895,26 @@ class CollectionController extends Controller
         // Retrieve the selected items
         $selectedItems = Mannequin::whereIn('id', $selectedIds)->get();
 
-        // Iterate through the selected items
         foreach ($selectedItems as $item) {
+            //(trashed by)
+            $this->setActionBy($item, 'Trashed');
             if ($item->activeStatus == 1) {
-                // If activeStatus is 1, set it to 0
+                // If activeStatus is 1, set it to 0 and add an audit trail
                 $item->update(['activeStatus' => 0]);
+                $activity = "Trashed {$item->itemref}";
+                $this->logAuditTrail(auth()->user(), $activity);
             }
-            else{
-                // If activeStatus is 0, delete the item
-                $item->delete();
+            else {
+                // If activeStatus is 0, delete the item and add an audit trail
                 foreach (explode(',', $item->images) as $imagePath) {
                     Storage::disk('dropbox')->delete($imagePath);
                 }
+                $activity = "Deleted {$item->itemref}";
+                $this->logAuditTrail(auth()->user(), $activity);
+                // $this->setActionBy($item, 'Deleted');
+                $item->delete();
             }
         }
-
         return response()->json(['message' => 'Items updated and deleted successfully']);
     }
 
@@ -858,10 +923,19 @@ class CollectionController extends Controller
     {
         $selectedIds = $request->input('ids');
 
-        // Update the activeStatus for the selected items
-        Mannequin::whereIn('id', $selectedIds)->update(['activeStatus' => 1]);
+        // Retrieve the selected items
+        $selectedItems = Mannequin::whereIn('id', $selectedIds)->get();
 
-        return response()->json(['message' => 'Items updated successfully']);
+        foreach ($selectedItems as $item) {
+            $this->setActionBy($item, 'Restored');
+            if ($item->activeStatus == 0) {
+                // If activeStatus is 0, set it to 1 and add an audit trail
+                $item->update(['activeStatus' => 1]);
+                $activity = "Restored {$item->itemref}";
+                $this->logAuditTrail(auth()->user(), $activity);
+            }
+        }
+        return response()->json(['message' => 'Items restored successfully']);
     }
 
     //Delete (PERMANENTLY from database to storage)
@@ -877,6 +951,9 @@ class CollectionController extends Controller
         foreach (explode(',', $mannequin->images) as $imagePath) {
             Storage::disk('dropbox')->delete($imagePath);
         }
+
+        $pdfPath = $mannequin->pdf;
+        Storage::disk('dropbox')->delete($pdfPath);
 
         // Delete the Mannequin record from the database
         $mannequin->delete();
@@ -900,7 +977,7 @@ class CollectionController extends Controller
 
         $mannequin = Mannequin::findOrFail($id);
         // Cache::forget('images_' . $mannequin->id);
-        // dd( $id);
+
         if ($mannequin) {
             // Store the original item reference for the audit trail
             $originalItemref = $mannequin->itemref;

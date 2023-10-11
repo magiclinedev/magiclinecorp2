@@ -3,7 +3,6 @@
 @endsection
 
 <x-app-layout>
-
     @php
         // Split the image paths string into an array
         $imagePaths = explode(',', $mannequin->images);
@@ -51,7 +50,6 @@
 
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white shadow-md rounded-lg flex flex-col md:flex-row px-8 py-6">
-
             {{-- IMAGES --}}
             <div class="grid grid-cols-3 gap-4">
                 @if ($imageUrls)
@@ -64,7 +62,7 @@
                     <p>Image not found</p>
                 @endif
             </div>
-
+            {{-- START FORM --}}
             <div class="md:w-1/2">
                 <div class="p-4 leading-normal">
                     <form method="POST" action="{{ route('collection.update', ['id' => $mannequin->id]) }}" enctype="multipart/form-data">
@@ -194,64 +192,52 @@
                     </form>
                 </div>
             </div>
+            {{-- END form --}}
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     {{-- Sweet Alert --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script>
         $('form').submit(function(event) {
-        event.preventDefault(); // Prevent the default form submission
+            event.preventDefault(); // Prevent the default form submission
 
-        var form = this;
+            var form = this;
 
-        // Get the current value of the description textarea
-        var descriptionValue = $('#description').val();
+            // Get the current value of the description textarea
+            var descriptionValue = $('#description').val();
 
-        Swal.fire({
-            title: 'Confirm Edit',
-            text: 'Are you sure you want to save the changes?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, save changes!',
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Restore the original description value before submitting the form
-                $('#description').val(descriptionValue);
-
-                // Proceed with the form submission
-                form.submit();
-            }
-        });
-    });
-    </script>
-    <script>
-        @if(session('success_message'))
             Swal.fire({
-                title: 'Done!',
-                text: '{{ session('success_message') }}',
-                icon: 'success',
-                timer: 3000,
+                title: 'Confirm Edit',
+                text: 'Are you sure you want to save the changes?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, save changes!',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Restore the original description value before submitting the form
+                    $('#description').val(descriptionValue);
+
+                    // Proceed with the form submission
+                    form.submit();
+                }
+            });
+        });
+
+        // Update Validation fail
+        @if(session('danger_message'))
+            Swal.fire({
+                title: 'Error!',
+                html: `{!! implode('<br>', $errors->all()) !!}`,
+                icon: 'error',
+                timer: 6000,
                 showCancelButton: false,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Close'
             });
-            @elseif(session('danger_message'))
-                Swal.fire({
-                    title: 'Error!',
-                    html: `{!! implode('<br>', $errors->all()) !!}`,
-                    icon: 'error',
-                    timer: 6000,
-                    showCancelButton: false,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                });
-            @endif
-
+        @endif
     </script>
 
     {{-- Description Quill --}}
