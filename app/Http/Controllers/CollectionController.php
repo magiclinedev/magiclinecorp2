@@ -85,6 +85,8 @@ class CollectionController extends Controller
             if (!empty($searchQuery)) {
                 $query->where(function ($subquery) use ($searchQuery) {
                     $subquery->where('itemref', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('po', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('description', 'like', '%' . $searchQuery . '%')
                             ->orWhere('company', 'like', '%' . $searchQuery . '%')
                             ->orWhere('category', 'like', '%' . $searchQuery . '%')
                             ->orWhere('type', 'like', '%' . $searchQuery . '%')
