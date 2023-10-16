@@ -108,6 +108,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //Audit trail
     // Route::get('/audit-trail', [AuditTrailController::class, 'index'])->name('audit-trail');
 
+    Route::get('/clear-cache-route', function () {
+        // Clear the cache
+        \Artisan::call('cache:clear');
+        // You can also clear other caches if needed, e.g., \Artisan::call('config:clear');
+
+        return response()->json(['message' => 'Cache cleared']);
+    });
+
+
 });
 
 require __DIR__.'/auth.php';

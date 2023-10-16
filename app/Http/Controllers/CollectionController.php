@@ -67,7 +67,7 @@ class CollectionController extends Controller
 
             // Modify your query to load the data for the current page and order by recently added
             $query = Mannequin::query();
-            $query->orderBy('created_at', 'desc');
+            $query->orderBy('updated_at', 'desc');
 
             // FILTERS
             $dateFilter = $request->input('date');
@@ -98,7 +98,7 @@ class CollectionController extends Controller
             if ($dateFilter == 'updatedToday') {
                 // Modify your query to filter products added today(in dashboard)
                 $query  ->whereDate('updated_at', now()->toDateString())
-                        ->where('addedBy', 'LIKE', '%Modified%');
+                        ->where('addedBy', 'NOT LIKE', '%Added%');
             }
             if (!empty($selectedCategory)) {
                 $query->where('category', $selectedCategory);
@@ -657,7 +657,7 @@ class CollectionController extends Controller
             $oldImagePaths = explode(',', $mannequin->images);
             foreach ($oldImagePaths as $oldImagePath) {
                 // Delete the old image from Dropbox
-                dd(Cache::forget('image_' .  $mannequin->id));
+                Cache::forget('image_' .  $mannequin->id);
 
                 Storage::disk('dropbox')->delete($oldImagePath);
             }

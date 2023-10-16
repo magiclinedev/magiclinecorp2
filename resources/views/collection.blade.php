@@ -8,9 +8,12 @@
         <div class="flex items-center justify-between space-x-4">
             <h2 id="pageTitle" class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Product') }}
+                  <p></p>
             </h2>
             {{-- Admin Buttons(Add Products, Type, Category) --}}
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-4">
+                {{-- Refresh BUtton --}}
+                    <button id="clearCacheAndReload" class="text-gray-800 hover:text-gray-600"><i style="font-size:17px" class="fa">&#xf021;</i> REFRESH</button>
                 {{-- Access for buttons --}}
                 @can('admin_access', Auth::user())
                     <a href="{{ route('collection.add') }}" class="text-gray-800 hover:text-gray-600">
@@ -360,6 +363,19 @@
             cancelButtonColor: '#d33',
         });
         @endif
+    </script>
+    <script>
+        document.getElementById('clearCacheAndReload').addEventListener('click', function() {
+            // Send an AJAX request to a Laravel route to clear the cache
+            axios.get('/clear-cache-route')
+                .then(function(response) {
+                    // Cache cleared successfully, reload the page
+                    location.reload();
+                })
+                .catch(function(error) {
+                    console.error('Failed to clear cache:', error);
+                });
+        });
     </script>
     {{--END scripts--}}
 </x-app-layout>

@@ -139,7 +139,7 @@
                     <div class="w-full sm:w-1/5 p-4">
                         {{-- admin 1, 2 and viewer has href --}}
                         @can('users_access', Auth::user())
-                            <a href="{{ route('collection', ['date' => 'updatedToday']) }}" class="block text-center relative overflow-hidden group">
+                            <a href="{{ route('collection', ['date' => 'today']) }}" class="block text-center relative overflow-hidden group">
                         @endcan
                         {{-- owner shows table below --}}
                         @can('owner', Auth::user())
@@ -399,7 +399,7 @@
             });
 
             // updated today
-            $('.showAddedTodayProducts').on('click', function(event) {
+            $('.showUpdatedTodayProducts').on('click', function(event) {
                 event.preventDefault();
                 var dateFilter = 'updatedToday';
                 $('#tableContainer').show();
