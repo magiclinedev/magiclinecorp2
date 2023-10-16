@@ -69,6 +69,10 @@ class DashboardController extends Controller
         ->where('activeStatus', 1)
         ->count();
 
+        $productsUpdatedToday = Mannequin::whereDate('updated_at', Carbon::today())
+        ->where('activeStatus', 1)
+        ->count();
+
         if($request->ajax()){
 
             // Get the page number and number of records per page from the request
@@ -172,6 +176,7 @@ class DashboardController extends Controller
             'user' => $user,
             'users' => $users,
             'productsCreatedToday' => $productsCreatedToday,
+            'productsUpdatedToday' => $productsUpdatedToday,
         ]);
     }
 }

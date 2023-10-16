@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Collection as P;
 use App\Models\Mannequin;
 use App\Models\Category;
 use App\Models\Company;
@@ -19,11 +18,6 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Cache;
-
-use Spatie\Dropbox\Client as DropboxClient;
-use Spatie\FlysystemDropbox\DropboxAdapter;
-
-use DataTables;
 
 class CollectionController extends Controller
 {
@@ -85,9 +79,9 @@ class CollectionController extends Controller
             if (!empty($searchQuery)) {
                 $query->where(function ($subquery) use ($searchQuery) {
                     $subquery->where('itemref', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('company', 'like', '%' . $searchQuery . '%')
                             ->orWhere('po', 'like', '%' . $searchQuery . '%')
                             ->orWhere('description', 'like', '%' . $searchQuery . '%')
-                            ->orWhere('company', 'like', '%' . $searchQuery . '%')
                             ->orWhere('category', 'like', '%' . $searchQuery . '%')
                             ->orWhere('type', 'like', '%' . $searchQuery . '%')
                             ->orWhere('addedBy', 'like', '%' . $searchQuery . '%');
@@ -100,6 +94,10 @@ class CollectionController extends Controller
             if ($dateFilter == 'today') {
                 // Modify your query to filter products added today(in dashboard)
                 $query->whereDate('created_at', now()->toDateString());
+            }
+            if ($dateFilter == 'updatedToday') {
+                // Modify your query to filter products added today(in dashboard)
+                $query->whereDate('updated_at', now()->toDateString());
             }
             if (!empty($selectedCategory)) {
                 $query->where('category', $selectedCategory);
@@ -319,7 +317,6 @@ class CollectionController extends Controller
                 // Handle the case when the file does not exist
                 $fileUrls = null;
             }
-
         }
         else {
             $fileUrls = null;
@@ -339,7 +336,6 @@ class CollectionController extends Controller
                 // Handle the case when the threeD does not exist
                 $threeDUrls = null;
             }
-
         }
         else {
             $threeDUrls = null;
@@ -395,10 +391,12 @@ class CollectionController extends Controller
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $photo) {
+
                 $photoName = time() . '_' . $photo->getClientOriginalName();
                 $path = 'Magicline Database/images/product/' . $photoName; // Relative path within Dropbox
 
                 Storage::disk('dropbox')->put($path, file_get_contents($photo));
+
                 // Store the Dropbox path in your array
                 $photoPaths[] = $path;
             }
@@ -643,9 +641,6 @@ class CollectionController extends Controller
         if ($request->hasFile('images')) {
             $imagePaths = [];
 
-            // Clear the cache associated with the second cache key
-            Cache::forget('images_' . $mannequin->id);
-
             foreach ($request->file('images') as $photo) {
                 $photoName = time() . '_' . $photo->getClientOriginalName();
                 $path = '/Magicline Database/images/product/' . $photoName; // Dropbox path
@@ -661,6 +656,8 @@ class CollectionController extends Controller
             $oldImagePaths = explode(',', $mannequin->images);
             foreach ($oldImagePaths as $oldImagePath) {
                 // Delete the old image from Dropbox
+                dd(Cache::forget('image_' .  $mannequin->id));
+
                 Storage::disk('dropbox')->delete($oldImagePath);
             }
 
@@ -705,10 +702,7 @@ class CollectionController extends Controller
             $this->logAuditTrail(auth()->user(), $activity);
         }
 
-        // Owner go to dashboard, others go to collection
-        $routeName = $user->status == 4 ? 'dashboard' : 'collection';
-
-        return redirect()->route($routeName, $mannequin->id)->with('success_message', 'Product details updated successfully.');
+        return redirect()->back()->with('success_message', 'Product details updated successfully.');
     }
 
     //SHOW TRASHCAN

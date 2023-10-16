@@ -229,14 +229,25 @@
         // Update Validation fail
         @if(session('danger_message'))
             Swal.fire({
-                title: 'Error!',
-                html: `{!! implode('<br>', $errors->all()) !!}`,
-                icon: 'error',
-                timer: 6000,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-            });
+            title: 'Error!',
+            html: `{!! implode('<br>', $errors->all()) !!}`,
+            icon: 'error',
+            timer: 6000,
+            showCancelButton: false,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+        });
+        @elseif(session('success_message'))
+            Swal.fire({
+            title: 'Done!',
+            text: '{{ session('success_message') }}',
+            icon: 'success',
+            timer: 3000,
+            showCancelButton: false,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Close'
+        });
         @endif
     </script>
 

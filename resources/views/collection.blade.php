@@ -132,6 +132,9 @@
                         if (window.location.search.includes('date=today')) {
                             data.date = 'today';
                         }
+                        if(window.location.search.includes('date=updatedToday')) {
+                            data.date = 'updatedToday';
+                        }
                     },
                 },
                 deferLoading: (10),
@@ -337,25 +340,25 @@
     <script>
         @if(session('success_message'))
             Swal.fire({
-                title: 'Done!',
-                text: '{{ session('success_message') }}',
-                icon: 'success',
-                timer: 3000,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Close'
-            });
+            title: 'Done!',
+            text: '{{ session('success_message') }}',
+            icon: 'success',
+            timer: 3000,
+            showCancelButton: false,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Close'
+        });
         @elseif(session('danger_message'))
             Swal.fire({
-                title: 'Error!',
-                text: '{{session('danger_message') }}',
-                icon: 'error',
-                timer: 3000,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-            });
+            title: 'Error!',
+            text: '{{session('danger_message') }}',
+            icon: 'error',
+            timer: 3000,
+            showCancelButton: false,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+        });
         @endif
     </script>
     {{--END scripts--}}
