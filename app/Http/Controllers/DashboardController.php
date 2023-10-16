@@ -71,6 +71,7 @@ class DashboardController extends Controller
 
         $productsUpdatedToday = Mannequin::whereDate('updated_at', Carbon::today())
         ->where('activeStatus', 1)
+        ->where('addedBy', 'LIKE', '%Modified%')
         ->count();
 
         if($request->ajax()){

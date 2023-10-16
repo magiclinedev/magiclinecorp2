@@ -193,7 +193,7 @@
                                 <div class="relative">
                                     <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
                                         <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
-                                            <i class="fas fa-plus fa-3x text-black"></i>
+                                            <i class="fas fa-edit fa-3x text-black"></i>
                                         </div>
                                     </div>
 

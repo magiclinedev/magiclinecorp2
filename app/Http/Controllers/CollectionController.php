@@ -97,7 +97,8 @@ class CollectionController extends Controller
             }
             if ($dateFilter == 'updatedToday') {
                 // Modify your query to filter products added today(in dashboard)
-                $query->whereDate('updated_at', now()->toDateString());
+                $query  ->whereDate('updated_at', now()->toDateString())
+                        ->where('addedBy', 'LIKE', '%Modified%');
             }
             if (!empty($selectedCategory)) {
                 $query->where('category', $selectedCategory);
