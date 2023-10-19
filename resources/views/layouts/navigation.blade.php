@@ -22,7 +22,8 @@
                 {{-- Products/Collection --}}
                 @if(Auth::user()->status != 4)
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('collection')" :active="request()->routeIs('collection')">
+                    <x-nav-link :href="route('collection')" :active="request()->routeIs(['collection', 'collection.view_prod',
+                    'collection.add', 'collection.edit', 'collection.category', 'collection.type'])">
                         {{ __('Products') }}
                     </x-nav-link>
                 </div>

@@ -11,7 +11,8 @@ Collection
 
         .img-magnifier-glass {
           position: absolute;
-          border: 3px solid #000;
+          border: 0px solid #000;
+          border-radius: 50%;
           background-color: #FBFBFD;
 
           cursor: none;
@@ -86,7 +87,7 @@ Collection
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white shadow-md rounded-lg flex flex-col md:flex-row px-8 py-6">
             {{-- Display Images --}}
-            <div class="w-full md:w-1/2 mb-4 md:mb-0 flex flex-col justify-center items-center">
+            <div class="w-full md:w-1/2 mb-4 md:mb-0 flex flex-col justify-center items-center border">
                 {{-- MAIN Image --}}
                 @if ($imageUrl)
                     <div class="w-10/12 md:w-8/12 img-magnifier-container relative">
@@ -99,7 +100,7 @@ Collection
                 @if ($imageUrls)
                 <div class="flex mt-1 space-x-1 overflow-hidden">
                     @foreach ($imageUrls as $index => $imagePath)
-                        <div class="w-1/5 zoomable-image" data-image-index="{{ $index }}">
+                        <div class="w-1/5 zoomable-image border" data-image-index="{{ $index }}">
                             <img src="{{ $imagePath }}" alt="Product Image" class="w-full h-full object-cover">
                         </div>
                     @endforeach

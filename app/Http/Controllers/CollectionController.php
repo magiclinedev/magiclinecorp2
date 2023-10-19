@@ -408,18 +408,25 @@ class CollectionController extends Controller
     // DROPBOX RFEMOVE IMAGES(not yet working)
     public function removeDropboxImage(Request $request)
     {
-        $filePath = $request->input('file_path');
+        // Get the image path from the request
+        // $imagePath = $request->input('imagePath');
 
-        try {
-            // Use the Dropbox API or your existing Dropbox removal logic here
-            // For example, you can use the Dropbox SDK to delete the file:
-            Storage::disk('dropbox')->delete($filePath);
+        // // Ensure that the image path is not empty
+        // if (!empty($imagePath)) {
+        //     // Delete the image from Dropbox
+        //     if (Storage::disk('dropbox')->exists($imagePath)) {
+        //         Storage::disk('dropbox')->delete($imagePath);
+        //     }
 
-            // If the file is deleted successfully, return a success response
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false]);
-        }
+        //     // You can also update your database to remove the reference to the image
+        //     // For example, if you have a Product model, you can remove the image path from the product's image column.
+
+        //     // Redirect back or to a specific route after deletion
+        //     return redirect()->back()->with('success_message', 'Image deleted successfully');
+        // }
+
+        // // Handle the case where the image path is empty or the image doesn't exist
+        // return redirect()->back()->with('danger_message', 'Image not found or deletion failed');
 
     }
 
@@ -637,35 +644,35 @@ class CollectionController extends Controller
             $updates[] = "Itemref (new: $newItemref, old: $oldItemref)";
         }
 
-        // Handle image uploads
-        // Optimize image upload using Dropbox
-        if ($request->hasFile('images')) {
-            $imagePaths = [];
+        // // Handle image uploads
+        // // Optimize image upload using Dropbox
+        // if ($request->hasFile('images')) {
+        //     $imagePaths = [];
 
-            foreach ($request->file('images') as $photo) {
-                $photoName = time() . '_' . $photo->getClientOriginalName();
-                $path = '/Magicline Database/images/product/' . $photoName; // Dropbox path
+        //     foreach ($request->file('images') as $photo) {
+        //         $photoName = time() . '_' . $photo->getClientOriginalName();
+        //         $path = '/Magicline Database/images/product/' . $photoName; // Dropbox path
 
-                // Upload the image to Dropbox
-                Storage::disk('dropbox')->put($path, file_get_contents($photo->path()));
+        //         // Upload the image to Dropbox
+        //         Storage::disk('dropbox')->put($path, file_get_contents($photo->path()));
 
-                // Store the Dropbox path in your database
-                $photoPaths[] = $path;
-            }
+        //         // Store the Dropbox path in your database
+        //         $photoPaths[] = $path;
+        //     }
 
-            // Remove old images from Dropbox
-            $oldImagePaths = explode(',', $mannequin->images);
-            foreach ($oldImagePaths as $oldImagePath) {
-                // Delete the old image from Dropbox
-                Cache::forget('image_' .  $mannequin->id);
+        //     // Remove old images from Dropbox
+        //     $oldImagePaths = explode(',', $mannequin->images);
+        //     foreach ($oldImagePaths as $oldImagePath) {
+        //         // Delete the old image from Dropbox
+        //         Cache::forget('image_' .  $mannequin->id);
 
-                Storage::disk('dropbox')->delete($oldImagePath);
-            }
+        //         Storage::disk('dropbox')->delete($oldImagePath);
+        //     }
 
-            // Update the images field in the database
-            $mannequin->images = implode(',', $photoPaths);
-            $updates[] = 'Images';
-        }
+        //     // Update the images field in the database
+        //     $mannequin->images = implode(',', $photoPaths);
+        //     $updates[] = 'Images';
+        // }
 
         // Handle file uploads
         $updateFile = function ($fileKey, $pathPrefix) use ($request, $mannequin) {
@@ -693,6 +700,41 @@ class CollectionController extends Controller
         $updateFile('file', 'excel/');
         $updateFile('pdf', 'pdf/');
 
+        // IMAGE UPLOAD
+        // Get the deleted image paths from the request
+        $deletedImages = explode(',', $request->input('deleted_images'));
+
+        if (!empty($deletedImages)) {
+            // Process and remove the deleted images from your storage
+            foreach ($deletedImages as $deletedImage) {
+                if (Storage::disk('dropbox')->exists($deletedImage)) {
+                    Storage::disk('dropbox')->delete($deletedImage);
+                }
+            }
+        }
+
+        // Handle image uploads
+        if ($request->hasFile('images')) {
+            $imagePaths = [];
+
+            foreach ($request->file('images') as $photo) {
+                $photoName = time() . '_' . $photo->getClientOriginalName();
+                $path = '/Magicline Database/images/product/' . $photoName; // Dropbox path
+
+                // Upload the image to Dropbox
+                Cache::forget('image_' .  $mannequin->id);
+                Storage::disk('dropbox')->put($path, file_get_contents($photo->path()));
+
+                // Store the Dropbox path in your database
+                $imagePaths[] = $path;
+            }
+
+            // Combine the new image paths with the existing ones
+            $mannequin->images = implode(',', array_merge($imagePaths, explode(',', $mannequin->images)));
+            $updates[] = 'Images';
+        }
+
+        // MODIFIED BY
         $this->setActionBy($mannequin, 'Modified');
 
         $mannequin->save();

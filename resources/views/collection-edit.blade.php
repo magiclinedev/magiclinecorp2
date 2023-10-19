@@ -4,20 +4,8 @@
 
 <x-app-layout>
     @php
-        // Split the image paths string into an array
         $imagePaths = explode(',', $mannequin->images);
-        $imageCacheKey = 'images_' . $mannequin->id;
-        $imageUrls = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($imagePaths) {
-            $imageUrls = [];
-
-            foreach ($imagePaths as $imagePath) {
-                if (Storage::disk('dropbox')->exists($imagePath)) {
-                    $imageUrls[] = Storage::disk('dropbox')->url($imagePath);
-                }
-            }
-
-            return $imageUrls;
-        });
+        $imageUrls = [];
     @endphp
 
     <x-slot name="header">
@@ -51,23 +39,31 @@
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white shadow-md rounded-lg flex flex-col md:flex-row px-8 py-6">
             {{-- IMAGES --}}
-            <div class="grid grid-cols-3 gap-4">
-                @if ($imageUrls)
-                    @foreach ($imageUrls as $imagePath)
-                        <div class="w-full">
-                            <img src="{{ $imagePath }}" alt="Photo" class="max-w-full h-auto">
-                        </div>
-                    @endforeach
-                @else
-                    <p>Image not found</p>
-                @endif
-            </div>
+<div class="grid grid-cols-3 gap-4">
+    @if ($imagePaths)
+        @foreach ($imagePaths as $imagePath)
+            @if (Storage::disk('dropbox')->exists($imagePath))
+                @php
+                    $imageUrls[] = Storage::disk('dropbox')->url($imagePath);
+                @endphp
+                <div class="w-full relative">
+                    <img src="{{ Storage::disk('dropbox')->url($imagePath) }}" alt="Photo" class="max-w-full h-auto" loading="lazy">
+                    <input type="hidden" name="images[]" value="{{ $imagePath }}">
+                    <button class="text-red-500 delete-image absolute top-2 right-2" data-image="{{ $imagePath }}"><i class="fas fa-times"></i></button>
+                </div>
+            @endif
+        @endforeach
+    @endif
+</div>
+
+
             {{-- START FORM --}}
             <div class="md:w-1/2">
                 <div class="p-4 leading-normal">
                     <form method="POST" action="{{ route('collection.update', ['id' => $mannequin->id]) }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
+                        <input type="hidden" name="deleted_images" value="[]">
                         {{-- Purchase Order --}}
                         <div class="flex">
                             <div class="w-1/3 font-bold font-bold">Purchase Order:</div>
@@ -272,6 +268,30 @@
         quill.on('text-change', function() {
             var editorContent = document.querySelector('#quill-editor .ql-editor').innerHTML;
             document.querySelector('#description').value = editorContent;
+        });
+    </script>
+
+    {{-- DELETE IMAGE --}}
+    <script>
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('delete-image')) {
+                const imageContainer = e.target.parentElement;
+                const imagePath = imageContainer.querySelector('input[name="images[]"]').value;
+
+                if (imagePath) {
+                    // Remove the image container from the DOM
+                    imageContainer.remove();
+                    // Track the deleted image
+                    const deletedImagesInput = document.querySelector('input[name="deleted_images"]');
+                    let deletedImages = deletedImagesInput.value;
+                    if (deletedImages === "[]") {
+                        deletedImages = imagePath;
+                    } else {
+                        deletedImages += ',' + imagePath;
+                    }
+                    deletedImagesInput.value = deletedImages;
+                }
+            }
         });
     </script>
 

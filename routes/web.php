@@ -76,7 +76,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/collection-add', [CollectionController::class, 'add'])->name('collection.add');//go to add view
 
     Route::post('/dropbox-image', [CollectionController::class, 'uploadToDropbox'])->name('upload-dropbox');//UPLOAD TO DROPBOX
-    Route::post('/remove-image', [CollectionController::class, 'removeDropboxImage'])->name('remove-image');//image removal in add
+    Route::get('/remove-image', [CollectionController::class, 'removeDropboxImage'])->name('remove-image');//image removal in add
     // Route::post('/remove-image', [CollectionController::class, 'remove'])->name('remove-image');//image removal in add
 
     Route::put('/collection-store', [CollectionController::class, 'store'])->name('collection.store');//add product
