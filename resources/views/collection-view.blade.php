@@ -150,13 +150,13 @@ Collection
                     <div class="flex">
                         {{-- PDF --}}
                         {{-- <div class="w-1/3 font-bold text-gray-700">PDF:</div> --}}
-                        {{-- <div class="w-2/3">
+                        <div class="w-2/3">
                             <a href="{{route('company.pdf', ['id' => Crypt::encrypt($mannequin->id)])}}" target="_blank">
                                 <button class="bg-red-500 hover-bg-red-600 text-white px-3 py-1 rounded transition-all">
                                     Download PDF <i class="fa fa-download ml-2"></i>
                                 </button>
                             </a>
-                        </div> --}}
+                        </div>
                         {{-- COSTING/EXCEL FILES --}}
                         <div class="w-2/3">
                             @if ($fileUrls)

@@ -91,7 +91,7 @@ class DashboardController extends Controller
                 $query = Mannequin::query();
             }
 
-            $query->orderBy('created_at', 'desc');
+            $query->orderBy('updated_at', 'desc');
 
             $searchQuery = $request->input('search');
             $selectedCategory = $request->input('category');
@@ -169,6 +169,7 @@ class DashboardController extends Controller
                 'data' => $data, // Your paginated data
             ]);
         }
+
         return view('dashboard')->with([
             'categories' => $categories,
             'mannequins' => $mannequins,

@@ -46,7 +46,13 @@
                         @foreach ($company as $company)
                             <tr class="border">
                                 <td class="px-4 py-2 border">
-                                    <img src="{{ asset('storage/' . $company->images) }}" alt="Company logo" width="100">
+                                    @php
+                                        $cacheKey = 'company_image_' . $company->id; // Use a unique key for each company
+                                        $imageURL = cache()->remember($cacheKey, now()->addHours(24), function () use ($company) {
+                                            return Storage::disk('dropbox')->url($company->images);
+                                        });
+                                    @endphp
+                                    <img src="{{ $imageURL }}" alt="Company logo" width="100">
                                 </td>
                                 <td class="px-4 py-2 border">{{ $company->name }}</td>
                                 <td class="px-4 py-2 border">{{ $company->addedBy }}</td>

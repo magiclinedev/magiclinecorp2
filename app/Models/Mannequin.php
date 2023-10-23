@@ -28,10 +28,9 @@ class Mannequin extends Model
     {
         return $this->belongsTo(Category::class, 'category');
     }
-
     public function company()
     {
-        return $this->belongsTo(Company::class, 'company');
+        return $this->belongsTo(Company::class, 'company_name', 'name');
     }
 
     public function mannequin()

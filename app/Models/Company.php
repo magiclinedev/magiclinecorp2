@@ -15,6 +15,10 @@ class Company extends Model
     {
         return $this->belongsToMany(User::class);
     }
+    public function images()
+    {
+        return $this->belongsTo(Mannequin::class);
+    }
 
 }
 

@@ -70,7 +70,13 @@
                                 <div class="relative">
                                     <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
                                         <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
-                                            <img src="{{ asset('storage/' . $company->images) }}" alt="Company Image" class="w-16 h-16 object-contain">
+                                            @php
+                                                $cacheKey = 'company_image_' . $company->id; // Use a unique key for each company
+                                                $imageURL = cache()->remember($cacheKey, now()->addHours(24), function () use ($company) {
+                                                    return Storage::disk('dropbox')->url($company->images);
+                                                });
+                                            @endphp
+                                            <img src="{{ $imageURL }}" alt="Company Image" class="w-16 h-16 object-contain">
                                         </div>
                                     </div>
 

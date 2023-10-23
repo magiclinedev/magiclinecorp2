@@ -1133,34 +1133,6 @@ class CollectionController extends Controller
         $log->save();
     }
 
-    public function downloadPDF($encryptedId)
-    {
-        try {
-            // Decrypt the encrypted ID to get the original ID
-            $id = Crypt::decrypt($encryptedId);
-        } catch (DecryptException $e) {
-            // Redirect with an error message if decryption fails
-            return redirect()->route('collection')->with('danger_message', 'Invalid URL.');
-        }
-
-        // check user if logged in
-        $user = Auth::user();
-        if (!$user) {
-            return redirect()->route('login');
-        }
-        // Find the mannequin using the decrypted ID
-        $mannequin = Mannequin::find($id);
-
-        $company = Company::all();
-
-        return view('pdfMaker')->with([
-            'mannequin' => $mannequin,
-            'company' => $company,
-            // 'i' => $imageUrl,
-        ]);
-
-    }
-
     // public function downloadPDF($encryptedId)
     // {
     //     try {
@@ -1171,30 +1143,72 @@ class CollectionController extends Controller
     //         return redirect()->route('collection')->with('danger_message', 'Invalid URL.');
     //     }
 
+    //     // check user if logged in
+    //     $user = Auth::user();
+    //     if (!$user) {
+    //         return redirect()->route('login');
+    //     }
     //     // Find the mannequin using the decrypted ID
     //     $mannequin = Mannequin::find($id);
 
-    //     // Define the $imagePaths variable with the paths to your images
-    //     $imagePaths = explode(',', $mannequin->images);
+    //     $companyName = $mannequin->company;
+    //     $company = Company::where('name', $companyName)->first();
+    //     $companyLogo=$company->images;
 
-    //     // Load the PDF view and pass the necessary data
-    //     $pdf = PDF::loadView('pdfMaker', compact('mannequin'));
+    //     return view('pdfMaker')->with([
+    //         'mannequin' => $mannequin,
+    //         'companyLogo' => $companyLogo,
+    //         // 'i' => $imageUrl,
+    //     ]);
 
-    //     // Set the page orientation to landscape
-    //     $pdf->setPaper('landscape');
-
-    //     // Optimize the images and handle EXIF orientation
-    //     // $optimizerChain = OptimizerChainFactory::create();
-    //     // foreach ($imagePaths as $imagePath) {
-    //     //     $optimizerChain->optimize($imagePath);
-    //     // }
-
-    //     // Define the PDF filename
-    //     $pdfFileName = 'mannequin_' . $mannequin->id . '.pdf';
-
-    //     // Return the PDF for download (stream) with the specified filename
-    //     return $pdf->stream($pdfFileName);
     // }
+
+    public function downloadPDF($encryptedId)
+    {
+        try {
+            // Decrypt the encrypted ID to get the original ID
+            $id = Crypt::decrypt($encryptedId);
+        } catch (DecryptException $e) {
+            // Redirect with an error message if decryption fails
+            return redirect()->route('collection')->with('danger_message', 'Invalid URL.');
+        }
+
+        // Find the mannequin using the decrypted ID
+        $mannequin = Mannequin::find($id);
+
+        $companyName = $mannequin->company;
+        $company = Company::where('name', $companyName)->first();
+        $companyLogo=$company->images;
+
+        // dd($companyLogo);
+
+        // $company = $mannequin->company;
+
+        // Extract image paths and cache key
+        $imagePaths = explode(',', $mannequin->images);
+        $imageCacheKey = 'images_' . $mannequin->id;
+
+        // Fetch image URLs from Dropbox disk and cache them
+        $imageUrls = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($imagePaths) {
+            return array_filter(array_map(function ($imagePath) {
+                return Storage::disk('dropbox')->exists($imagePath)
+                    ? Storage::disk('dropbox')->url($imagePath)
+                    : null;
+            }, $imagePaths));
+        });
+
+        // Load the PDF view and pass the necessary data
+        $pdf = PDF::loadView('pdfMaker', compact('mannequin', 'companyLogo', 'imagePaths', 'imageUrls'));
+
+        // Set the page orientation to landscape
+        $pdf->setPaper('landscape');
+
+        // Define the PDF filename
+        $pdfFileName = 'mannequin_' . $mannequin->id . '.pdf';
+
+        // Return the PDF for download (stream) with the specified filename
+        return $pdf->stream($pdfFileName);
+    }
 
     // public function downloadPDF($encryptedId)
     // {
