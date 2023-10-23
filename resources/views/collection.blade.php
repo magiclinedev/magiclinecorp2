@@ -120,7 +120,7 @@
                 processing: true,
                 "autoWidth": false,
                 serverSide: true,
-                // deferRender: true,
+                deferRender: true,
                 scrollX: true,
                 // responsive: true,
                 ajax:{
@@ -255,7 +255,7 @@
 
             //Handles individual row checkboxes
             $('#mannequinsTable').on('change', 'input.row-checkbox', function () {
-                var allChecked = $('input.row-checkbox:checked').length === $('input.row-checkbox').length;
+                var allChecked = $('input.row-checkbox:checked').length == $('input.row-checkbox').length;
                 $('#selectAllCheckbox').prop('checked', allChecked);
             });
 

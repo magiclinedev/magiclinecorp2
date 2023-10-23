@@ -39,22 +39,22 @@
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white shadow-md rounded-lg flex flex-col md:flex-row px-8 py-6">
             {{-- IMAGES --}}
-<div class="grid grid-cols-3 gap-4">
-    @if ($imagePaths)
-        @foreach ($imagePaths as $imagePath)
-            @if (Storage::disk('dropbox')->exists($imagePath))
-                @php
-                    $imageUrls[] = Storage::disk('dropbox')->url($imagePath);
-                @endphp
-                <div class="w-full relative">
-                    <img src="{{ Storage::disk('dropbox')->url($imagePath) }}" alt="Photo" class="max-w-full h-auto" loading="lazy">
-                    <input type="hidden" name="images[]" value="{{ $imagePath }}">
-                    <button class="text-red-500 delete-image absolute top-2 right-2" data-image="{{ $imagePath }}"><i class="fas fa-times"></i></button>
-                </div>
-            @endif
-        @endforeach
-    @endif
-</div>
+            <div class="grid grid-cols-3 gap-4">
+                @if ($imagePaths)
+                    @foreach ($imagePaths as $imagePath)
+                        @if (Storage::disk('dropbox')->exists($imagePath))
+                            @php
+                                $imageUrls[] = Storage::disk('dropbox')->url($imagePath);
+                            @endphp
+                            <div class="w-full relative">
+                                <img src="{{ Storage::disk('dropbox')->url($imagePath) }}" alt="Photo" class="max-w-full h-auto" loading="lazy">
+                                <input type="hidden" name="images[]" value="{{ $imagePath }}">
+                                <button class="text-red-500 delete-image absolute top-0 right-0" data-image="{{ $imagePath }}">X</button>
+                            </div>
+                        @endif
+                    @endforeach
+                @endif
+            </div>
 
 
             {{-- START FORM --}}

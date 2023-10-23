@@ -108,6 +108,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //Audit trail
     // Route::get('/audit-trail', [AuditTrailController::class, 'index'])->name('audit-trail');
 
+
+    Route::get('download-pdf/{id}',[CollectionController::class, 'downloadPDF'])->name('company.pdf');
+
     Route::get('/clear-cache-route', function () {
         // Clear the cache
         \Artisan::call('cache:clear');
@@ -118,5 +121,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 });
+
 
 require __DIR__.'/auth.php';

@@ -1,23 +1,25 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Mannequin;
+use App\Models\AuditTrail;
 use App\Models\Category;
 use App\Models\Company;
+use App\Models\Mannequin;
 use App\Models\Type;
 use App\Models\User;
-use App\Models\AuditTrail;
-
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
-use Livewire\WithPagination;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Cache;
+use Livewire\WithPagination;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Spatie\ImageOptimizer\OptimizerChainFactory;
+
 
 class CollectionController extends Controller
 {
@@ -692,7 +694,7 @@ class CollectionController extends Controller
 
                 // Update the file field in the database
                 $mannequin->{$fileKey} = $path;
-                $mannequin->save();
+                // $mannequin->save();
             }
         };
 
@@ -709,6 +711,7 @@ class CollectionController extends Controller
             foreach ($deletedImages as $deletedImage) {
                 if (Storage::disk('dropbox')->exists($deletedImage)) {
                     Storage::disk('dropbox')->delete($deletedImage);
+                    $updates[] = 'Images';
                 }
             }
         }
@@ -1129,5 +1132,91 @@ class CollectionController extends Controller
         $log->activity = $activity;
         $log->save();
     }
+
+    public function downloadPDF($encryptedId)
+    {
+        try {
+            // Decrypt the encrypted ID to get the original ID
+            $id = Crypt::decrypt($encryptedId);
+        } catch (DecryptException $e) {
+            // Redirect with an error message if decryption fails
+            return redirect()->route('collection')->with('danger_message', 'Invalid URL.');
+        }
+
+        // check user if logged in
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+        // Find the mannequin using the decrypted ID
+        $mannequin = Mannequin::find($id);
+
+        $company = Company::all();
+
+        return view('pdfMaker')->with([
+            'mannequin' => $mannequin,
+            'company' => $company,
+            // 'i' => $imageUrl,
+        ]);
+
+    }
+
+    // public function downloadPDF($encryptedId)
+    // {
+    //     try {
+    //         // Decrypt the encrypted ID to get the original ID
+    //         $id = Crypt::decrypt($encryptedId);
+    //     } catch (DecryptException $e) {
+    //         // Redirect with an error message if decryption fails
+    //         return redirect()->route('collection')->with('danger_message', 'Invalid URL.');
+    //     }
+
+    //     // Find the mannequin using the decrypted ID
+    //     $mannequin = Mannequin::find($id);
+
+    //     // Define the $imagePaths variable with the paths to your images
+    //     $imagePaths = explode(',', $mannequin->images);
+
+    //     // Load the PDF view and pass the necessary data
+    //     $pdf = PDF::loadView('pdfMaker', compact('mannequin'));
+
+    //     // Set the page orientation to landscape
+    //     $pdf->setPaper('landscape');
+
+    //     // Optimize the images and handle EXIF orientation
+    //     // $optimizerChain = OptimizerChainFactory::create();
+    //     // foreach ($imagePaths as $imagePath) {
+    //     //     $optimizerChain->optimize($imagePath);
+    //     // }
+
+    //     // Define the PDF filename
+    //     $pdfFileName = 'mannequin_' . $mannequin->id . '.pdf';
+
+    //     // Return the PDF for download (stream) with the specified filename
+    //     return $pdf->stream($pdfFileName);
+    // }
+
+    // public function downloadPDF($encryptedId)
+    // {
+    //     try {
+    //         // Decrypt the encrypted ID to get the original ID
+    //         $id = Crypt::decrypt($encryptedId);
+    //     } catch (DecryptException $e) {
+    //         // Redirect with an error message if decryption fails
+    //         return redirect()->route('collection')->with('danger_message', 'Invalid URL.');
+    //     }
+
+    //     // Find the mannequin using the decrypted ID
+    //     $mannequin = Mannequin::find($id);
+
+    //     // Load the PDF view and pass the necessary data
+    //     $pdf = PDF::loadView('pdfMaker', compact('mannequin'))->setPaper('a4', 'landscape');
+
+    //     // Define the PDF filename
+    //     $pdfFileName = 'mannequin_' . $mannequin->id . '.pdf';
+
+    //     // Return the PDF for download (stream) with the specified filename
+    //     return $pdf->stream($pdfFileName);
+    // }
 }
 
