@@ -1229,27 +1229,5 @@ class CollectionController extends Controller
         return $pdf->stream($pdfFileName);
     }
 
-    // public function downloadPDF($encryptedId)
-    // {
-    //     try {
-    //         // Decrypt the encrypted ID to get the original ID
-    //         $id = Crypt::decrypt($encryptedId);
-    //     } catch (DecryptException $e) {
-    //         // Redirect with an error message if decryption fails
-    //         return redirect()->route('collection')->with('danger_message', 'Invalid URL.');
-    //     }
-
-    //     // Find the mannequin using the decrypted ID
-    //     $mannequin = Mannequin::find($id);
-
-    //     // Load the PDF view and pass the necessary data
-    //     $pdf = PDF::loadView('pdfMaker', compact('mannequin'))->setPaper('a4', 'landscape');
-
-    //     // Define the PDF filename
-    //     $pdfFileName = 'mannequin_' . $mannequin->id . '.pdf';
-
-    //     // Return the PDF for download (stream) with the specified filename
-    //     return $pdf->stream($pdfFileName);
-    // }
 }
 

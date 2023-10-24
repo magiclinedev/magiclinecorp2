@@ -12,15 +12,19 @@
         size: A4 landscape;
     }
     body {
-
         margin: 0;
         padding: 0;
         font-family: Arial, sans-serif;
     }
 
+    .border{
+        border-style: solid;
+        border-width: 3px;
+    }
+
     .container {
-        max-width: 100%;
-        max-height: 100%;
+        max-width: fill;
+        max-height: fill;
         margin: 0 auto;
         padding: 0;
         text-align: center;
@@ -28,7 +32,6 @@
 
     table {
        width: auto;
-       max-height: 100%;
     }
 
     .two-column {
@@ -50,7 +53,7 @@
     }
 
     .additional-image {
-        width: 30%;
+        width: 40%;
 
     }
 
@@ -85,6 +88,7 @@
     .type-label,
     .description-label {
         font-weight: bold;
+        margin-left: 10px;
     }
 
     .company-name,
@@ -98,219 +102,54 @@
 </style>
     {{-- FOR IMAGES --}}
     @php
-    //    // Extract image paths and cache key
-    //     $imagePaths = explode(',', $mannequin->images);
-    //     $imageCacheKey = 'images_' . $mannequin->id;
-
-    //     // Fetch image URLs from Dropbox disk and cache them
-    //     $imageUrls = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($imagePaths) {
-    //         return array_filter(array_map(function ($imagePath) {
-    //             return Storage::disk('dropbox')->exists($imagePath)
-    //                 ? Storage::disk('dropbox')->url($imagePath)
-    //                 : null;
-    //         }, $imagePaths));
-    //     });
-
-        // Fetch the logo URL from Dropbox disk
         $imageLogo = Storage::disk('dropbox')->url($companyLogo);
     @endphp
 
-<div class="container">
-    <table>
-        <tr class="border">
-            <!-- Column 1 -->
-            <td style="width: 25%;" rowspan="2">
-                <center>
-                    <img id="mainImage" src="{{ $imageUrls[0] }}" alt="Product Image" class="product-image">
+    <div class="container">
+        <table class="border">
+            <tr>
+                <!-- Column 1 -->
+                <td style="width: 25%;" rowspan="3">
+                    <center>
+                        <img id="mainImage" src="{{ $imageUrls[0] }}" alt="Product Image" class="product-image">
+                    </center>
+                </td>
 
-                    {{-- <img src="{{ asset('storage/' .  $companyLogo)}}" alt="Company logo" width="100"> --}}
-                </center>
-                {{-- <div class="item-reference">{{ $mannequin->itemref }}</div> --}}
-            </td>
-            <td style="width: 25%;" rowspan="2">
-                <div class="additional-images">
-                    @foreach ($imageUrls as $index => $imagePath)
-                        @if ($index > 0)
-                            <img id="mainImage" src="{{ $imagePath }}" class="additional-image" loading="lazy">
-                        @endif
-                    @endforeach
-                </div>
-            </td>
-
-            <!-- Column 2 -->
-            <td class="border two-column" style="width: 30%; margin-top: 0; text-align: left;" rowspan="3">
-
-
-                <div class="description-label">Description:</div>
-                <div class="description">{!! $mannequin->description !!}</div>
-            </td>
-
-            <td class="border" style="width: 10%; height: 20%; margin-top: 0; text-align: left;">
-                <center>
-                    <img id="mainImage" src="{{ $imageLogo }}" alt="Product Image" class="logo-image">
-                </center>
-            </td>
-        </tr>
-        <tr class="border">
-            <td class="border">sad</td>
-        </tr>
-        <tr>
-            <td class="border" colspan="2"><div class="item-reference">{{ $mannequin->itemref }}</div></td>
-            <td class="border">sad2</td>
-        </tr>
-
-    </table>
-</div>
-{{-- <div class="container">
-    <div class="product-card">
-        <div class="item-reference">{{ $mannequin->itemref }}</div>
-
-        <center>
-            <img id="mainImage" src="{{ $imageUrl }}" alt="Product Image" class="product-image">
-
-            <div class="additional-images">
-                @foreach ($imageUrls as $index => $imagePath)
-                    @if ($index > 0)
-                        <img id="mainImage" src="{{ $imagePath }}" class="additional-image" loading="lazy">
-                    @endif
-                @endforeach
-            </div>
-        </center>
-
-        <div>
-            <div class="company-label">Company:</div>
-            <div class="company-name">{{ $mannequin->company }}</div>
-
-            <div class="category-label">Category:</div>
-            <div class="category-name">{{ $mannequin->category }}</div>
-
-            <div class="type-label">Type:</div>
-            <div class="type-name">{{ $mannequin->type }}</div>
-
-            <div class="description-label">Description:</div>
-            <div class="description">{!! $mannequin->description !!}</div>
-        </div>
-    </div>
-    <script>
-        // Initialize lazy loading for images within the description
-        lazySizes.init();
-    </script>
- </div> --}}
- {{-- <div class="container mx-auto">
-    <div class="grid grid-cols-2 gap-8">
-        <!-- Column 1 -->
-        <div>
-            <img id="mainImage" src="{{ $imageUrl }}" alt="Product Image" class="product-image">
-                <div class="grid grid-cols-2 gap-2">
-                @foreach ($imageUrls as $index => $imagePath)
-                    <div>
-                        <img id="mainImage" src="{{ $imagePath }}" alt="Product Image" class="w-40 h-40" loading="lazy">
-                    </div>
-                @endforeach
-            </div>
-        </div>
-
-        <!-- Column 2 -->
-        <div>
-            <div class="flex my-2">
-                <div class="w-1/3 font-bold text-gray-700">Company:</div>
-                <div class="w-2/3">{{ $mannequin->company }}</div>
-            </div>
-            <div class="flex my-2">
-                <div class="w-1/3 font-bold text-gray-700">Category:</div>
-                <div class="w-2/3">{{ $mannequin->category }}</div>
-            </div>
-            <div class="flex my-2">
-                <div class="w-1/3 font-bold text-gray-700">Type:</div>
-                <div class="w-2/3">{{ $mannequin->type }}</div>
-            </div>
-            <div class="w-1/3 font-bold text-gray-700">Description:</div>
-            <div class="max-h-full overflow-y-auto">{!! $mannequin->description !!}</div>
-        </div>
-    </div>
-</div> --}}
-
-{{--
-<div class="container mx-auto">
-    <div class="grid grid-flow-col grid-rows-2 grid-cols-4 gap-8 border">
-
-        <div class="border p-2">
-            <div class="col-span-4 row-span-1 border">
-                {{ $mannequin->itemref }}
-            </div>
-
-            <img id="mainImage" src="{{ $imageUrl }}" alt="Product Image" class="object-cover w-65 h-60" loading="lazy">
-
-            <div class="border col-span-4 row-span-1">
-                <div class="grid grid-flow-col grid-rows-1 grid-cols-4 gap-4">
-                    <div class="p-2">
+                <td style="width: 25%;" rowspan="3">
+                    <div class="additional-images">
                         @foreach ($imageUrls as $index => $imagePath)
-                            <img id="mainImage" src="{{ $imagePath }}" class="w-20 h-20" loading="lazy">
+                            @if ($index > 1)
+                                <img id="mainImage" src="{{ $imagePath }}" class="additional-image" loading="lazy">
+                            @endif
                         @endforeach
                     </div>
-                </div>
-            </div>
+                </td>
 
-            <div class="border col-span-4">
-                <div class="flex my-2">
-                    <div class="w-1/3 font-bold text-gray-700">Company:</div>
-                    <div class="w-2/3">{{ $mannequin->company }}</div>
-                </div>
-                <div class="flex my-2">
-                    <div class="w-1/3 font-bold text-gray-700">Category:</div>
-                    <div class="w-2/3">{{ $mannequin->category }}</div>
-                </div>
-                <div class="flex my-2">
-                    <div class="w-1/3 font-bold text-gray-700">Type:</div>
-                    <div class="w-2/3">{{ $mannequin->type }}</div>
-                </div>
-                <div class="w-1/3 font-bold text-gray-700">Description:</div>
-                <div class="max-h-full overflow-y-auto">{!! $mannequin->description !!}</div>
-            </div>
-        </div>
+                <!-- Column 2 -->
+                <td class="two-column border" style="width: 30%; margin-top: 0; text-align: left; -top: none;" rowspan="4">
+                    <div class="description-label">Description:</div>
+                    <div class="description">{!! $mannequin->description !!}</div>
+                </td>
+
+                <td style="width: 10%; margin-top: 0; text-align: left;">
+                    <center>
+                        <img id="mainImage" src="{{ $imageLogo }}" alt="Product Image" class="logo-image">
+                    </center>
+                </td>
+            </tr>
+            <tr style="-bottom: none;">
+                <td class="border">
+                    123 45th Street Address,
+                    PH 11223
+                </td>
+            </tr>
+            <tr>
+                <td rowspan="2" ><div class="item-reference" style="transform: rotate(90deg);">Sample Collection</div></td>
+            </tr>
+            <tr>
+                <td colspan="2"><div class="item-reference" style="-top: none;">{{ $mannequin->itemref }}</div></td>
+            </tr>
+        </table>
     </div>
-</div> --}}
-
-
-    {{-- <div class="container mx-auto">
-        <div class="grid grid-flow-col grid-rows-2 grid-cols-4 gap-8">
-
-            <div class="border">
-            <img id="mainImage" src="{{ $imageUrl }}" alt="Product Image" class="object-cover w-70 h-70" loading="lazy">
-            </div>
-
-            <div class="col-start-2">
-                <div class="grid grid-flow-col grid-rows-3 grid-cols-2 gap-2">
-                    @foreach ($imageUrls as $index => $imagePath)
-                        <div class="">
-                            <img id="mainImage" src="{{ $imagePath }}" alt="Product Image" class=" w-40 h-40" loading="lazy">
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
-
-            <div class="border col-start-3">
-                <div class="flex my-2">
-                    <div class="w-1/3 font-bold text-gray-700">Company:</div>
-                    <div class="w-2/3">{{ $mannequin->company }}</div>
-                </div>
-                <div class="flex my-2">
-                    <div class="w-1/3 font-bold text-gray-700">Category:</div>
-                    <div class="w-2/3">{{ $mannequin->category }}</div>
-                </div>
-                <div class="flex my-2">
-                    <div class="w-1/3 font-bold text-gray-700">Type:</div>
-                    <div class="w-2/3">{{ $mannequin->type }}</div>
-                </div>
-                <div class="w-1/3 font-bold text-gray-700">Description:</div>
-                <div class="max-h-full overflow-y-auto">{!! $mannequin->description !!}</div>
-            </div>
-
-            <div class="col-span-4 row-span-1 border">
-                {{ $mannequin->itemref }}
-            </div>
-        </div>
-    </div> --}}
 </body>
 </html>
