@@ -149,6 +149,10 @@
                     {
                         targets: [0],
                         visible: userStatus == 1
+                    },
+                    {
+                        targets: [6],
+                        visible: userStatus == 1 || userStatus == 2
                     }
                 ],
                 columns: [

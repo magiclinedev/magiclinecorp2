@@ -64,7 +64,7 @@ Collection
                 <ol class="flex items-center space-x-2 text-gray-500">
                     @can('users', Auth::user())
                     <li>
-                        <a href="javascript:history.go(-1);" class="hover:text-gray-700">Go Back</a>
+                        <a href="{{ route('collection') }}" class="hover:text-gray-700">Collection</a>
                     </li>
                     @endcan
                     @can('owner', Auth::user())
@@ -85,7 +85,7 @@ Collection
 
     {{-- START CONTENT --}}
     <div class="container mx-auto px-4 py-8">
-        <div class="bg-white shadow-md rounded-lg flex flex-col md:flex-row px-8 py-6">
+        <div class="bg-white shadow-md rounded-lg flex flex-col md:flex-row px-8 py-6 fixed-width-div">
             {{-- Display Images --}}
             <div class="w-full md:w-1/2 mb-4 md:mb-0 flex flex-col justify-center items-center border">
                 {{-- MAIN Image --}}
@@ -98,13 +98,13 @@ Collection
                 @endif
                 {{-- SELECT IMAGE --}}
                 @if ($imageUrls)
-                <div class="flex mt-1 space-x-1 overflow-hidden">
-                    @foreach ($imageUrls as $index => $imagePath)
-                        <div class="w-1/5 zoomable-image border" data-image-index="{{ $index }}">
-                            <img src="{{ $imagePath }}" alt="Product Image" class="w-full h-full object-cover">
-                        </div>
-                    @endforeach
-                </div>
+                    <div class="flex mt-1 space-x-1 overflow-hidden">
+                        @foreach ($imageUrls as $index => $imagePath)
+                            <div class="w-1/5 zoomable-image border" data-image-index="{{ $index }}">
+                                <img src="{{ $imagePath }}" alt="Product Image" class="w-full h-40 object-cover" loading="lazy">
+                            </div>
+                        @endforeach
+                    </div>
                 @else
                     <p>Image not found</p>
                 @endif
@@ -149,14 +149,28 @@ Collection
                     {{-- UPLOADS --}}
                     <div class="flex">
                         {{-- PDF --}}
-                        {{-- <div class="w-1/3 font-bold text-gray-700">PDF:</div> --}}
                         <div class="w-2/3">
+                            @if ($pdfUrls)
+                                <a href="{{ $pdfUrls }}" target="_blank">
+                                    <button class="bg-red-500 hover-bg-red-600 text-white px-3 py-1 rounded transition-all">
+                                        Download PDF <i class="fa fa-download ml-2"></i>
+                                    </button>
+                                </a>
+                            @else
+                                <a href="{{route('company.pdf', ['id' => Crypt::encrypt($mannequin->id)])}}" target="_blank">
+                                    <button class="bg-red-500 hover-bg-red-600 text-white px-3 py-1 rounded transition-all">
+                                        Download PDF <i class="fa fa-download ml-2"></i>
+                                    </button>
+                                </a>
+                            @endif
+                        </div>
+                        {{-- <div class="w-2/3">
                             <a href="{{route('company.pdf', ['id' => Crypt::encrypt($mannequin->id)])}}" target="_blank">
                                 <button class="bg-red-500 hover-bg-red-600 text-white px-3 py-1 rounded transition-all">
                                     Download PDF <i class="fa fa-download ml-2"></i>
                                 </button>
                             </a>
-                        </div>
+                        </div> --}}
                         {{-- COSTING/EXCEL FILES --}}
                         <div class="w-2/3">
                             @if ($fileUrls)

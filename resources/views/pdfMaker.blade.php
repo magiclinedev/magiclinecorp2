@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <style>
-        @page {
+    @page {
         size: A4 landscape;
     }
     body {
@@ -19,10 +19,16 @@
     }
 
     .container {
-        max-width: 800px;
+        max-width: 100%;
+        max-height: 100%;
         margin: 0 auto;
-        padding: 20px;
-        background-color: #f9f9f9;
+        padding: 0;
+        text-align: center;
+    }
+
+    table {
+       width: auto;
+       max-height: 100%;
     }
 
     .two-column {
@@ -34,7 +40,7 @@
     }
 
     .product-image {
-        width: 90%;
+        width: 100%;
         flex-wrap: wrap;
     }
 
@@ -44,7 +50,7 @@
     }
 
     .additional-image {
-        width: 37%;
+        width: 30%;
 
     }
 
@@ -59,7 +65,7 @@
     .logo-image {
         max-width: 100px;
         max-height: 100px;
-        width: 40%;
+        width: 100%;
 
     }
 
@@ -71,7 +77,7 @@
         font-weight: bold;
         text-align: center;
         margin: 10px 0;
-        font-size: 24px;
+        font-size: 30px;
     }
 
     .company-label,
@@ -85,10 +91,11 @@
     .category-name,
     .type-name,
     .description {
+        flex: 1;
         margin-left: 10px;
+        font-size: 16px;
     }
 </style>
-<body>
     {{-- FOR IMAGES --}}
     @php
     //    // Extract image paths and cache key
@@ -108,28 +115,19 @@
         $imageLogo = Storage::disk('dropbox')->url($companyLogo);
     @endphp
 
+<div class="container">
     <table>
-        <th>
-            <tr>
-                <td>
-                    <img id="mainImage" src="{{ $imageLogo }}" alt="Product Image" class="logo-image">
-                </td>
-                <td></td>
-                <td>
-                    <div class="item-reference">{{ $mannequin->itemref }}</div>
-                </td>
-            </tr>
-        </th>
         <tr class="border">
             <!-- Column 1 -->
-            <td style="width: 40%; border-right: none;">
+            <td style="width: 25%;" rowspan="2">
                 <center>
                     <img id="mainImage" src="{{ $imageUrls[0] }}" alt="Product Image" class="product-image">
 
                     {{-- <img src="{{ asset('storage/' .  $companyLogo)}}" alt="Company logo" width="100"> --}}
                 </center>
+                {{-- <div class="item-reference">{{ $mannequin->itemref }}</div> --}}
             </td>
-            <td style="width: 30%;">
+            <td style="width: 25%;" rowspan="2">
                 <div class="additional-images">
                     @foreach ($imageUrls as $index => $imagePath)
                         @if ($index > 0)
@@ -140,17 +138,29 @@
             </td>
 
             <!-- Column 2 -->
-            <td class="border two-column" style="width: 30%; margin-top: 0; text-align: left;">
-                <div class="category-label">Category:</div>
-                <div class="category-name">{{ $mannequin->category }}</div>
+            <td class="border two-column" style="width: 30%; margin-top: 0; text-align: left;" rowspan="3">
+
 
                 <div class="description-label">Description:</div>
                 <div class="description">{!! $mannequin->description !!}</div>
             </td>
+
+            <td class="border" style="width: 10%; height: 20%; margin-top: 0; text-align: left;">
+                <center>
+                    <img id="mainImage" src="{{ $imageLogo }}" alt="Product Image" class="logo-image">
+                </center>
+            </td>
         </tr>
+        <tr class="border">
+            <td class="border">sad</td>
+        </tr>
+        <tr>
+            <td class="border" colspan="2"><div class="item-reference">{{ $mannequin->itemref }}</div></td>
+            <td class="border">sad2</td>
+        </tr>
+
     </table>
-
-
+</div>
 {{-- <div class="container">
     <div class="product-card">
         <div class="item-reference">{{ $mannequin->itemref }}</div>

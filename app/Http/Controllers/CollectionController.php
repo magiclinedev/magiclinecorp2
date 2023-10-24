@@ -154,7 +154,7 @@ class CollectionController extends Controller
                     'type' => $m->type,
                     'addedBy' => $m->addedBy,
                     'action' => '
-                    <div class="flex justify-between">
+                    <div class="flex justify-between center">
                         <a href="' . route('collection.view_prod', ['id' => Crypt::encrypt($m->id)]) . '" class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded" title="View">
                         <i class="fas fa-eye"></i></a>
                         '.$action.'
@@ -1155,10 +1155,29 @@ class CollectionController extends Controller
     //     $company = Company::where('name', $companyName)->first();
     //     $companyLogo=$company->images;
 
+
+    //     // IMAGES
+
+    //     $company = $mannequin->company;
+
+    //     // Extract image paths and cache key
+    //     $imagePaths = explode(',', $mannequin->images);
+    //     $imageCacheKey = 'images_' . $mannequin->id;
+
+    //     // Fetch image URLs from Dropbox disk and cache them
+    //     $imageUrls = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($imagePaths) {
+    //         return array_filter(array_map(function ($imagePath) {
+    //             return Storage::disk('dropbox')->exists($imagePath)
+    //                 ? Storage::disk('dropbox')->url($imagePath)
+    //                 : null;
+    //         }, $imagePaths));
+    //     });
+
+
     //     return view('pdfMaker')->with([
     //         'mannequin' => $mannequin,
     //         'companyLogo' => $companyLogo,
-    //         // 'i' => $imageUrl,
+    //         'imageUrls' => $imageUrls,
     //     ]);
 
     // }

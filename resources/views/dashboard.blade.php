@@ -23,10 +23,10 @@
                         @can('owner', Auth::user())
                             <a href="" class="showAllProducts block text-center relative overflow-hidden group">
                         @endcan
-                            <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
-                                <div class="relative">
-                                    <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
-                                        <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
+                        <div class="pl-4 pr-4 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
+                            <div class="flex flex-col lg:flex-row items-center">
+                                <div class="w-full lg:w-1/2 lg:p-2">
+                                    <div class="relative bg-white rounded-md flex justify-center items-center p-2">
                                             <i class="fas fa-database fa-3x text-black"></i>
                                         </div>
                                     </div>
@@ -66,13 +66,13 @@
                             <a href="#" id="showTableButton" class="companyFilter show-table-button block text-center relative overflow-hidden group" data-company="{{ $company->name }}">{{-- {{ route('collection', ['company' => $company->name]) }} --}}
                         @endcan
                             <!-- Content for the first square -->
-                            <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
-                                <div class="relative">
-                                    <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
-                                        <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
+                            <div class="pl-4 pr-4 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
+                                <div class="flex flex-col lg:flex-row items-center">
+                                    <div class="w-full lg:w-1/2 lg:p-2">
+                                        <div class="relative bg-white rounded-md flex justify-center items-center">
                                             @php
                                                 $cacheKey = 'company_image_' . $company->id; // Use a unique key for each company
-                                                $imageURL = cache()->remember($cacheKey, now()->addHours(24), function () use ($company) {
+                                                $imageURL = Cache::remember($cacheKey, now()->addHours(1), function () use ($company) {
                                                     return Storage::disk('dropbox')->url($company->images);
                                                 });
                                             @endphp
@@ -109,10 +109,10 @@
                     <div class="w-full sm:w-1/5 p-4">
                         <a href="users" class="block text-center relative overflow-hidden group">
                             <!-- Content for the first square -->
-                            <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
-                                <div class="relative">
-                                    <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
-                                        <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
+                            <div class="pl-4 pr-4 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
+                                <div class="flex flex-col lg:flex-row items-center">
+                                    <div class="w-full lg:w-1/2 lg:p-2">
+                                        <div class="relative bg-white rounded-md flex justify-center items-center p-2">
                                             <i class="fas fa-users fa-3x text-black"></i>
                                         </div>
                                     </div>
@@ -152,10 +152,10 @@
                             <a href="" class="showAddedTodayProducts block text-center relative overflow-hidden group">
                         @endcan
                             <!-- Content for the first square -->
-                            <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
-                                <div class="relative">
-                                    <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
-                                        <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
+                            <div class="pl-4 pr-4 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
+                                <div class="flex flex-col lg:flex-row items-center">
+                                    <div class="w-full lg:w-1/2 lg:p-2">
+                                        <div class="relative bg-white rounded-md flex justify-center items-center p-2">
                                             <i class="fas fa-plus fa-3x text-black"></i>
                                         </div>
                                     </div>
@@ -195,10 +195,10 @@
                             <a href="" class="showUpdatedTodayProducts block text-center relative overflow-hidden group">
                         @endcan
                             <!-- Content for the first square -->
-                            <div class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
-                                <div class="relative">
-                                    <div class="absolute left-0 top-5 transform -translate-x-1/2 -translate-y-1/2 ml-7 w-20 h-20 rounded-md flex justify-center items-center">
-                                        <div class="bg-white w-full h-full rounded-md flex justify-center items-center">
+                            <div class="pl-4 pr-4 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
+                                <div class="flex flex-col lg:flex-row items-center">
+                                    <div class="w-full lg:w-1/2 lg:p-2">
+                                        <div class="relative bg-white rounded-md flex justify-center items-center p-2">
                                             <i class="fas fa-edit fa-3x text-black"></i>
                                         </div>
                                     </div>
