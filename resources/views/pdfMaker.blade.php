@@ -31,8 +31,8 @@
     }
 
     table {
-        width: 100%;
-        height: 100% auto;
+        width: 1250px;
+        height: 720px;
     }
 
     .two-column {
@@ -44,7 +44,9 @@
     }
 
     .product-image {
-        width: 93%;
+        width: 100%;
+        height: 550px;
+        object-fit: cover;
     }
 
     .additional-images {
@@ -100,9 +102,7 @@
         font-size: 16px;
     }
     .content {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
+        width: 350px;
     }
     /* tr
     td
@@ -121,10 +121,10 @@
                 <!-- Column 1 -->
                 <td style="width: 30%;" rowspan="3">
                     <div class="content">
-                    <center>
-                        <img id="mainImage" src="{{ $imageUrls[0] }}" alt="Product Image" class="product-image ">
-                    </center>
-                </div>
+                        <center>
+                            <img id="mainImage" src="{{ $imageUrls[0] }}" alt="Product Image" class="product-image ">
+                        </center>
+                    </div>
                 </td>
 
                 <td style="width: 25%;" rowspan="3">
