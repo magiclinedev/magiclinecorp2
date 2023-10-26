@@ -30,7 +30,7 @@ class Mannequin extends Model
     }
     public function company()
     {
-        return $this->belongsTo(Company::class, 'company_name', 'name');
+        return $this->belongsTo(Company::class, 'company');
     }
 
     public function mannequin()

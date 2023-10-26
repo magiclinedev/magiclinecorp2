@@ -1205,16 +1205,14 @@ class CollectionController extends Controller
 
         // Extract image paths and cache key
         $imagePaths = explode(',', $mannequin->images);
-        $imageCacheKey = 'images_' . $mannequin->id;
+        $imageUrls = [];
 
-        // Fetch image URLs from Dropbox disk and cache them
-        $imageUrls = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($imagePaths) {
-            return array_filter(array_map(function ($imagePath) {
-                return Storage::disk('dropbox')->exists($imagePath)
-                    ? Storage::disk('dropbox')->url($imagePath)
-                    : null;
-            }, $imagePaths));
-        });
+        // Limit the loop to the first 5 elements
+        foreach (array_slice($imagePaths, 0, 5) as $imagePath) {
+            if (Storage::disk('dropbox')->exists($imagePath)) {
+                $imageUrls[] = Storage::disk('dropbox')->url($imagePath);
+            }
+        }
 
         // Load the PDF view and pass the necessary data
         $pdf = PDF::loadView('pdfMaker', compact('mannequin', 'companyLogo', 'imagePaths', 'imageUrls'));
