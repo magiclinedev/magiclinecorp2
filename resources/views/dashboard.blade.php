@@ -8,6 +8,18 @@
             {{ __('Magic Line') }}
         </h2>
     </x-slot>
+    <style>
+        /* Add this CSS to your stylesheet */
+        .group {
+            transition: all 0.3s ease; /* Add a smooth transition */
+        }
+
+        .group:hover {
+            background-color: #ff0000; /* Change the background color on hover */
+            transform: translateY(-10px); /* Move the element 10px to the right on hover */
+        }
+
+    </style>
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-2">
             <div class="flex flex-wrap ">

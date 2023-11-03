@@ -20,6 +20,7 @@ class Mannequin extends Model
         'images',
         'file',
         'pdf',
+        'reqImg',
         'addedBy',
         'activeStatus',
     ];

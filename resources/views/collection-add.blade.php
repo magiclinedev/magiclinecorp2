@@ -112,6 +112,13 @@
                     <input type="file" name="pdf" id="pdf" class="w-full border rounded-md py-2 px-3">
                 </div>
 
+                {{-- REQUEST IMAGES --}}
+                <div class="col-span-2">
+                    <label for="reqImg[]" class="block font-bold mb-2">Request Images <i class="text-sm text-gray-600">(Maximum upload size 2MB)</i></label>
+                    <input type="file" name="reqImg[]" id="reqImg[]" class="w-full border rounded-md py-2 px-3" multiple>
+                </div>
+
+
             </div>
             <button type="submit" class="mt-4 inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                 Add Product

@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    {{-- <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> --}}
     <title>PDF</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
 </head>
@@ -12,6 +12,7 @@
         size: 14in 8.5in;
     }
     body {
+        /* width: 100%; */
         margin: 0;
         padding: 0;
         font-family: Arial, sans-serif;
@@ -24,15 +25,16 @@
 
     .container {
         width: 100%;
-        height: auto;
-        margin: 0 auto;
-        padding: 0;
+        height: 700px;
+        margin: auto;
+        /* padding: 10px; */
         text-align: center;
     }
 
     table {
-        width: 1250px;
-        height: 720px;
+        width: 100%;
+        height: 100% auto;
+        padding: 0;
     }
 
     .two-column {
@@ -45,7 +47,7 @@
 
     .product-image {
         width: 100%;
-        height: 550px;
+        height: 500px;
         object-fit: cover;
     }
 
@@ -110,12 +112,13 @@
         border: 1px solid black;
     } */
 </style>
+<body style="margin:0;padding:0">
     {{-- FOR IMAGES --}}
     @php
         $imageLogo = Storage::disk('dropbox')->url($companyLogo);
     @endphp
 
-    {{-- <div class="container"> --}}
+    {{-- <div class="container border"> --}}
         <table class="border">
             <tr>
                 <!-- Column 1 -->
@@ -140,12 +143,12 @@
                 </td>
 
                 <!-- Column 2 -->
-                <td class="two-column border" style="width: 25%; margin-top: 0; text-align: left; -top: none;" rowspan="4">
+                <td class="two-column border" style="width: 35%; margin-top: 0; text-align: left; -top: none;" rowspan="4">
                     <div class="description-label">Description:</div>
                     <div class="description">{!! $mannequin->description !!}</div>
                 </td>
 
-                <td style="width: 10%; margin-top: 0; text-align: left;">
+                <td style="width: 15%; margin-top: 0; text-align: left;">
                     <center>
                         <img id="mainImage" src="{{ $imageLogo }}" alt="Product Image" class="logo-image">
                     </center>
@@ -153,7 +156,7 @@
             </tr>
             <tr>
                 <td class="border">
-                    <div>address</div>
+                    <div>122333 Street Ytic City, Phillipines</div>
                 </td>
             </tr>
             <tr>

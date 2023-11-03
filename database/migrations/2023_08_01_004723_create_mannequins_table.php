@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('addedBy');
             $table->string('modifiedBy')->nullable();
             $table->string('activeStatus');
+            $table->text('reqImg')->nullable();//request images
             $table->timestamps();
         });
     }

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Livewire\WithPagination;
 use Barryvdh\DomPDF\Facade\Pdf;
+use ZipArchive;
 use Spatie\ImageOptimizer\OptimizerChainFactory;
 
 
@@ -307,6 +308,48 @@ class CollectionController extends Controller
             $pdfUrls = null;
         }
 
+        // request IMAGE
+        // Requested images as an array
+        $reqImgPaths = $mannequin->reqImg;
+        $reqImgUrls = null;
+        $reqImgPathsArray = explode(',', $reqImgPaths);
+
+        if (!empty($reqImgPaths)) {
+            // Create a temporary directory to store the compressed images
+            $tempDir = sys_get_temp_dir() . '/' . uniqid('compressed_images_', true);
+            mkdir($tempDir);
+
+            // Initialize a new ZipArchive
+            $zip = new ZipArchive();
+            $zipPath = $tempDir . '/images.zip';
+
+            if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+                foreach ($reqImgPathsArray as $reqImgPath) {
+                    if (Storage::disk('dropbox')->exists($reqImgPath)) {
+                        $originalImage = Storage::disk('dropbox')->url($reqImgPath);
+                        $compressedImage = $tempDir . '/' . basename($reqImgPath);
+
+                        // Compress the image
+                        copy($originalImage, $compressedImage);
+
+                        // Add the compressed image to the zip archive
+                        $zip->addFile($compressedImage, basename($reqImgPath));
+                    }
+                }
+
+                $zip->close();
+
+                // Set the URL for downloading the zip file
+                $reqImgUrls = Storage::disk('dropbox')->putFile('compressed', $zipPath);
+
+                // Clean up: delete temporary directory and files
+                foreach (glob($tempDir . '/*') as $file) {
+                    unlink($file);
+                }
+                rmdir($tempDir);
+            }
+        }
+
         // COSTING / EXCEL
         $filePath = $mannequin->file;
         if($filePath)
@@ -364,6 +407,7 @@ class CollectionController extends Controller
             'encryptedId' => $encryptedId,
             'canViewPrice' => $canViewPrice,
             'pdfUrls' => $pdfUrls,
+            'reqImgUrls' => $reqImgUrls,
             'fileUrls' => $fileUrls,
             'threeDUrls' => $threeDUrls,
         ]);
@@ -390,6 +434,7 @@ class CollectionController extends Controller
     //ADD DROPBOX in filepond
     public function uploadToDropbox(Request $request)
     {
+        // dd($request->hasFile('reqImg'));
         $photoPaths = [];
 
         if ($request->hasFile('images')) {
@@ -435,6 +480,8 @@ class CollectionController extends Controller
     // ADD PRODUCT
     public function store(Request $request)
     {
+        // $req = $request->all();
+        // dd($req);
         $validator = Validator::make($request->all(), [
             // 'po' => 'nullable|string|max:255|unique:mannequins,po',
             'itemRef' => 'required|string|max:255|unique:mannequins,itemref',
@@ -447,6 +494,8 @@ class CollectionController extends Controller
             // 'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'file' => 'nullable|mimes:xlsx,xls|max:2048',//COSTING
             'pdf' => 'nullable|mimes:pdf|max:2048',
+            'reqImg' => 'nullable|array|min:1|max:8',
+            'reqImg.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
             // 'po.unique' => 'The Purchase Order is already being used.',
             'itemRef.required' => 'The Item Reference is required.',
@@ -502,6 +551,22 @@ class CollectionController extends Controller
         $excelFileName = $uploadFile('file', 'file', 'excel/');
         $pdfFileName = $uploadFile('pdf', 'pdf', 'pdf/');
 
+        // REQUEST IMAGES
+        $reqPhotoPaths = [];
+
+        if ($request->hasFile('reqImg')) {
+            foreach ($request->file('reqImg') as $photo) {
+
+                $photoName = time().$photo->getClientOriginalName();
+                $path = 'Magicline Database/reqImg/' . $photoName; // Relative path within Dropbox
+
+                Storage::disk('dropbox')->put($path, file_get_contents($photo));
+
+                // Store the Dropbox path in your array
+                $reqPhotoPaths[] = $path;
+            }
+        }
+
         // Create a new Mannequin instance and set its properties
         $mannequin = new Mannequin([
             'po' => strtoupper($request->po),
@@ -512,6 +577,7 @@ class CollectionController extends Controller
             'price' => $request->price,
             'description' => $request->description,
             'images' => implode(',', $photoPaths),
+            'reqImg' => implode(',', $reqPhotoPaths),
             'activeStatus' => "1",
             'file' => $excelFileName,
             'pdf' => $pdfFileName

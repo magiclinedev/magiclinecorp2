@@ -53,6 +53,21 @@ Collection
 
             return $imageUrls;
         });
+
+        // REQUEST IMAGES
+        $reqImagePaths = explode(',', $mannequin->reqImg);
+        $imageCacheKey = 'reqImages_' . $mannequin->id;
+        $reqImageUrls = Cache::remember($imageCacheKey, now()->addHours(1), function () use ($reqImagePaths) {
+            $reqImageUrls = [];
+
+            foreach ($reqImagePaths as $reqImagePath) {
+                if (Storage::disk('dropbox')->exists($reqImagePath)) {
+                    $reqImageUrls[] = Storage::disk('dropbox')->url($reqImagePath);
+                }
+            }
+
+            return $reqImageUrls;
+        });
     @endphp
 
     <x-slot name="header">
@@ -108,6 +123,19 @@ Collection
                 @else
                     <p>Image not found</p>
                 @endif
+
+                {{-- @if ($reqImageUrls)
+                    <div class="flex mt-1 space-x-1 overflow-hidden">
+                        @foreach ($reqImageUrls as $index => $reqImagePath)
+                            <div class="w-1/5 zoomable-image border" data-image-index="{{ $index }}">
+                                <img src="{{ $reqImagePath }}" alt="Product Image" class="w-full h-40 object-cover" loading="lazy">
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p>Image not found</p>
+                @endif --}}
+
             </div>
             {{-- DETAILS --}}
             <div class="md:w-1/2">
@@ -149,49 +177,57 @@ Collection
                     {{-- UPLOADS --}}
                     <div class="flex">
                         {{-- PDF --}}
-                        <div class="w-2/3">
+                        <div class="w-1/4">
                             @if ($pdfUrls)
                                 <a href="{{ $pdfUrls }}" target="_blank">
-                                    <button class="bg-red-500 hover-bg-red-600 text-white px-3 py-1 rounded transition-all">
+                                    <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-all">
                                         Download PDF <i class="fa fa-download ml-2"></i>
                                     </button>
                                 </a>
                             @else
                                 <a href="{{route('company.pdf', ['id' => Crypt::encrypt($mannequin->id)])}}" target="_blank">
-                                    <button class="bg-red-500 hover-bg-red-600 text-white px-3 py-1 rounded transition-all">
+                                    <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-all">
                                         Download PDF <i class="fa fa-download ml-2"></i>
                                     </button>
                                 </a>
                             @endif
                         </div>
-                        {{-- <div class="w-2/3">
-                            <a href="{{route('company.pdf', ['id' => Crypt::encrypt($mannequin->id)])}}" target="_blank">
-                                <button class="bg-red-500 hover-bg-red-600 text-white px-3 py-1 rounded transition-all">
-                                    Download PDF <i class="fa fa-download ml-2"></i>
-                                </button>
-                            </a>
-                        </div> --}}
-                        {{-- COSTING/EXCEL FILES --}}
-                        <div class="w-2/3">
-                            @if ($fileUrls)
-                                <a href="{{ $fileUrls }}" target="_blank">
+
+                        {{-- REQUEST IMAGES --}}
+                        <div class="w-1/4">
+                            @if ($reqImgUrls)
+                                <a href="{{ Storage::disk('dropbox')->url($reqImgUrls) }}" target="_blank" download>
                                     <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-all">
-                                        Download Costing <i class="fa fa-download ml-2"></i>
+                                        Download IMG <i class="fa fa-download ml-2"></i>
                                     </button>
                                 </a>
                             @endif
                         </div>
-                        {{-- 3D FIle --}}
-                        <div class="w-2/3">
+
+
+                        {{-- COSTING --}}
+                        <div class="w-1/4">
+                            @if ($fileUrls)
+                                <a href="{{ $fileUrls }}" target="_blank">
+                                    <button class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition-all">
+                                        Download Excel <i class="fa fa-download ml-2"></i>
+                                    </button>
+                                </a>
+                            @endif
+                        </div>
+
+                        {{-- 3D File --}}
+                        <div class="w-1/4">
                             @if ($threeDUrls)
                                 <a href="{{ $threeDUrls }}" target="_blank">
-                                    <button class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition-all">
+                                    <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded transition-all">
                                         Download 3D <i class="fa fa-download ml-2"></i>
                                     </button>
                                 </a>
                             @endif
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
