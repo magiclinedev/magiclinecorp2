@@ -182,6 +182,26 @@
                             </div>
                         </div>
 
+                        {{-- REquest IMAGES --}}
+                        <div class="mt-4">
+                            <label class="block font-bold mb-2">Request Images</label>
+                            <div class="mt-2 items-center">
+                                <input type="file" name="reqImg[]" class="border rounded-lg p-2" multiple>
+                            </div>
+                            @if ($mannequin->reqImg)
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm text-gray-500">Current Thumbnail:</span>
+                                    <span class="text-sm text-blue-600">{{ $mannequin->reqImg }}</span>
+                                </div>
+                            @else
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm text-gray-500">Current Thumbnail:</span>
+                                    <span class="text-sm text-blue-600">No Thumbnail</span>
+                                </div>
+                            @endif
+
+                        </div>
+
                         <button type="submit" class="mt-4 inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             Save
                         </button>

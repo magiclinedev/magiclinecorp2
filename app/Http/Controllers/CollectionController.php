@@ -712,10 +712,38 @@ class CollectionController extends Controller
             $updates[] = "Itemref (new: $newItemref, old: $oldItemref)";
         }
 
+
+        // REQUEST IMAGES
+        if ($request->hasFile('reqImg')) {
+            $reqImgPaths = [];
+
+            foreach ($request->file('reqImg') as $photo) {
+                $photoName = time().$photo->getClientOriginalName();
+                $path = '/Magicline Database/reqImg/' . $photoName; // Dropbox path
+
+                // Upload the image to Dropbox
+                Storage::disk('dropbox')->put($path, file_get_contents($photo->path()));
+
+                // Store the Dropbox path in your database
+                $reqImgPaths[] = $path;
+            }
+
+            // Remove old reqImg from Dropbox
+            $oldReqImgPaths = explode(',', $mannequin->reqImg);
+            foreach ($oldReqImgPaths as $oldReqImgPath) {
+                // Delete the old ReqImg from Dropbox
+                Storage::disk('dropbox')->delete($oldReqImgPath);
+            }
+
+            // Update the reqImg field in the database
+            $mannequin->reqImg = implode(',', $reqImgPaths);
+            $updates[] = 'reqImg';
+        }
+
         // // Handle image uploads
         // // Optimize image upload using Dropbox
         // if ($request->hasFile('images')) {
-        //     $imagePaths = [];
+        //     $reqImgPaths = [];
 
         //     foreach ($request->file('images') as $photo) {
         //         $photoName = time() . '_' . $photo->getClientOriginalName();
