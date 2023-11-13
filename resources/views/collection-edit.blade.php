@@ -17,7 +17,7 @@
                 <ol class="flex items-center space-x-2 text-gray-500">
                     @can('users', Auth::user())
                     <li>
-                        <a href="{{ route('collection') }}" class="hover:text-gray-700">Collection</a>
+                        <a href="javascript:history.go(-1);" class="hover:text-gray-700">Go Back</a>
                     </li>
                     @endcan
                     @can('owner', Auth::user())
@@ -29,13 +29,73 @@
                         <i class="fa fa-caret-right"></i>
                     </li>
                     <li class="font-semibold">
-                        <span class="whitespace-nowrap">Product Edit</span>
+                        <span class="whitespace-nowrap">Product View</span>
                     </li>
                 </ol>
             </nav>
         </div>
     </x-slot>
+    <style>
+        .switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 24px;
+        }
 
+        .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        }
+
+        .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        }
+
+        .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        }
+
+        input:checked + .slider {
+        background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+        box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .slider:before {
+        -webkit-transform: translateX(16px);
+        -ms-transform: translateX(16px);
+        transform: translateX(16px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+        border-radius: 34px;
+        }
+
+        .slider.round:before {
+        border-radius: 50%;
+        }
+    </style>
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white shadow-md rounded-lg flex flex-col md:flex-row px-8 py-6">
             {{-- IMAGES --}}
@@ -166,8 +226,13 @@
                         {{-- PDF --}}
                         <div class="mt-4">
                             <label class="block font-bold mb-2">PDF</label>
+                            <i class="text-sm text-gray-600">Auto Generate PDF?</i>
+                            <label class="switch">
+                                <input type="checkbox" id="autoGeneratePDF" name="autoGeneratePDF" @if($mannequin->pdf == 'Auto') checked @endif>
+                                <span class="slider round"></span>
+                            </label>
                             <div class="mt-2 flex items-center space-x-4">
-                                <input type="file" name="pdf" class="border rounded-lg p-2">
+                                <input type="file" name="pdf" class="border rounded-lg p-2" id="pdfInput">
                                 @if ($mannequin->pdf)
                                     <div class="flex items-center space-x-2">
                                         <span class="text-sm text-gray-500">Current PDF:</span>
@@ -182,9 +247,12 @@
                             </div>
                         </div>
 
+
                         {{-- REquest IMAGES --}}
                         <div class="mt-4">
-                            <label class="block font-bold mb-2">Request Images</label>
+
+                            {{-- Thumbnails --}}
+                            <label class="block font-bold mb-2">Thumbnail:</label>
                             <div class="mt-2 items-center">
                                 <input type="file" name="reqImg[]" class="border rounded-lg p-2" multiple>
                             </div>
@@ -199,9 +267,7 @@
                                     <span class="text-sm text-blue-600">No Thumbnail</span>
                                 </div>
                             @endif
-
                         </div>
-
                         <button type="submit" class="mt-4 inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             Save
                         </button>
@@ -315,4 +381,30 @@
         });
     </script>
 
+    {{-- remove input file for pdf if switch button checked --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get references to the checkbox and input elements
+            var checkbox = document.getElementById('autoGeneratePDF');
+            var input = document.getElementById('pdfInput');
+            var container = document.getElementById('pdfContainer');
+
+            // Add event listener to the checkbox
+            checkbox.addEventListener('change', function () {
+                // Toggle the visibility of the input based on the checkbox state
+                if (checkbox.checked) {
+                    input.style.display = 'none';
+                } else {
+                    input.style.display = 'block';
+                }
+            });
+
+            // Initial check to hide/show input based on the checkbox state
+            if (checkbox.checked) {
+                input.style.display = 'none';
+            } else {
+                input.style.display = 'block';
+            }
+        });
+    </script>
 </x-app-layout>

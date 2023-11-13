@@ -79,7 +79,7 @@ Collection
                 <ol class="flex items-center space-x-2 text-gray-500">
                     @can('users', Auth::user())
                     <li>
-                        <a href="{{ route('collection') }}" class="hover:text-gray-700">Collection</a>
+                        <a href="javascript:history.go(-1);" class="hover:text-gray-700">Go Back</a>
                     </li>
                     @endcan
                     @can('owner', Auth::user())
@@ -174,58 +174,61 @@ Collection
                         <div class="w-1/3 font-bold text-gray-700">Description:</div>
                         <div class="max-h-full overflow-y-auto">{!! $mannequin->description !!}</div>
                     </div>
+
                     {{-- UPLOADS --}}
                     <div class="flex">
                         {{-- PDF --}}
-                        <div class="w-1/4">
-                            @if ($pdfUrls)
+                        @if ($pdfUrls && $pdfUrls != 'Auto')
+                            <div class="w-1/4">
                                 <a href="{{ $pdfUrls }}" target="_blank">
                                     <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-all">
                                         Download PDF <i class="fa fa-download ml-2"></i>
                                     </button>
                                 </a>
-                            @else
+                            </div>
+                        @endif
+                        @if ($pdfUrls == 'Auto')
+                            <div class="w-1/4">
                                 <a href="{{route('company.pdf', ['id' => Crypt::encrypt($mannequin->id)])}}" target="_blank">
                                     <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-all">
                                         Download PDF <i class="fa fa-download ml-2"></i>
                                     </button>
                                 </a>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
 
                         {{-- REQUEST IMAGES --}}
-                        <div class="w-1/4">
-                            @if ($reqImgUrls)
+                        @if ($reqImgUrls)
+                            <div class="w-1/4">
                                 <a href="{{ Storage::disk('dropbox')->url($reqImgUrls) }}" target="_blank" download>
                                     <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-all">
                                         Download IMG <i class="fa fa-download ml-2"></i>
                                     </button>
                                 </a>
-                            @endif
-                        </div>
-
+                            </div>
+                        @endif
 
                         {{-- COSTING --}}
-                        <div class="w-1/4">
-                            @if ($fileUrls)
+                        @if ($fileUrls)
+                            <div class="w-1/4">
                                 <a href="{{ $fileUrls }}" target="_blank">
                                     <button class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition-all">
                                         Download Excel <i class="fa fa-download ml-2"></i>
                                     </button>
                                 </a>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
 
                         {{-- 3D File --}}
-                        <div class="w-1/4">
-                            @if ($threeDUrls)
+                        @if ($threeDUrls)
+                            <div class="w-1/4">
                                 <a href="{{ $threeDUrls }}" target="_blank">
                                     <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded transition-all">
                                         Download 3D <i class="fa fa-download ml-2"></i>
                                     </button>
                                 </a>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
                     </div>
 
                 </div>

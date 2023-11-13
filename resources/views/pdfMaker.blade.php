@@ -24,16 +24,11 @@
     }
 
     .container {
-        width: 100%;
-        height: 700px;
-        margin: auto;
-        /* padding: 10px; */
-        text-align: center;
+        padding: 10px;
     }
 
     table {
         width: 100%;
-        height: 100% auto;
         padding: 0;
     }
 
@@ -47,17 +42,18 @@
 
     .product-image {
         width: 100%;
-        height: 500px;
         object-fit: cover;
     }
 
     .additional-images {
         display: flex;
         flex-wrap: wrap;
+        overflow: hidden;
+        width: 80%;
     }
 
     .additional-image {
-        width: 47%;
+        width: 45%;
 
     }
 
@@ -104,7 +100,10 @@
         font-size: 16px;
     }
     .content {
-        width: 350px;
+        width: 70%;
+        display: flex;
+        flex-wrap: wrap;
+        overflow: hidden;
     }
     /* tr
     td
@@ -123,7 +122,7 @@
             <tr>
                 <!-- Column 1 -->
                 <td style="width: 30%;" rowspan="3">
-                    <div class="content">
+                    <div class="content border">
                         <center>
                             <img id="mainImage" src="{{ $imageUrls[0] }}" alt="Product Image" class="product-image ">
                         </center>
@@ -131,7 +130,7 @@
                 </td>
 
                 <td style="width: 25%;" rowspan="3">
-                    <div class="additional-images">
+                    <div class="additional-images border">
                         <center>
                         @foreach ($imageUrls as $index => $imagePath)
                             @if ($index > 1 && $index <= 5)  {{-- Load images 3 to 7 (up to 5 images) --}}

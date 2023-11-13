@@ -23,6 +23,68 @@
             </nav>
         </div>
     </x-slot>
+
+    <style>
+        .switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 24px;
+        }
+
+        .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        }
+
+        .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        }
+
+        .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        }
+
+        input:checked + .slider {
+        background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+        box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .slider:before {
+        -webkit-transform: translateX(16px);
+        -ms-transform: translateX(16px);
+        transform: translateX(16px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+        border-radius: 34px;
+        }
+
+        .slider.round:before {
+        border-radius: 50%;
+        }
+    </style>
     <div class="container mx-auto px-4 py-8">
         <form action="{{ route('collection.store') }}" method="POST" enctype="multipart/form-data" class="bg-white shadow-md rounded-lg px-8 py-6">
             @csrf
@@ -107,9 +169,16 @@
                     <input type="file" name="file" id="file" class="w-full border rounded-md py-2 px-3">
                 </div>
                 {{-- PDF --}}
-                <div class="col-span-2">
-                    <label for="pdf" class="block font-bold mb-2">PDF <i class="text-sm text-gray-600">(Maximum upload size 2MB)</i></label>
-                    <input type="file" name="pdf" id="pdf" class="w-full border rounded-md py-2 px-3">
+                <div class="col-span-2" id="pdfContainer">
+                    <label for="pdf" class="block font-bold mb-2">PDF <i class="text-sm text-gray-600">(Maximum upload size 2MB).</i></label>
+
+                    <i class="text-sm text-gray-600">Auto Generate PDF?</i>
+                    <label class="switch">
+                        <input type="checkbox" id="autoGeneratePDF" name="autoGeneratePDF">
+                        <span class="slider round"></span>
+                    </label>
+
+                    <input type="file" name="pdf" id="pdfInput" class="w-full border rounded-md py-2 px-3">
                 </div>
 
                 {{-- REQUEST IMAGES --}}
@@ -274,6 +343,31 @@
 
                     file.info.appendChild(cancelBtn);
                 }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get references to the checkbox and input elements
+            var checkbox = document.getElementById('autoGeneratePDF');
+            var input = document.getElementById('pdfInput');
+            var container = document.getElementById('pdfContainer');
+
+            // Add event listener to the checkbox
+            checkbox.addEventListener('change', function () {
+                // Toggle the visibility of the input based on the checkbox state
+                if (checkbox.checked) {
+                    input.style.display = 'none';
+                } else {
+                    input.style.display = 'block';
+                }
+            });
+
+            // Initial check to hide/show input based on the checkbox state
+            if (checkbox.checked) {
+                input.style.display = 'none';
+            } else {
+                input.style.display = 'block';
+            }
         });
     </script>
 </x-app-layout>

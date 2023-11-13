@@ -292,7 +292,11 @@ class CollectionController extends Controller
 
         // PDF
         $pdfPath = $mannequin->pdf;
-        if($pdfPath)
+        if($pdfPath == 'Auto')
+        {
+            $pdfUrls = 'Auto';
+        }
+        elseif ($pdfPath && $pdfPath != 'Auto')
         {
             $pdfUrls = $pdfPath; // Initialize with the PDF path
             // dd($pdfUrls);
@@ -530,7 +534,7 @@ class CollectionController extends Controller
             $photoPaths[] = $cleanedElement;
         }
 
-        //FILE UPLOADS
+        // FILE UPLOADS
         $excelFileName = null;
         $pdfFileName = null;
 
@@ -548,8 +552,13 @@ class CollectionController extends Controller
             return null;
         };
 
-        $excelFileName = $uploadFile('file', 'file', 'excel/');
-        $pdfFileName = $uploadFile('pdf', 'pdf', 'pdf/');
+        // Check if the "Auto Generate PDF" checkbox is checked
+        if ($request->has('autoGeneratePDF') && $request->input('autoGeneratePDF')) {
+            $pdfFileName = 'Auto';
+        } else {
+            // Perform file upload for non-auto-generated PDF
+            $pdfFileName = $uploadFile('pdf', 'pdf', 'pdf/');
+        }
 
         // REQUEST IMAGES
         $reqPhotoPaths = [];
@@ -772,7 +781,14 @@ class CollectionController extends Controller
 
         // Handle file uploads
         $updateFile = function ($fileKey, $pathPrefix) use ($request, $mannequin) {
-            if ($request->hasFile($fileKey)) {
+            // Check if the "Auto Generate PDF" checkbox is checked
+            $autoGeneratePDF = $request->input('autoGeneratePDF');
+
+            if ($fileKey == 'pdf' && $autoGeneratePDF) {
+                // If "Auto Generate PDF" is checked, set the PDF to 'Auto' and don't upload a file
+                $mannequin->{$fileKey} = 'Auto';
+            } elseif ($request->hasFile($fileKey)) {
+                // If a file is uploaded and "Auto Generate PDF" is unchecked, handle it as usual
                 $file = $request->file($fileKey);
 
                 // Remove the old file if it exists
@@ -788,13 +804,16 @@ class CollectionController extends Controller
 
                 // Update the file field in the database
                 $mannequin->{$fileKey} = $path;
-                // $mannequin->save();
+            } elseif (!$autoGeneratePDF) {
+                // If no file is uploaded and "Auto Generate PDF" is unchecked, set the PDF to null
+                $mannequin->{$fileKey} = null;
             }
         };
 
         // Update the "excel" and "pdf" files
         $updateFile('file', 'excel/');
         $updateFile('pdf', 'pdf/');
+
 
         // IMAGE UPLOAD
         // Get the deleted image paths from the request
