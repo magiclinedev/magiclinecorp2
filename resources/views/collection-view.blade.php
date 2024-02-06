@@ -207,6 +207,11 @@ Collection
                                 </a>
                             </div>
                         @endif
+                        @if($imagesUrls)
+                            <a href="{{ route('download.image', ['id' => $mannequin->id]) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded transition-all">Download Images</a>
+                        @else
+                            <p>No images available for download.</p>
+                        @endif
 
                         {{-- COSTING --}}
                         @if ($fileUrls)

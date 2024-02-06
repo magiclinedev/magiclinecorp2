@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Validator;
 use Livewire\WithPagination;
 use Barryvdh\DomPDF\Facade\Pdf;
 use ZipArchive;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 
 class CollectionController extends Controller
@@ -280,17 +281,27 @@ class CollectionController extends Controller
         $zip = new ZipArchive();
         $zipPath = $tempDir . '/images.zip';
 
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
             foreach ($imagePaths as $imagePath) {
                 if (Storage::disk('dropbox')->exists($imagePath)) {
                     $originalImage = Storage::disk('dropbox')->url($imagePath);
                     $compressedImage = $tempDir . '/' . basename($imagePath);
 
                     // Compress the image
-                    copy($originalImage, $compressedImage);
+                    if (!copy($originalImage, $compressedImage)) {
+                        // Handle copy failure
+                        $zip->close();
+                        rmdir($tempDir);
+                        return null;
+                    }
 
                     // Add the compressed image to the zip archive
-                    $zip->addFile($compressedImage, basename($imagePath));
+                    if (!$zip->addFile($compressedImage, basename($imagePath))) {
+                        // Handle addFile failure
+                        $zip->close();
+                        rmdir($tempDir);
+                        return null;
+                    }
                 }
             }
 
@@ -308,8 +319,55 @@ class CollectionController extends Controller
             return $zipUrl;
         }
 
+        // Handle ZipArchive open failure
         return null;
     }
+
+    public function downloadImage($id)
+    {
+        $mannequin = Mannequin::find($id);
+        $imagePaths = explode(',', $mannequin->images);
+
+        $tempDir = sys_get_temp_dir() . '/' . uniqid('compressed_images_', true);
+        mkdir($tempDir);
+
+        $zip = new ZipArchive();
+        $zipPath = $tempDir . '/images.zip';
+
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            foreach ($imagePaths as $imagePath) {
+                if (Storage::disk('dropbox')->exists($imagePath)) {
+                    $originalImage = Storage::disk('dropbox')->url($imagePath);
+                    $compressedImage = $tempDir . '/' . basename($imagePath);
+
+                    // Compress the image
+                    if (!copy($originalImage, $compressedImage)) {
+                        // Handle copy failure
+                        $zip->close();
+                        rmdir($tempDir);
+                        return response()->json(['error' => 'Failed to compress images.'], 500);
+                    }
+
+                    // Add the compressed image to the zip archive
+                    if (!$zip->addFile($compressedImage, basename($imagePath))) {
+                        // Handle addFile failure
+                        $zip->close();
+                        rmdir($tempDir);
+                        return response()->json(['error' => 'Failed to add images to zip archive.'], 500);
+                    }
+                }
+            }
+
+            $zip->close();
+
+            // Set the content disposition to "attachment" to force download
+            return response()->download($zipPath, $mannequin->itemref . '.zip')->deleteFileAfterSend(true);
+        }
+
+        // Handle ZipArchive open failure
+        return response()->json(['error' => 'Failed to create zip archive.'], 500);
+    }
+
 
     // VIEW PRODUCT
     public function view($encryptedId)
@@ -324,7 +382,7 @@ class CollectionController extends Controller
 
         // Find the mannequin using the decrypted ID
         $mannequin = Mannequin::find($id);
-
+        $imagesUrls = $mannequin->images;
         // If the mannequin doesn't exist, redirect with an error message
         if (!$mannequin) {
             return redirect()->route('collection')->with('danger_message', 'Mannequin not found.');
@@ -426,7 +484,7 @@ class CollectionController extends Controller
             'reqImgUrls' => $reqImgUrls,
             'fileUrls' => $fileUrls,
             'threeDUrls' => $threeDUrls,
-            // 'imagesUrls' => $imagesUrls,
+            'imagesUrls' => $imagesUrls,
         ]);
     }
 
