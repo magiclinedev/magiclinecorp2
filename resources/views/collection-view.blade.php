@@ -208,17 +208,6 @@ Collection
                             </div>
                         @endif
 
-                        {{-- REQUEST IMAGES --}}
-                        @if ($imagesUrls)
-                            <div class="w-1/4">
-                                <a href="{{ Storage::disk('dropbox')->url($imagesUrls) }}" target="_blank" download>
-                                    <button class="bg-gray-700 hover:bg-gray-700 text-white px-3 py-1 rounded transition-all">
-                                        Download IMG <i class="fa fa-download ml-2"></i>
-                                    </button>
-                                </a>
-                            </div>
-                        @endif
-
                         {{-- COSTING --}}
                         @if ($fileUrls)
                             <div class="w-1/4">

@@ -359,12 +359,12 @@ class CollectionController extends Controller
             $reqImgUrls = $this->compressAndArchiveImages($reqImgPathsArray);
         }
 
-        // Images
-        $imagesUrls = null;
-        if (!empty($mannequin->images)) {
-            $imagesPathsArray = explode(',', $mannequin->images);
-            $imagesUrls = $this->compressAndArchiveImages($imagesPathsArray);
-        }
+        // // Images
+        // $imagesUrls = null;
+        // if (!empty($mannequin->images)) {
+        //     $imagesPathsArray = explode(',', $mannequin->images);
+        //     $imagesUrls = $this->compressAndArchiveImages($imagesPathsArray);
+        // }
 
         // COSTING / EXCEL
         $filePath = $mannequin->file;
@@ -426,7 +426,7 @@ class CollectionController extends Controller
             'reqImgUrls' => $reqImgUrls,
             'fileUrls' => $fileUrls,
             'threeDUrls' => $threeDUrls,
-            'imagesUrls' => $imagesUrls,
+            // 'imagesUrls' => $imagesUrls,
         ]);
     }
 
