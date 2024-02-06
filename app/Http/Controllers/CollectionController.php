@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Validator;
 use Livewire\WithPagination;
 use Barryvdh\DomPDF\Facade\Pdf;
 use ZipArchive;
-use Spatie\ImageOptimizer\OptimizerChainFactory;
 
 
 class CollectionController extends Controller
@@ -118,7 +117,8 @@ class CollectionController extends Controller
             else {
                 // If user's status is not 1, query based on user's companies
                 $companies = $user->companies->pluck('name')->toArray();
-                $query->whereIn('company', $companies);
+                $query->whereIn('company', $companies)
+                    ->where('activeStatus', 1);
             }
 
             // Get the total number of records
@@ -271,6 +271,46 @@ class CollectionController extends Controller
         }
     }
 
+    //COMPRESS IMAGES
+    private function compressAndArchiveImages($imagePaths)
+    {
+        $tempDir = sys_get_temp_dir() . '/' . uniqid('compressed_images_', true);
+        mkdir($tempDir);
+
+        $zip = new ZipArchive();
+        $zipPath = $tempDir . '/images.zip';
+
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+            foreach ($imagePaths as $imagePath) {
+                if (Storage::disk('dropbox')->exists($imagePath)) {
+                    $originalImage = Storage::disk('dropbox')->url($imagePath);
+                    $compressedImage = $tempDir . '/' . basename($imagePath);
+
+                    // Compress the image
+                    copy($originalImage, $compressedImage);
+
+                    // Add the compressed image to the zip archive
+                    $zip->addFile($compressedImage, basename($imagePath));
+                }
+            }
+
+            $zip->close();
+
+            // Set the URL for downloading the zip file
+            $zipUrl = Storage::disk('dropbox')->putFile('compressed', $zipPath);
+
+            // Clean up: delete temporary directory and files
+            foreach (glob($tempDir . '/*') as $file) {
+                unlink($file);
+            }
+            rmdir($tempDir);
+
+            return $zipUrl;
+        }
+
+        return null;
+    }
+
     // VIEW PRODUCT
     public function view($encryptedId)
     {
@@ -312,46 +352,18 @@ class CollectionController extends Controller
             $pdfUrls = null;
         }
 
-        // request IMAGE
-        // Requested images as an array
-        $reqImgPaths = $mannequin->reqImg;
+        // Requested images
         $reqImgUrls = null;
-        $reqImgPathsArray = explode(',', $reqImgPaths);
+        if (!empty($mannequin->reqImg)) {
+            $reqImgPathsArray = explode(',', $mannequin->reqImg);
+            $reqImgUrls = $this->compressAndArchiveImages($reqImgPathsArray);
+        }
 
-        if (!empty($reqImgPaths)) {
-            // Create a temporary directory to store the compressed images
-            $tempDir = sys_get_temp_dir() . '/' . uniqid('compressed_images_', true);
-            mkdir($tempDir);
-
-            // Initialize a new ZipArchive
-            $zip = new ZipArchive();
-            $zipPath = $tempDir . '/images.zip';
-
-            if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
-                foreach ($reqImgPathsArray as $reqImgPath) {
-                    if (Storage::disk('dropbox')->exists($reqImgPath)) {
-                        $originalImage = Storage::disk('dropbox')->url($reqImgPath);
-                        $compressedImage = $tempDir . '/' . basename($reqImgPath);
-
-                        // Compress the image
-                        copy($originalImage, $compressedImage);
-
-                        // Add the compressed image to the zip archive
-                        $zip->addFile($compressedImage, basename($reqImgPath));
-                    }
-                }
-
-                $zip->close();
-
-                // Set the URL for downloading the zip file
-                $reqImgUrls = Storage::disk('dropbox')->putFile('compressed', $zipPath);
-
-                // Clean up: delete temporary directory and files
-                foreach (glob($tempDir . '/*') as $file) {
-                    unlink($file);
-                }
-                rmdir($tempDir);
-            }
+        // Images
+        $imagesUrls = null;
+        if (!empty($mannequin->images)) {
+            $imagesPathsArray = explode(',', $mannequin->images);
+            $imagesUrls = $this->compressAndArchiveImages($imagesPathsArray);
         }
 
         // COSTING / EXCEL
@@ -414,6 +426,7 @@ class CollectionController extends Controller
             'reqImgUrls' => $reqImgUrls,
             'fileUrls' => $fileUrls,
             'threeDUrls' => $threeDUrls,
+            'imagesUrls' => $imagesUrls,
         ]);
     }
 
@@ -1286,6 +1299,14 @@ class CollectionController extends Controller
     //         }, $imagePaths));
     //     });
 
+    //     $imageUrls = [];
+
+    //     // Limit the loop to the first 5 elements
+    //     foreach (array_slice($imagePaths, 0, 5) as $imagePath) {
+    //         if (Storage::disk('dropbox')->exists($imagePath)) {
+    //             $imageUrls[] = Storage::disk('dropbox')->url($imagePath);
+    //         }
+    //     }
 
     //     return view('pdfMaker')->with([
     //         'mannequin' => $mannequin,

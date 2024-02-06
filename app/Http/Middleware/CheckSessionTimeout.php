@@ -17,7 +17,7 @@ class CheckSessionTimeout
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     protected $session;
-    protected $timeout = 10;
+    protected $timeout = 60;
 
     public function __construct(Store $session)
     {

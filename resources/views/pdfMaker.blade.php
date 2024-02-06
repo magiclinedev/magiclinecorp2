@@ -41,8 +41,10 @@
     }
 
     .product-image {
-        width: 100%;
+        width: auto;
         object-fit: cover;
+        border-style: solid;
+        border-width: 3px;
     }
 
     .additional-images {
@@ -54,6 +56,8 @@
 
     .additional-image {
         width: 45%;
+        border-style: solid;
+        border-width: 3px;
 
     }
 
@@ -100,7 +104,7 @@
         font-size: 16px;
     }
     .content {
-        width: 70%;
+        width: 440px;
         display: flex;
         flex-wrap: wrap;
         overflow: hidden;
@@ -122,7 +126,7 @@
             <tr>
                 <!-- Column 1 -->
                 <td style="width: 30%;" rowspan="3">
-                    <div class="content border">
+                    <div class="content">
                         <center>
                             <img id="mainImage" src="{{ $imageUrls[0] }}" alt="Product Image" class="product-image ">
                         </center>
@@ -130,7 +134,7 @@
                 </td>
 
                 <td style="width: 25%;" rowspan="3">
-                    <div class="additional-images border">
+                    <div class="additional-images">
                         <center>
                         @foreach ($imageUrls as $index => $imagePath)
                             @if ($index > 1 && $index <= 5)  {{-- Load images 3 to 7 (up to 5 images) --}}
@@ -159,15 +163,16 @@
                 </td>
             </tr>
             <tr>
-                <td rowspan="2" ><div class="item-reference" style="transform: rotate(90deg);">Sample Collection</div></td>
+                <td><div class="item-reference" style="transform: rotate(90deg);">Sample Collection</div></td>
             </tr>
-            {{-- <tr>
-            </tr> --}}
             <tr>
                 <td colspan="2">
                     <div class="item-reference">{{ $mannequin->itemref }}</div>
                 </td>
             </tr>
+            {{-- <tr>
+
+            </tr> --}}
         </table>
     {{-- </div> --}}
 </body>

@@ -7,9 +7,10 @@
     <x-slot name="header">
         <div class="flex items-center justify-between space-x-4">
             <h2 id="pageTitle" class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Product') }}
-                  <p></p>
+                {!! __('Product') !!}
+                <p></p>
             </h2>
+
             {{-- Admin Buttons(Add Products, Type, Category) --}}
             <div class="flex items-center space-x-4">
                 {{-- Refresh BUtton --}}
