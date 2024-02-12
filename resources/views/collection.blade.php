@@ -10,36 +10,34 @@
                 {!! __('Product') !!}
                 <p></p>
             </h2>
+        {{-- Admin Buttons(Add Products, Type, Category) --}}
+        <div class="grid grid-cols-2 gap-4 sm:flex sm:space-x-4">
+            {{-- Refresh Button --}}
+            <a id="clearCacheAndReload" class="text-gray-800 hover:text-gray-600"><i style="font-size:17px" class="fa">&#xf021;</i> REFRESH</a>
+            {{-- Access for buttons --}}
+            @can('admin_access', Auth::user())
+                <a href="{{ route('collection.add') }}" class="text-gray-800 hover:text-gray-600">
+                    <i class="fas fa-plus-circle"></i> ADD PRODUCT
+                </a>
+                <a href="{{ route('collection.category') }}" class="text-gray-800 hover:text-gray-600">
+                    <i class="fas fa-folder-plus"></i> ADD CATEGORY
+                </a>
+                <a href="{{ route('collection.type') }}" class="text-gray-800 hover:text-gray-600">
+                    <i class="fas fa-tags"></i> ADD TYPE
+                </a>
+            @endcan
 
-            {{-- Admin Buttons(Add Products, Type, Category) --}}
-            <div class="flex items-center space-x-4">
-                {{-- Refresh BUtton --}}
-                    <button id="clearCacheAndReload" class="text-gray-800 hover:text-gray-600"><i style="font-size:17px" class="fa">&#xf021;</i> REFRESH</button>
-                {{-- Access for buttons --}}
-                @can('admin_access', Auth::user())
-                    <a href="{{ route('collection.add') }}" class="text-gray-800 hover:text-gray-600">
-                        <i class="fas fa-plus-circle"></i> ADD PRODUCT
+            {{-- Trashcan Button --}}
+            @can('super_admin', Auth::user())
+                @if ($mannequins->contains('activeStatus', 0))
+                    <a href="{{ route('collection.trashcan') }}" class="text-gray-800 hover:text-gray-600">
+                        <i class="fas fa-trash-alt"></i> TRASH
+                        <span class="badge">{{ $mannequins->where('activeStatus', 0)->count() }}</span>
                     </a>
-                    <a href="{{ route('collection.category') }}" class="text-gray-800 hover:text-gray-600">
-                        <i class="fas fa-folder-plus"></i> ADD CATEGORY
-                    </a>
-                    <a href="{{ route('collection.type') }}" class="text-gray-800 hover:text-gray-600">
-                        <i class="fas fa-tags"></i> ADD TYPE
-                    </a>
-                @endcan
+                @endif
+            @endcan
+        </div>
 
-                {{-- Trashcan Button --}}
-                @can('super_admin', Auth::user())
-                    @if ($mannequins->contains('activeStatus', 0))
-                        <div class="ml-2">
-                            <a href="{{ route('collection.trashcan') }}" class="text-gray-800 hover:text-gray-600">
-                                <i class="fas fa-trash-alt"></i> TRASH
-                                <span class="badge">{{ $mannequins->where('activeStatus', 0)->count() }}</span>
-                            </a>
-                        </div>
-                    @endif
-                @endcan
-            </div>
         </div>
     </x-slot>
 
@@ -52,7 +50,7 @@
                     <h1 class="text-2xl font-bold"><i class="fas fa-list-alt"></i> Product List</h1>
                 </div>
                 {{-- FILTER --}}
-                <div class="flex space-x-2 my-2">
+                <div class="grid grid-cols-1 gap-4 sm:flex sm:space-x-4">
                     {{-- category --}}
                     <div class="filter-dropdown">
                         <select id="categoryFilter" class="block w-52 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Filter by Category">
@@ -71,15 +69,20 @@
                             @endforeach
                         </select>
                     </div>
+
+                    {{-- DELETE/TRASH ALL BUTTON --}}
+                    <button name="bulkAction" id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+
                     {{-- Searchbox --}}
-                    <div class="w-full">
+                    <div class="w-full mb-2">
                         <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
                     </div>
                 </div>
-                {{-- DELETE/TRASH ALL BUTTON --}}
-                <button name="bulkAction" id="bulkAction" class="hidden bg-red-500 block w-52 py-2 px-3 mb-2 border border-gray-300 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                    <i class="fas fa-trash-alt"></i> Delete
-                </button>
+
+
+
                 {{-- TABLE --}}
                 <table id="mannequinsTable" class="w-full border-collapse border">
                     <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
