@@ -103,89 +103,91 @@
             {{-- END FORM --}}
 
             {{-- CompanyList --}}
-            <div class="bg-white shadow-md rounded-lg p-4 w-full md:w-full">
+            <div class="overflow-hidden bg-white shadow-md rounded-lg p-4 w-full md:w-full">
                 {{-- Searchbox --}}
-                <div class="w-full">
+                <div class="w-full mb-6">
                     <input id="customSearchInput" type="text" class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search...">
                 </div>
-                {{-- table --}}
-                <table id="usersTable" class="w-full border-collapse pt-6">
-                    <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
-                        <tr>
-                            <th class="px-4 py-2 border">Name</th>
-                            <th class="px-4 py-2 border">Status</th>
-                            <th class="px-4 py-2 border">Company</th>
-                            <th class="px-4 py-2 border">Set By</th>
-                            <th class="px-4 py-2 border">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($users as $user)
-                            <tr class="border">
-                                {{-- Name --}}
-                                <td class="px-4 py-2 border">{{ $user->name }}</td>
-                                {{-- Status --}}
-                                <td class="px-4 py-2 border" style="{{ $user->activeStatus == 0 ? 'color: red;' : '' }}">
-                                    @if ($user->status == 1)
-                                        Admin 1 / Super Admin
-                                    @elseif ($user->status == 2)
-                                        Admin 2
-                                    @elseif ($user->status == 4)
-                                        Owner
-                                    @else
-                                        Viewer
-                                    @endif
-                                </td>
-                                {{-- Company --}}
-                                <td class="px-4 py-2 border">
-                                    @if ($user->status == 1 || $user->status == 4)
-                                        All
-                                    @else
-                                        @foreach ($user->companies as $company)
-                                            <span style="{{ $company->pivot->checkPrice == 1 ? 'color: green;' : '' }}">
-                                                {{ $company->name }}
-                                            </span>
-                                            @unless($loop->last)
-                                                ,
-                                            @endunless
-                                        @endforeach
-                                    @endif
-                                </td>
-                                {{-- SetBy --}}
-                                <td class="px-4 py-2 border">{{ $user->addedBy }}</td>
-                                {{-- Action BUtton --}}
-                                <td class="px-4 py-2 border">
-                                    {{-- If User is inactive --}}
-                                    @if ($user->activeStatus == 0)
-                                        {{-- <button class="btn-edit">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button> --}}
-                                        <button class="btn-active" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.restore', ['id' => $user->id]) }}">
-                                            <i class="fas fa-check"></i> Active
-                                        </button>
-                                        <button class="btn-delete" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.trash', ['id' => $user->id]) }}">
-                                            <i class="fas fa-trash-alt"></i> Delete
-                                        </button>
-                                    {{-- else --}}
-                                    @else
-                                        @if(auth()->check() && auth()->user()->id === $user->id)
-                                            <span class="btn-view">
-                                                Current User
-                                            </span>
-                                        @else
-                                            <a href="{{ route('users.edit', ['encryptedId' => Crypt::encrypt($user->id)]) }}" class="btn-view">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </a>
-                                            <button class="btn-delete" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.trash', ['id' => $user->id]) }}">
-                                                <i class="fas fa-bullseye"></i> Deactivate
-                                            </button>
-                                        @endif
-                                    @endif
-                                </td>
+                <div class="overflow-x-auto">
+                    {{-- table --}}
+                    <table id="usersTable" class="w-full border-collapse border pt-6">
+                        <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
+                            <tr>
+                                <th class="px-2 py-2 border">Name</th>
+                                <th class="px-2 py-2 border">Status</th>
+                                <th class="px-2 py-2 border">Company</th>
+                                <th class="px-2 py-2 border">Set By</th>
+                                <th class="px-2 py-2 border">Action</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach ($users as $user)
+                                <tr class="border">
+                                    {{-- Name --}}
+                                    <td class="px-2 py-2 border">{{ $user->name }}</td>
+                                    {{-- Status --}}
+                                    <td class="px-2 py-2 border" style="{{ $user->activeStatus == 0 ? 'color: red;' : '' }}">
+                                        @if ($user->status == 1)
+                                            Admin 1 / Super Admin
+                                        @elseif ($user->status == 2)
+                                            Admin 2
+                                        @elseif ($user->status == 4)
+                                            Owner
+                                        @else
+                                            Viewer
+                                        @endif
+                                    </td>
+                                    {{-- Company --}}
+                                    <td class="px-2 py-2 border">
+                                        @if ($user->status == 1 || $user->status == 4)
+                                            All
+                                        @else
+                                            @foreach ($user->companies as $company)
+                                                <span style="{{ $company->pivot->checkPrice == 1 ? 'color: green;' : '' }}">
+                                                    {{ $company->name }}
+                                                </span>
+                                                @unless($loop->last)
+                                                    ,
+                                                @endunless
+                                            @endforeach
+                                        @endif
+                                    </td>
+                                    {{-- SetBy --}}
+                                    <td class="px-2 py-2 border">{{ $user->addedBy }}</td>
+                                    {{-- Action BUtton --}}
+                                    <td class="px-2 py-2 flex">
+                                        {{-- If User is inactive --}}
+                                        @if ($user->activeStatus == 0)
+                                            {{-- <button class="btn-edit">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button> --}}
+                                            <button class="btn-active bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2.5 border border-green-500 hover:border-transparent rounded m-2" title="Active" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.restore', ['id' => $user->id]) }}">
+                                                <i class="fas fa-check"></i> Active
+                                            </button>
+                                            <button class="btn-delete bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-2.5 border border-red-500 hover:border-transparent rounded m-2" title="Delete" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.trash', ['id' => $user->id]) }}">
+                                                <i class="fas fa-trash-alt"></i> Delete
+                                            </button>
+                                        {{-- else --}}
+                                        @else
+                                            @if(auth()->check() && auth()->user()->id === $user->id)
+                                                <span class="btn-view">
+                                                    Current User
+                                                </span>
+                                            @else
+                                                <a href="{{ route('users.edit', ['encryptedId' => Crypt::encrypt($user->id)]) }}" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded m-2 text-center" title="Edit">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                                <button class="btn-delete bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-2.5 border border-red-500 hover:border-transparent rounded m-2" title="Deactivate" data-id="{{ $user->id }}" data-transfer-url="{{ route('users.trash', ['id' => $user->id]) }}">
+                                                    <i class="fas fa-trash-alt"></i>Deactivate
+                                                </button>
+                                            @endif
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
             {{-- END table --}}
 
@@ -203,6 +205,11 @@
                 order: [[1, 'asc']],
                 lengthChange: false,
                 "dom": 'lrtip'
+                processing: true,
+                "autoWidth": false,
+                serverSide: true,
+                deferRender: true,
+                scrollX: true,
             });
 
              // Custom search input handler using input event

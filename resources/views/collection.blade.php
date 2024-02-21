@@ -1,7 +1,19 @@
 @section('title')
     Collection
 @endsection
+<style>
+    /* Exclude first column from being fixed */
+th{
+    background-color: #1F2937;
+}
+.DTFC_LeftBodyWrapper{
+    background-color: #fff;
+    border-bottom: 1px solid #B2B2B2;
+}
+.no-border {
+}
 
+</style>
 <x-app-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-slot name="header">
@@ -92,8 +104,8 @@
                                     <input type="checkbox" id="selectAllCheckbox">
                                 </div>
                             </th>
-                            <th class="px-4 py-2 border">Image</th>
-                            <th class="px-4 py-2 border">Item Reference</th>
+                            <th class="px-4 py-2  fixed-column">Image</th>
+                            <th class="px-4 py-2 ">Item Reference</th>
                             <th class="px-4 py-2 border">Company</th>
                             <th class="px-4 py-2 border">Category</th>
                             <th class="px-4 py-2 border">Type</th>
@@ -112,6 +124,9 @@
     {{--START scripts --}}
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <!-- FixedColumns Extension -->
+<script src="https://cdn.datatables.net/fixedcolumns/3.3.3/js/dataTables.fixedColumns.min.js"></script>
+
     <script>
         $(document).ready(function() {
             // user status for checkbox
@@ -126,6 +141,11 @@
                 serverSide: true,
                 deferRender: true,
                 scrollX: true,
+                scrollCollapse: true,
+                "fixedColumns": {
+        leftColumns: 3, // Number of columns to be fixed from the left
+        rightColumns: 0 // Number of columns to be fixed from the right (optional)
+    },
                 // responsive: true,
                 ajax:{
                     url: '{{ route('collection') }}' ,
@@ -153,6 +173,10 @@
                     {
                         targets: [0],
                         visible: userStatus == 1
+                    },
+                    {
+                        targets: [0, 1, 2],
+                        className: 'no-border',
                     },
                     {
                         targets: [6],
