@@ -299,7 +299,8 @@
                 processing: true,
                 serverSide: true,
                 deferRender: true,
-                scrollY: false,
+                scrollX: true,
+                "autoWidth": false,
                 pageLength: 10,
                 ajax:{
                     url: '{{ route('dashboard') }}',

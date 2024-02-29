@@ -6,11 +6,13 @@
 th{
     background-color: #1F2937;
 }
-.DTFC_LeftBodyWrapper{
+.DTFC_RightBodyWrapper{
     background-color: #fff;
     border-bottom: 1px solid #B2B2B2;
 }
-.no-border {
+.dataTables_processing {
+    z-index: 9999;
+    position: absolute;
 }
 
 </style>
@@ -22,34 +24,33 @@ th{
                 {!! __('Product') !!}
                 <p></p>
             </h2>
-        {{-- Admin Buttons(Add Products, Type, Category) --}}
-        <div class="grid grid-cols-2 gap-4 sm:flex sm:space-x-4">
-            {{-- Refresh Button --}}
-            <a id="clearCacheAndReload" class="text-gray-800 hover:text-gray-600"><i style="font-size:17px" class="fa">&#xf021;</i> REFRESH</a>
-            {{-- Access for buttons --}}
-            @can('admin_access', Auth::user())
-                <a href="{{ route('collection.add') }}" class="text-gray-800 hover:text-gray-600">
-                    <i class="fas fa-plus-circle"></i> ADD PRODUCT
-                </a>
-                <a href="{{ route('collection.category') }}" class="text-gray-800 hover:text-gray-600">
-                    <i class="fas fa-folder-plus"></i> ADD CATEGORY
-                </a>
-                <a href="{{ route('collection.type') }}" class="text-gray-800 hover:text-gray-600">
-                    <i class="fas fa-tags"></i> ADD TYPE
-                </a>
-            @endcan
-
-            {{-- Trashcan Button --}}
-            @can('super_admin', Auth::user())
-                @if ($mannequins->contains('activeStatus', 0))
-                    <a href="{{ route('collection.trashcan') }}" class="text-gray-800 hover:text-gray-600">
-                        <i class="fas fa-trash-alt"></i> TRASH
-                        <span class="badge">{{ $mannequins->where('activeStatus', 0)->count() }}</span>
+            {{-- Admin Buttons(Add Products, Type, Category) --}}
+            <div class="grid grid-cols-2 gap-4 sm:flex sm:space-x-4">
+                {{-- Refresh Button --}}
+                <button id="clearCacheAndReload" class="text-gray-800 hover:text-gray-600 text-left"><i style="font-size:17px" class="fa">&#xf021;</i> REFRESH</button>
+                {{-- Access for buttons --}}
+                @can('admin_access', Auth::user())
+                    <a href="{{ route('collection.add') }}" class="text-gray-800 hover:text-gray-600">
+                        <i class="fas fa-plus-circle"></i> ADD PRODUCT
                     </a>
-                @endif
-            @endcan
-        </div>
+                    <a href="{{ route('collection.category') }}" class="text-gray-800 hover:text-gray-600">
+                        <i class="fas fa-folder-plus"></i> ADD CATEGORY
+                    </a>
+                    <a href="{{ route('collection.type') }}" class="text-gray-800 hover:text-gray-600">
+                        <i class="fas fa-tags"></i> ADD TYPE
+                    </a>
+                @endcan
 
+                {{-- Trashcan Button --}}
+                @can('super_admin', Auth::user())
+                    @if ($mannequins->contains('activeStatus', 0))
+                        <a href="{{ route('collection.trashcan') }}" class="text-gray-800 hover:text-gray-600">
+                            <i class="fas fa-trash-alt"></i> TRASH
+                            <span class="badge">{{ $mannequins->where('activeStatus', 0)->count() }}</span>
+                        </a>
+                    @endif
+                @endcan
+            </div>
         </div>
     </x-slot>
 
@@ -93,8 +94,6 @@ th{
                     </div>
                 </div>
 
-
-
                 {{-- TABLE --}}
                 <table id="mannequinsTable" class="w-full border-collapse border">
                     <thead class="px-6 py-4 font-medium whitespace-nowrap text-white bg-gray-800 rounded-md">
@@ -125,9 +124,10 @@ th{
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <!-- FixedColumns Extension -->
-<script src="https://cdn.datatables.net/fixedcolumns/3.3.3/js/dataTables.fixedColumns.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/3.3.3/js/dataTables.fixedColumns.min.js"></script>
 
     <script>
+
         $(document).ready(function() {
             // user status for checkbox
             var userStatus = {{ $status }};
@@ -142,10 +142,11 @@ th{
                 deferRender: true,
                 scrollX: true,
                 scrollCollapse: true,
+
                 "fixedColumns": {
-        leftColumns: 3, // Number of columns to be fixed from the left
-        rightColumns: 0 // Number of columns to be fixed from the right (optional)
-    },
+                    leftColumns: 0,
+                    rightColumns: 1, // Number of columns to be fixed from the left (starting from column 1)
+                },
                 // responsive: true,
                 ajax:{
                     url: '{{ route('collection') }}' ,
@@ -166,13 +167,15 @@ th{
                 },
                 deferLoading: (10),
                 columnDefs: [
+                    { "orderable": false, "targets": 0 },
                     {
                         targets: '_all',
                         className: 'px-2 py-2 border text-center',
+                        "width": "auto"
                     },
                     {
                         targets: [0],
-                        visible: userStatus == 1
+                        visible: userStatus == 1,
                     },
                     {
                         targets: [0, 1, 2],
@@ -207,9 +210,27 @@ th{
                             return data;
                         },
                     },
-                    { data: 'itemref', name: 'itemref',},
+                    { data: 'itemref', name: 'itemref'},
                     { data: 'company', name: 'company' },
-                    { data: 'category', name: 'category' },
+                    {
+                        data: 'category',
+                        name: 'category',
+                        width: '150px', // Set a specific width for the column
+                        className: 'text-sm',
+                        render: function(data, type, full, meta) {
+                            if (type === 'display' && data !== null && data !== undefined) {
+                                // Split the category string into an array of items
+                                var categories = data.split(', ');
+                                // Create links for each category item
+                                var links = categories.map(function(category) {
+                                    return '<a href="#" class="category-link text-blue-600 hover:underline" data-category="' + category + '">' + category + '</a>';
+                                });
+                                // Join the links with commas
+                                return links.join(', ');
+                            }
+                            return data;
+                        }
+                    },
                     { data: 'type', name: 'type' },
                     { data: 'addedBy', name: 'addedBy' },
                     {
@@ -240,6 +261,14 @@ th{
             }
 
             // Category Filter
+
+            // Add click event handler for category links
+            $('#mannequinsTable').on('click', '.category-link', function(e) {
+                e.preventDefault();
+                var category = $(this).data('category');
+                // Example: Set the category filter value and redraw the table
+                $('#categoryFilter').val(category).trigger('change');
+            });
             $('#categoryFilter').on('change', function () {
                 table.draw();
             });

@@ -19,6 +19,8 @@
         "pusher/pusher-php-server": "^7.2",
         "spatie/flysystem-dropbox": "^3.0",
         "spatie/laravel-image-optimizer": "^1.7",
+        "symfony/http-client": "^7.0",
+        "symfony/mailgun-mailer": "^7.0",
         "yajra/laravel-datatables": "^10.0"
     },
     "require-dev": {

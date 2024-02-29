@@ -179,7 +179,7 @@ Collection
                     <div class="flex">
                         {{-- PDF --}}
                         @if ($pdfUrls && $pdfUrls != 'Auto')
-                            <div class="w-1/4">
+                            <div class="lg:w-1/4 sm:w-1/3">
                                 <a href="{{ $pdfUrls }}" target="_blank">
                                     <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-all">
                                         Download PDF <i class="fa fa-download ml-2"></i>
@@ -188,7 +188,7 @@ Collection
                             </div>
                         @endif
                         @if ($pdfUrls == 'Auto')
-                            <div class="w-1/4">
+                            <div class="lg:w-1/4 sm:w-1/3">
                                 <a href="{{route('company.pdf', ['id' => Crypt::encrypt($mannequin->id)])}}" target="_blank">
                                     <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-all">
                                         Download PDF <i class="fa fa-download ml-2"></i>
@@ -199,7 +199,7 @@ Collection
 
                         {{-- REQUEST IMAGES --}}
                         @if ($reqImgUrls)
-                            <div class="w-1/4">
+                            <div class="lg:w-1/4 sm:w-1/3">
                                 <a href="{{ Storage::disk('dropbox')->url($reqImgUrls) }}" target="_blank" download>
                                     <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-all">
                                         Download IMG <i class="fa fa-download ml-2"></i>
@@ -208,14 +208,20 @@ Collection
                             </div>
                         @endif
                         @if($imagesUrls)
-                            <a href="{{ route('download.image', ['id' => $mannequin->id]) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded transition-all">Download Images</a>
+                            <div class="lg:w-1/4 sm:w-1/3">
+                                <a href="{{ route('download.image', ['id' => $mannequin->id]) }}" >
+                                    <button class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded transition-all">
+                                        Download IMG <i class="fa fa-download ml-2"></i>
+                                    </button>
+                                </a>
+                            </div>
                         @else
                             <p>No images available for download.</p>
                         @endif
 
                         {{-- COSTING --}}
                         @if ($fileUrls)
-                            <div class="w-1/4">
+                            <div class="lg:w-1/4 sm:w-1/3">
                                 <a href="{{ $fileUrls }}" target="_blank">
                                     <button class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition-all">
                                         Download Excel <i class="fa fa-download ml-2"></i>
@@ -226,7 +232,7 @@ Collection
 
                         {{-- 3D File --}}
                         @if ($threeDUrls)
-                            <div class="w-1/4">
+                            <div class="lg:w-1/4 sm:w-1/3">
                                 <a href="{{ $threeDUrls }}" target="_blank">
                                     <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded transition-all">
                                         Download 3D <i class="fa fa-download ml-2"></i>

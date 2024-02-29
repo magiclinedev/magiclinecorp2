@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Livewire\WithPagination;
 use Barryvdh\DomPDF\Facade\Pdf;
 use ZipArchive;
@@ -75,7 +76,12 @@ class CollectionController extends Controller
             // FILTERS
             $dateFilter = $request->input('date');
             $searchQuery = $request->input('search');
-            $selectedCategory = $request->input('category');
+
+            // Get the selected category string from the request
+            $categoryInput = $request->input('category', '');
+            // Split the input string into an array of categories if it's not empty
+            $selectedCategories = !empty($categoryInput) ? explode(', ', $categoryInput) : [];
+
             $selectedCompany = $request->query('company', '');
 
             // SEARCH in datatable
@@ -103,13 +109,18 @@ class CollectionController extends Controller
                 $query  ->whereDate('updated_at', now()->toDateString())
                         ->where('addedBy', 'NOT LIKE', '%Added%');
             }
-            if (!empty($selectedCategory)) {
-                $query->where('category', $selectedCategory);
+            // Filter by category
+            if (!empty($selectedCategories)) {
+                $query->where(function ($query) use ($selectedCategories) {
+                    foreach ($selectedCategories as $category) {
+                        $query->orWhere('category', 'like', '%' . $category . '%');
+                    }
+                });
             }
+
             if (!empty($selectedCompany)) {
                 $query->where('company', $selectedCompany);
             }
-
             // Product Access()
             if ($user->status == 1) {
                 // If user's status is 1(superadmin), query for activeStatus = 1
@@ -555,13 +566,20 @@ class CollectionController extends Controller
     // ADD PRODUCT
     public function store(Request $request)
     {
+        // dd($request->all());
         // $req = $request->all();
         // dd($req);
         $validator = Validator::make($request->all(), [
             // 'po' => 'nullable|string|max:255|unique:mannequins,po',
             'itemRef' => 'required|string|max:255|unique:mannequins,itemref',
             'company' => 'required|nullable|string|max:255',
-            'category' => 'required|nullable|string|max:255',
+            'categories' => [
+                'array', // Must be an array
+                // Required if 'status' is not equal to 1 or 4
+                Rule::requiredIf(function () use ($request) {
+                    return !in_array($request->input('status'), [1, 2]);
+                }),
+            ],
             'type' => 'required|nullable|string|max:255',
             'price' => 'nullable|numeric',
             'description' => 'nullable',
@@ -647,12 +665,15 @@ class CollectionController extends Controller
             }
         }
 
+        $categoryNames = $request->input('categories', []);
+        $categoryString = implode(', ', $categoryNames);
+
         // Create a new Mannequin instance and set its properties
         $mannequin = new Mannequin([
             'po' => strtoupper($request->po),
             'itemref' => strtoupper($request->itemRef),
             'company' => strtoupper($request->company),
-            'category' => strtoupper($request->category),
+            'category' => strtoupper($categoryString),
             'type' => strtoupper($request->type),
             'price' => $request->price,
             'description' => $request->description,
@@ -743,7 +764,13 @@ class CollectionController extends Controller
             // 'po' => 'nullable|string|max:255|unique:mannequins,po,' . $id,
             'itemref' => 'required|string|max:255|unique:mannequins,itemref,' . $id,
             'company' => 'required|nullable|string|max:255',
-            'category' => 'required|nullable|string|max:255',
+            'categories' => [
+                'array', // Must be an array
+                // Required if 'status' is not equal to 1 or 4
+                Rule::requiredIf(function () use ($request) {
+                    return !in_array($request->input('status'), [1, 2]);
+                }),
+            ],
             'type' => 'required|nullable|string|max:255',
             'price' => 'nullable|numeric',
             'description' => 'nullable',
@@ -772,15 +799,31 @@ class CollectionController extends Controller
         // Store the original itemref for the audit trail
         $originalItemref = $mannequin->itemref;
 
+        // Categories
+        // $categoryNames = $request->input('categories', []);
+        // $categoryString = implode(', ', $categoryNames);
+        // $mannequin->category = $categoryString;
+        // $mannequin->save();
+
         // Define the fields that can be updated
         $fillableFields = ['po', 'company', 'category', 'type', 'price', 'description'];
 
         $updates = [];
 
         foreach ($fillableFields as $field) {
-            if ($request->has($field) && $request->input($field) !== $mannequin->{$field}) {
-                $mannequin->{$field} = $request->input($field);
-                $updates[] = strtoupper($field);
+            if ($field === 'category') {
+                // Check if the request has the 'categories' field and it is an array
+                if ($request->has('categories') && is_array($request->input('categories'))) {
+                    // Update the categories field with the array of categories
+                    $mannequin->category = implode(', ', $request->input('categories'));
+                    $updates[] = 'CATEGORY'; // Assuming you want to track the update of categories
+                }
+            } else {
+                // For other fields, check if the request has the field and it is different from the current value
+                if ($request->has($field) && $request->input($field) !== $mannequin->{$field}) {
+                    $mannequin->{$field} = $request->input($field);
+                    $updates[] = strtoupper($field);
+                }
             }
         }
 
@@ -1259,8 +1302,8 @@ class CollectionController extends Controller
     //Delete Category(PERMANENTLY)
     public function trash_category($id)
     {
-        $type = type::findOrFail($id);
-        $type->delete();
+        $category = Category::findOrFail($id);
+        $category->delete();
 
         return response()->json(['success' => true]);
     }

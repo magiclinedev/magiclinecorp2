@@ -90,54 +90,53 @@
             @csrf
             @method('PUT')
             <div class="grid grid-cols-2 gap-4">
-                {{-- Purchase order --}}
-                <div class="col-span-2 sm:col-span-1">
-                    <label for="po" class="block font-bold mb-2">PO</label>
-                    <input type="text" name="po" value="{{ old('po') }}" id="po" class="w-full border rounded-md py-2 px-3" placeholder="Enter PO number">
-                </div>
                 {{-- ITEM REF--}}
-                <div class="col-span-2 sm:col-span-1">
-                    <label for="itemRef" class="block font-bold mb-2">Item Reference</label>
-                    <input type="text" name="itemRef" id="itemRef" value="{{ old('itemRef') }}" class="w-full border rounded-md py-2 px-3" placeholder="Enter Item Ref">
-                </div>
-                {{-- COMPANIES --}}
-                <div class="col-span-2 sm:col-span-1">
-                    <label for="company" class="block font-bold mb-2">Company</label>
+                <div class="col-span-2 sm:col-span-1 ">
+                    <label for="itemRef" class="block font-bold">Item Reference</label>
+                    <input type="text" name="itemRef" id="itemRef" value="{{ old('itemRef') }}" class="w-full border rounded-md py-2 px-3 mb-2" placeholder="Enter Item Ref">
+
+                    {{-- Purchase order --}}
+                    <label for="po" class="block font-bold">PO</label>
+                    <input type="text" name="po" value="{{ old('po') }}" id="po" class="w-full border rounded-md py-2 px-3 mb-2" placeholder="Enter PO number">
+
+
+                    {{-- COMPANIES --}}
+                    <label for="company" class="block font-bold">Company</label>
                     <div class="col-span-2 sm:col-span-1 flex items-center">
-                        <select name="company" id="company" class="w-full border rounded-md py-2 px-3">
+                        <select name="company" id="company" class="w-full border rounded-md py-2 px-3 mb-2">
                             @foreach ($companies as $company)
                                 <option value="{{ $company->name }}" {{ old('company') == $company->name ? 'selected' : '' }}>{{ $company->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                </div>
-                {{-- CATEGORY --}}
-                <div class="col-span-2 sm:col-span-1">
-                    <label for="category" class="block font-bold mb-2">Category</label>
+
+                    {{-- PRICE --}}
+                    <label for="price" class="block font-bold">Price</label>
+                    <input type="number" name="price" value="{{ old('price') }}" id="price" class="w-full border rounded-md py-2 px-3 mb-2" placeholder="Enter Price">
+
+                    {{-- TYPE --}}
+                    <label for="type" class="block font-bold">Type</label>
                     <div class="col-span-2 sm:col-span-1 flex items-center">
-                        <select name="category" id="category" class="w-full border rounded-md py-2 px-3">
-                            @foreach ($categories as $category)
-                                <option value="{{ $category->name }}" {{ old('category') == $category->name ? 'selected' : '' }}>{{ $category->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                {{-- TYPE --}}
-                <div class="col-span-2 sm:col-span-1">
-                    <label for="type" class="block font-bold mb-2">Type</label>
-                    <div class="col-span-2 sm:col-span-1 flex items-center">
-                        <select name="type" id="type" class="w-full border rounded-md py-2 px-3">
+                        <select name="type" id="type" class="w-full border rounded-md py-2 px-3 ">
                             @foreach ($types as $type)
                                 <option value="{{ $type->name }}" {{ old('type') == $type->name ? 'selected' : '' }}>{{ $type->name }}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
-                {{-- PRICE --}}
-                <div class="col-span-2 sm:col-span-1">
-                    <label for="price" class="block font-bold mb-2">Price</label>
-                    <input type="number" name="price" value="{{ old('price') }}" id="price" class="w-full border rounded-md py-2 px-3" placeholder="Enter Price">
+                {{-- CATEGORY --}}
+                <div class="col-span-2 sm:col-span-1 border border-gray-300 rounded-md p-2">
+                    <label class="block font-bold mb-2">Category</label>
+                    @foreach ($categories as $category)
+                        <div class="flex items-center mb-2">
+                            <input type="checkbox" name="categories[]" value="{{ $category->name }}" id="{{ $category->name }}" class="mr-2">
+                            <label for="{{ $category->name }}">{{ $category->name }}</label>
+                        </div>
+                    @endforeach
                 </div>
+            </div>
+            <br>
+            <div class="grid grid-cols-2 gap-4">
                 {{-- DESCRIPTION --}}
                 <div class="col-span-2">
                     <label for="description" class="block font-bold mb-2">Description</label>
@@ -186,8 +185,6 @@
                     <label for="reqImg[]" class="block font-bold mb-2">Request Images <i class="text-sm text-gray-600">(Maximum upload size 2MB)</i></label>
                     <input type="file" name="reqImg[]" id="reqImg[]" class="w-full border rounded-md py-2 px-3" multiple>
                 </div>
-
-
             </div>
             <button type="submit" class="mt-4 inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                 Add Product

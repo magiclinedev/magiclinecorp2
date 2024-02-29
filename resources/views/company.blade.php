@@ -79,8 +79,11 @@
         $(document).ready(function() {
             var table = $('#companiesTable').DataTable({
                 lengthChange: false,
-                "dom": 'lrtip'
-                scrollX: false,
+                "dom": 'lrtip',
+                processing: true,
+                "autoWidth": false,
+                scrollX: true,
+                scrollCollapse: true,
             });
 
              // Custom search input handler using input event

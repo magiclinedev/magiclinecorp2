@@ -210,6 +210,7 @@
                 serverSide: true,
                 deferRender: true,
                 scrollX: true,
+                searching: true,
             });
 
              // Custom search input handler using input event

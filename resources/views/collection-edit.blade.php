@@ -153,13 +153,16 @@
 
                         {{-- CATEGORY --}}
                         <div class="col-span-2 sm:col-span-1">
-                            <label for="category" class="block font-bold mb-2">Category:</label>
-                            <div class="col-span-2 sm:col-span-1 flex items-center">
-                                <select name="category" id="category" class="w-full border rounded-md py-2 px-3">
-                                    @foreach ($categories as $category)
-                                        <option value="{{ $category->name }}" {{ $category->name == $mannequin->category ? 'selected' : '' }}>{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
+                            <label class="block font-bold mb-2">Category:</label>
+                            <div class="col-span-2 sm:col-span-1 flex flex-wrap">
+                                @foreach ($categories as $category)
+                                    <label class="inline-flex items-center mr-4 mb-2">
+                                        <input type="checkbox" name="categories[]" value="{{ $category->name }}"
+                                            {{ in_array($category->name, explode(', ', $mannequin->category)) ? 'checked' : '' }}
+                                            class="form-checkbox h-5 w-5 text-gray-600">
+                                        <span class="ml-2">{{ $category->name }}</span>
+                                    </label>
+                                @endforeach
                             </div>
                         </div>
 
@@ -199,8 +202,8 @@
                         {{-- IMAGES --}}
                         <div class="w-full">
                             <label class="block font-bold mb-2">Images</label>
-                            <div class="mt-2 items-center">
-                                <input type="file" name="images[]" class="border rounded-lg p-2" multiple>
+                            <div class="mt-2">
+                                <input type="file" name="images[]" class="border rounded-lg p-2 w-full" multiple>
                             </div>
                         </div>
 
@@ -254,17 +257,17 @@
                             {{-- Thumbnails --}}
                             <label class="block font-bold mb-2">Thumbnail:</label>
                             <div class="mt-2 items-center">
-                                <input type="file" name="reqImg[]" class="border rounded-lg p-2" multiple>
+                                <input type="file" name="reqImg[]" class="border rounded-lg p-2 w-full" multiple>
                             </div>
                             @if ($mannequin->reqImg)
-                                <div class="flex items-center space-x-2">
+                                <div class="flex items-center space-x-2 w-full">
                                     <span class="text-sm text-gray-500">Current Thumbnail:</span>
                                     <span class="text-sm text-blue-600">{{ $mannequin->reqImg }}</span>
                                 </div>
                             @else
-                                <div class="flex items-center space-x-2">
+                                <div class="flex items-center space-x-2 w-full">
                                     <span class="text-sm text-gray-500">Current Thumbnail:</span>
-                                    <span class="text-sm text-blue-600">No Thumbnail</span>
+                                    <span class="text-sm text-blue-600 ">No Thumbnail</span>
                                 </div>
                             @endif
                         </div>
