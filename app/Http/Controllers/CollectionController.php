@@ -898,10 +898,12 @@ class CollectionController extends Controller
             // Check if the "Auto Generate PDF" checkbox is checked
             $autoGeneratePDF = $request->input('autoGeneratePDF');
 
-            if ($fileKey == 'pdf' && $autoGeneratePDF) {
+            if ($fileKey == 'pdf' && $autoGeneratePDF)
+            {
                 // If "Auto Generate PDF" is checked, set the PDF to 'Auto' and don't upload a file
                 $mannequin->{$fileKey} = 'Auto';
-            } elseif ($request->hasFile($fileKey)) {
+            }
+            elseif ($request->hasFile($fileKey)) {
                 // If a file is uploaded and "Auto Generate PDF" is unchecked, handle it as usual
                 $file = $request->file($fileKey);
 
@@ -918,10 +920,11 @@ class CollectionController extends Controller
 
                 // Update the file field in the database
                 $mannequin->{$fileKey} = $path;
-            } elseif (!$autoGeneratePDF) {
-                // If no file is uploaded and "Auto Generate PDF" is unchecked, set the PDF to null
-                $mannequin->{$fileKey} = null;
             }
+            // elseif (!$autoGeneratePDF) {
+            //     // If no file is uploaded and "Auto Generate PDF" is unchecked, set the PDF to null
+            //     $mannequin->{$fileKey} = null;
+            // }
         };
 
         // Update the "excel" and "pdf" files

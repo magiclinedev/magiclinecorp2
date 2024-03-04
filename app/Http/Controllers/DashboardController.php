@@ -94,9 +94,13 @@ class DashboardController extends Controller
             $query->orderBy('updated_at', 'desc');
 
             $searchQuery = $request->input('search');
-            $selectedCategory = $request->input('category');
+            // $selectedCategory = $request->input('category');
             $selectedCompany = $request->query('company', '');
             // $dateFilter = $request->input('date');
+             // Get the selected category string from the request
+             $categoryInput = $request->input('category', '');
+             // Split the input string into an array of categories if it's not empty
+             $selectedCategories = !empty($categoryInput) ? explode(', ', $categoryInput) : [];
 
             // Modify your query to add search functionality
             if (!empty($searchQuery)) {
@@ -114,8 +118,17 @@ class DashboardController extends Controller
             //     // Modify your query to filter products added today
             //     $query->whereDate('created_at', now()->toDateString());
             // }
-            if (!empty($selectedCategory)) {
-                $query->where('category', $selectedCategory);
+            // if (!empty($selectedCategory)) {
+            //     $query->where('category', $selectedCategory);
+            // }
+
+            // Filter by category
+            if (!empty($selectedCategories)) {
+                $query->where(function ($query) use ($selectedCategories) {
+                    foreach ($selectedCategories as $category) {
+                        $query->orWhere('category', 'like', '%' . $category . '%');
+                    }
+                });
             }
             if (!empty($selectedCompany)) {
                 $query->where('company', $selectedCompany);
