@@ -89,21 +89,21 @@
         <form action="{{ route('collection.store') }}" method="POST" enctype="multipart/form-data" class="bg-white shadow-md rounded-lg px-8 py-6">
             @csrf
             @method('PUT')
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-3 gap-4">
                 {{-- ITEM REF--}}
-                <div class="col-span-2 sm:col-span-1 ">
+                <div class="col-span-3 sm:col-span-2 h-100">
                     <label for="itemRef" class="block font-bold">Item Reference</label>
-                    <input type="text" name="itemRef" id="itemRef" value="{{ old('itemRef') }}" class="w-full border rounded-md py-2 px-3 mb-2" placeholder="Enter Item Ref">
+                    <input type="text" name="itemRef" id="itemRef" value="{{ old('itemRef') }}" class="w-full border rounded-md py-2 px-3 mb-3" placeholder="Enter Item Ref">
 
                     {{-- Purchase order --}}
                     <label for="po" class="block font-bold">PO</label>
-                    <input type="text" name="po" value="{{ old('po') }}" id="po" class="w-full border rounded-md py-2 px-3 mb-2" placeholder="Enter PO number">
+                    <input type="text" name="po" value="{{ old('po') }}" id="po" class="w-full border rounded-md py-2 px-3 mb-3" placeholder="Enter PO number">
 
 
                     {{-- COMPANIES --}}
                     <label for="company" class="block font-bold">Company</label>
                     <div class="col-span-2 sm:col-span-1 flex items-center">
-                        <select name="company" id="company" class="w-full border rounded-md py-2 px-3 mb-2">
+                        <select name="company" id="company" class="w-full border rounded-md py-2 px-3 mb-3">
                             @foreach ($companies as $company)
                                 <option value="{{ $company->name }}" {{ old('company') == $company->name ? 'selected' : '' }}>{{ $company->name }}</option>
                             @endforeach
@@ -112,7 +112,7 @@
 
                     {{-- PRICE --}}
                     <label for="price" class="block font-bold">Price</label>
-                    <input type="number" name="price" value="{{ old('price') }}" id="price" class="w-full border rounded-md py-2 px-3 mb-2" placeholder="Enter Price">
+                    <input type="number" name="price" value="{{ old('price') }}" id="price" class="w-full border rounded-md py-2 px-3 mb-3" placeholder="Enter Price">
 
                     {{-- TYPE --}}
                     <label for="type" class="block font-bold">Type</label>
@@ -125,14 +125,16 @@
                     </div>
                 </div>
                 {{-- CATEGORY --}}
-                <div class="col-span-2 sm:col-span-1 border border-gray-300 rounded-md p-2">
-                    <label class="block font-bold mb-2">Category</label>
-                    @foreach ($categories as $category)
-                        <div class="flex items-center mb-2">
-                            <input type="checkbox" name="categories[]" value="{{ $category->name }}" id="{{ $category->name }}" class="mr-2">
-                            <label for="{{ $category->name }}">{{ $category->name }}</label>
-                        </div>
-                    @endforeach
+                <div class="col-span-3 sm:col-span-1">
+                    <label class="block font-bold">Category</label>
+                    <div class=" border border-gray-300 rounded-md p-2 w-auto h-auto overflow-y-auto">
+                        @foreach ($categories as $category)
+                            <div class="flex flex-wrap">
+                                <input type="checkbox" name="categories[]" value="{{ $category->name }}" id="{{ $category->name }}" class="mr-2">
+                                <label for="{{ $category->name }}">{{ $category->name }}</label>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
             <br>

@@ -110,13 +110,21 @@ class CollectionController extends Controller
                         ->where('addedBy', 'NOT LIKE', '%Added%');
             }
             // Filter by category
-            if (!empty($selectedCategories)) {
-                $query->where(function ($query) use ($selectedCategories) {
-                    foreach ($selectedCategories as $category) {
-                        $query->orWhere('category', 'like', '%' . $category . '%');
-                    }
-                });
-            }
+            // Assuming $selectedCategory is a string containing the selected category
+
+// Assuming $selectedCategory is a string containing the selected category
+
+// Filter by category
+if (!empty($selectedCategory)) {
+    $selectedCategories = explode(",", $selectedCategory);
+    $query->where(function ($query) use ($selectedCategories) {
+        foreach ($selectedCategories as $category) {
+            $query->whereRaw("FIND_IN_SET('$category', REPLACE(category, ', ', ',')) > 0");
+        }
+    });
+}
+
+
 
             if (!empty($selectedCompany)) {
                 $query->where('company', $selectedCompany);
